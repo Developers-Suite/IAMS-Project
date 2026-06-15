@@ -147,7 +147,19 @@ export async function unsubscribeFromPushNotifications(): Promise<boolean> {
     const subscription = await registration.pushManager.getSubscription();
 
     if (subscription) {
+      const endpoint = subscription.endpoint;
       await subscription.unsubscribe();
+      const token = getApiAuthToken();
+      if (token) {
+        await fetch(getApiUrl("/api/v1/push/unsubscribe"), {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ endpoint }),
+        }).catch(() => {});
+      }
     }
     localStorage.removeItem("push_subscription");
     setBrowserNotificationsEnabled(false);
@@ -221,7 +233,7 @@ async function sendSubscriptionToBackend(subscription: PushSubscription): Promis
   if (!token) return;
 
   try {
-    await fetch(getApiUrl("/api/v1/notifications/subscribe"), {
+    await fetch(getApiUrl("/api/v1/push/subscribe"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
