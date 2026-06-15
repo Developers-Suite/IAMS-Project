@@ -77,7 +77,6 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
 
   try {
     const permission = await Notification.requestPermission();
-    console.log("[Push] Notification permission:", permission);
     return permission;
   } catch (error) {
     console.error("[Push] Failed to request notification permission:", error);
@@ -120,8 +119,6 @@ export async function subscribeToPushNotifications(): Promise<NotificationSubscr
       applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
     });
 
-    console.log("[Push] Subscribed to push notifications:", subscription);
-
     // Send subscription to backend (when API is ready)
     await sendSubscriptionToBackend(subscription);
     setBrowserNotificationsEnabled(true);
@@ -154,7 +151,6 @@ export async function unsubscribeFromPushNotifications(): Promise<boolean> {
     }
     localStorage.removeItem("push_subscription");
     setBrowserNotificationsEnabled(false);
-    console.log("[Push] Unsubscribed from push notifications");
     return true;
   } catch (error) {
     console.error("[Push] Failed to unsubscribe from push notifications:", error);
@@ -269,8 +265,6 @@ export async function sendTestNotification(): Promise<void> {
         url: "/",
       },
     });
-
-    console.log("[Push] Test notification sent");
   } catch (error) {
     console.error("[Push] Failed to send test notification:", error);
     throw error;

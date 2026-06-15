@@ -55,7 +55,6 @@ export function useStudentCheckIn(enabled = true) {
       const localKey = `check_in_${internship.id}_${today}`;
       const localData = localStorage.getItem(localKey);
       if (localData) {
-        console.log("Using local check-in data");
         setCheckedInToday(true);
         setLoading(false);
         return;
@@ -80,7 +79,6 @@ export function useStudentCheckIn(enabled = true) {
   // Listen for check-in updates from modal
   useEffect(() => {
     const handleCheckInUpdate = () => {
-      console.log("Check-in updated, refreshing...");
       refresh();
     };
 

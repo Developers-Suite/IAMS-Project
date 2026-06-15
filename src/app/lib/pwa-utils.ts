@@ -6,7 +6,6 @@ import { isPushConfigured, subscribeToPushNotifications, getNotificationPermissi
 export async function registerServiceWorker() {
   // Check if Service Workers are supported
   if (!("serviceWorker" in navigator)) {
-    console.log("[PWA] Service Workers not supported");
     return;
   }
 
@@ -14,7 +13,6 @@ export async function registerServiceWorker() {
     const registration = await navigator.serviceWorker.register("/sw.js", {
       scope: "/",
     });
-    console.log("[PWA] Service Worker registered:", registration);
 
     // If the user already granted push permission, re-register the subscription
     // so the backend always has a valid endpoint (handles new sessions / cleared storage)
@@ -33,7 +31,6 @@ export async function registerServiceWorker() {
       if (newWorker) {
         newWorker.addEventListener("statechange", () => {
           if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-            console.log("[PWA] New service worker available");
             // Show update available notification if needed
           }
         });
@@ -56,7 +53,6 @@ export async function unregisterServiceWorker() {
     const registrations = await navigator.serviceWorker.getRegistrations();
     for (const registration of registrations) {
       await registration.unregister();
-      console.log("[PWA] Service Worker unregistered");
     }
   } catch (error) {
     console.error("[PWA] Failed to unregister Service Worker:", error);

@@ -86,7 +86,6 @@ export function StudentHistoryPage() {
       const res = await apiClient.getInternshipLogbooks(internshipId, { per_page: 100 });
       if (res.success) {
         const logbooks = Array.isArray(res.data) ? res.data : res.data?.logbooks ?? [];
-        console.log(`Loaded ${logbooks.length} logbooks for internship ${internshipId}:`, logbooks);
         // Sort by date descending
         const sorted = [...logbooks].sort((a, b) =>
           new Date(b.entry_date || b.created_at).getTime() - new Date(a.entry_date || a.created_at).getTime()

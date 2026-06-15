@@ -956,12 +956,6 @@ export const apiClient = {
       { method: "GET", query: applyDomainScoping({ ...filters, internship_id: internshipId }) }
     );
     const attendance = response.success ? extractCollection<any>(response, "attendance") : [];
-    console.log(`[API] getInternshipAttendance(${internshipId}):`, {
-      success: response.success,
-      filters: { ...filters, internship_id: internshipId },
-      rawResponse: response.data,
-      extractedAttendance: attendance
-    });
     return { success: response.success, data: attendance, message: response.message };
   },
 

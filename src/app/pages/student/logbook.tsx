@@ -84,7 +84,6 @@ export function LogbookPage() {
         const localKey = `check_in_${id}_${today}`;
         const localData = localStorage.getItem(localKey);
         if (localData) {
-          console.log("Logbook: Found local check-in data");
           setCheckedInToday(true);
         } else {
           // Fall back to API
@@ -116,13 +115,10 @@ export function LogbookPage() {
 
       if (previousDayDrafts.length === 0) return;
 
-      console.log(`Auto-submitting ${previousDayDrafts.length} draft entries from previous days`);
-
       // Auto-submit each previous day's draft
       for (const entry of previousDayDrafts) {
         try {
           await apiClient.submitLogbookEntry(entry.id);
-          console.log(`Auto-submitted entry ${entry.id} from ${entry.entry_date}`);
         } catch (error) {
           console.error(`Failed to auto-submit entry ${entry.id}:`, error);
         }
@@ -155,7 +151,6 @@ export function LogbookPage() {
   // Listen for check-in updates from modal
   useEffect(() => {
     const handleCheckInUpdate = () => {
-      console.log("Logbook: Check-in detected, reloading data");
       loadData();
     };
 

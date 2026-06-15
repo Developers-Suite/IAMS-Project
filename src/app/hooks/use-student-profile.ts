@@ -39,7 +39,6 @@ export function useStudentProfile(userId?: string | number, enabled = true) {
         lastSynced: new Date().toISOString(),
         version: 1,
       }));
-      console.log("Profile saved to localStorage");
     } catch (e) {
       console.warn("Failed to save profile to localStorage:", e);
     }
@@ -50,7 +49,6 @@ export function useStudentProfile(userId?: string | number, enabled = true) {
     try {
       const stored = localStorage.getItem(PROFILE_STORAGE_KEY(userId));
       if (stored) {
-        console.log("Loaded profile from localStorage");
         return JSON.parse(stored);
       }
     } catch (e) {
@@ -131,9 +129,7 @@ export function useStudentProfile(userId?: string | number, enabled = true) {
     // Sync with API
     try {
       const res = await apiClient.updateStudent(String(userId), updates);
-      if (res.success) {
-        console.log("Profile updated on server");
-      } else {
+      if (!res.success) {
         setError("Failed to sync profile with server");
       }
     } catch (err) {
@@ -147,7 +143,6 @@ export function useStudentProfile(userId?: string | number, enabled = true) {
       localStorage.removeItem(PROFILE_STORAGE_KEY(userId));
       localStorage.removeItem(PROFILE_METADATA_KEY(userId));
       setProfile(null);
-      console.log("Profile cache cleared");
     } catch (e) {
       console.warn("Failed to clear profile cache:", e);
     }
