@@ -391,7 +391,7 @@ export function MessagesPanel({ preselectedRecipientId, preselectedThreadId, onC
                   <div className="flex items-center gap-1.5">
                     <span className="w-2 h-2 bg-emerald-500 rounded-full" />
                     <span className="text-xs text-muted-foreground">
-                      {getThreadRole(currentThread!)} · Active
+                      {currentThread ? getThreadRole(currentThread) : ""} · Active
                     </span>
                   </div>
                 </div>
