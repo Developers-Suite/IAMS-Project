@@ -207,6 +207,7 @@ export function MessagesPanel({ preselectedRecipientId, preselectedThreadId, onC
     try {
       const selectedContact = contacts.find((c: any) => String(c.id) === newForm.recipientId);
       const res = await apiClient.createThread({
+        recipient_id: newForm.recipientId,
         recipientId: newForm.recipientId,
         recipientName: selectedContact?.name || "",
         subject: newForm.subject,

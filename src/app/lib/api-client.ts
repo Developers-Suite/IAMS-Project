@@ -1382,7 +1382,7 @@ export const apiClient = {
   },
 
   async terminateInternship(id: string, reason?: string): Promise<ApiResponse<null>> {
-    return requestApi<null>(replacePathParams(API_ENDPOINTS.INTERNSHIP_TERMINATE, { id }), { method: "PATCH", body: JSON.stringify({ reason }) });
+    return requestApi<null>(replacePathParams(API_ENDPOINTS.INTERNSHIP_TERMINATE, { id }), { method: "PATCH", body: JSON.stringify({ termination_reason: reason }) });
   },
 
   async getInternshipLogbooks(internshipId: string, filters?: Record<string, unknown>): Promise<ApiResponse<any[]>> {
