@@ -4,7 +4,7 @@ import { apiClient } from "../../lib/api-client";
 import { toast } from "sonner";
 import {
   Building2, Plus, Edit2, UserCheck, UserPlus,
-  Search, X, Layers, User, ChevronDown, BookOpen, Trash2
+  Search, X, Layers, User, ChevronDown, BookOpen, Trash2, AlertTriangle
 } from "lucide-react";
 import { SkeletonStatCards, SkeletonCardGrid } from "../../components/skeleton";
 
@@ -549,6 +549,17 @@ export function DepartmentsPage() {
     setShowModal(true);
   };
 
+  const handleDeleteDept = async (dept: Department) => {
+    if (!confirm(`Delete "${dept.name}"? This cannot be undone.`)) return;
+    const res = await apiClient.deleteDepartment(dept.id);
+    if (res.success) {
+      setDepts((prev) => prev.filter((d) => d.id !== dept.id));
+      toast.success(`${dept.name} deleted.`);
+    } else {
+      toast.error(res.message ?? "Cannot delete this department.");
+    }
+  };
+
   const handleSave = async () => {
     if (!form.name.trim()) { toast.error("Department name is required."); return; }
     if (!form.code.trim()) { toast.error("Short code is required."); return; }
@@ -692,6 +703,13 @@ export function DepartmentsPage() {
                   title="Edit department"
                 >
                   <Edit2 className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => handleDeleteDept(dept)}
+                  className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 text-muted-foreground hover:text-red-600 transition-colors"
+                  title="Delete department"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>

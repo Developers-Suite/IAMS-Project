@@ -787,6 +787,13 @@ export const apiClient = {
     );
   },
 
+  async deleteDepartment(id: string): Promise<ApiResponse<null>> {
+    return requestApi<null>(
+      replacePathParams(API_ENDPOINTS.DEPARTMENT_BY_ID, { id }),
+      { method: "DELETE" }
+    );
+  },
+
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // PROGRAMMES
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━

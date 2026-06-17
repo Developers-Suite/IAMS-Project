@@ -6,6 +6,7 @@ import { SkeletonStatCards, SkeletonCardGrid, SkeletonPageHeader } from "../../c
 import { StatusBadge } from "../../components/status-badge";
 import { apiClient } from "../../lib/api-client";
 import type { TermDashboardResponse } from "../../types/api";
+import { ProgramPicker } from "../../components/program-picker";
 import {
   Plus, Calendar, Archive, Eye, X, Play, Edit2, CheckCircle2,
   Clock, FileText, TrendingUp, GraduationCap, Layers
@@ -96,6 +97,7 @@ const emptyForm = {
   internshipStart: "", internshipEnd: "",
   levels: ["L300"] as string[],
   selectedDepts: [] as string[],
+  selectedPrograms: [] as string[],
 };
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -159,7 +161,7 @@ export function TermsPage() {
 
   const openCreate = () => {
     setEditTarget(null);
-    setForm({ ...emptyForm, selectedDepts: deptOptions.map((d) => d.name) });
+    setForm({ ...emptyForm, selectedDepts: deptOptions.map((d) => d.name), selectedPrograms: [] });
     setShowModal(true);
   };
 
@@ -171,6 +173,7 @@ export function TermsPage() {
       internshipStart: term.internshipStart, internshipEnd: term.internshipEnd,
       levels: term.eligibleLevels.length > 0 ? term.eligibleLevels : ["L300"],
       selectedDepts: term.departments,
+      selectedPrograms: term.programs ?? [],
     });
     setShowModal(true);
   };
@@ -201,6 +204,7 @@ export function TermsPage() {
       applicationStart: form.applicationStart, applicationEnd: form.applicationEnd,
       internshipStart: form.internshipStart, internshipEnd: form.internshipEnd,
       eligibleLevels: form.levels, departments: form.selectedDepts,
+      programs: form.selectedPrograms.length > 0 ? form.selectedPrograms : undefined,
     };
 
     if (editTarget) {
@@ -626,6 +630,25 @@ export function TermsPage() {
                 })}
               </div>
             </section>
+
+            {/* ── Programme Filter (optional) ────────────────────────────────────── */}
+            {form.selectedDepts.length > 0 && (
+              <section className="space-y-3 border-t border-border pt-5">
+                <div>
+                  <p className="text-muted-foreground uppercase tracking-widest" style={{ fontSize: "0.62rem", fontWeight: 600 }}>
+                    Eligible Programmes
+                  </p>
+                  <p className="text-muted-foreground mt-0.5" style={{ fontSize: "0.72rem" }}>
+                    Leave empty to allow all programmes in the selected departments.
+                  </p>
+                </div>
+                <ProgramPicker
+                  selectedDepartments={form.selectedDepts}
+                  selectedPrograms={form.selectedPrograms}
+                  onChange={(programs) => setForm({ ...form, selectedPrograms: programs })}
+                />
+              </section>
+            )}
 
             {/* ── Actions ─────────────────────────────────────────────────────────── */}
             <div className="flex gap-2 justify-end pt-2 border-t border-border">
