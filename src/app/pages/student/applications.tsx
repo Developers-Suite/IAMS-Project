@@ -76,7 +76,6 @@ interface FormData {
   phoneNumber: string;
   emergencyContact: string;
   emergencyPhone: string;
-  preferredStartDate: string;
   additionalNotes: string;
   uploadCV: boolean;
   uploadMotivation: boolean;
@@ -100,7 +99,6 @@ const defaultForm: FormData = {
   phoneNumber: "",
   emergencyContact: "",
   emergencyPhone: "",
-  preferredStartDate: "",
   additionalNotes: "",
   uploadCV: false,
   uploadMotivation: false,
@@ -408,7 +406,6 @@ export function StudentApplicationsPage() {
           academic_term_id: Number(form.termId),
           application_type: "individual",
           cover_letter: form.additionalNotes || undefined,
-          proposed_start_date: form.preferredStartDate || undefined,
           status: "submitted", // Create directly as submitted, not draft
         });
         if (!createRes.success || !createRes.data?.id) {

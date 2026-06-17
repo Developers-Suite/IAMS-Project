@@ -20,7 +20,6 @@ interface FormData {
   phoneNumber: string;
   emergencyContact: string;
   emergencyPhone: string;
-  preferredStartDate: string;
   additionalNotes: string;
   uploadCV: boolean;
   uploadMotivation: boolean;
@@ -81,16 +80,6 @@ export function PersonalDetailsForm({ form, updateForm, user }: PersonalDetailsF
               style={{ fontSize: "0.85rem" }}
             />
           </div>
-        </div>
-        <div>
-          <label style={{ fontSize: "0.8rem" }}>Preferred Start Date</label>
-          <input
-            type="date"
-            value={form.preferredStartDate}
-            onChange={(e) => updateForm({ preferredStartDate: e.target.value })}
-            className="w-full mt-1 px-3 py-2 border border-border rounded-lg bg-background"
-            style={{ fontSize: "0.85rem" }}
-          />
         </div>
         <div>
           <label style={{ fontSize: "0.8rem" }}>Emergency Contact Name *</label>
