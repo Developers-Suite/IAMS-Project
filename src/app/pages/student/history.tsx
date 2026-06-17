@@ -236,7 +236,7 @@ export function StudentHistoryPage() {
               </span>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Applied: {new Date(dateApplied(internship)).toLocaleDateString()}
+              Applied: {new Date(dateApplied(internship)).toLocaleDateString("en-GB")}
             </p>
           </div>
         </div>
@@ -287,11 +287,11 @@ export function StudentHistoryPage() {
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
                       <p className="text-muted-foreground font-semibold">Start Date</p>
-                      <p className="text-foreground">{new Date(startDate(internship)).toLocaleDateString()}</p>
+                      <p className="text-foreground">{new Date(startDate(internship)).toLocaleDateString("en-GB")}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground font-semibold">End Date</p>
-                      <p className="text-foreground">{endDate(internship) !== "—" ? new Date(endDate(internship)).toLocaleDateString() : "Ongoing"}</p>
+                      <p className="text-foreground">{endDate(internship) !== "—" ? new Date(endDate(internship)).toLocaleDateString("en-GB") : "Ongoing"}</p>
                     </div>
                     <div className="col-span-2">
                       <p className="text-muted-foreground font-semibold">Supervisor</p>
@@ -313,7 +313,7 @@ export function StudentHistoryPage() {
                           <div key={entry.id} className="p-3 bg-card rounded border border-border/50">
                             <div className="flex items-center justify-between gap-2 mb-2">
                               <span className="text-xs font-medium">
-                                {new Date(entry.entry_date || entry.created_at).toLocaleDateString()}
+                                {new Date(entry.entry_date || entry.created_at).toLocaleDateString("en-GB")}
                               </span>
                               <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
                                 entry.status === "approved"  ? "bg-emerald-100 text-emerald-700" :
@@ -356,7 +356,7 @@ export function StudentHistoryPage() {
                       <div className="text-xs space-y-1">
                         {attendanceMap[id].map((record) => (
                           <div key={record.id} className="p-2 bg-card rounded border border-border/50 flex items-center justify-between">
-                            <span className="font-medium">{new Date(record.date || record.attendance_date || record.check_in_time).toLocaleDateString()}</span>
+                            <span className="font-medium">{new Date(record.date || record.attendance_date || record.check_in_time).toLocaleDateString("en-GB")}</span>
                             <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
                               record.status === "present" ? "bg-emerald-100 text-emerald-700" :
                               record.status === "late" ? "bg-amber-100 text-amber-700" :
@@ -373,7 +373,7 @@ export function StudentHistoryPage() {
                     <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
                       <p className="text-muted-foreground text-xs font-semibold mb-2">ℹ️ No Attendance Records</p>
                       <p className="text-xs text-blue-700 dark:text-blue-300">
-                        Attendance records only appear within the internship active period ({new Date(internships.find((i) => String(i.id) === id)?.start_date || "").toLocaleDateString()} to {new Date(internships.find((i) => String(i.id) === id)?.end_date || "").toLocaleDateString()}).
+                        Attendance records only appear within the internship active period ({new Date(internships.find((i) => String(i.id) === id)?.start_date || "").toLocaleDateString("en-GB")} to {new Date(internships.find((i) => String(i.id) === id)?.end_date || "").toLocaleDateString("en-GB")}).
                       </p>
                       <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
                         If you've checked in outside this period, records won't appear here.

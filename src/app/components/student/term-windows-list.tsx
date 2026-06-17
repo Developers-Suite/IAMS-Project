@@ -6,7 +6,7 @@ function formatDate(dateStr: string): string {
   if (!dateStr) return "";
   const date = new Date(dateStr + "T00:00:00Z");
   const options: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" };
-  return date.toLocaleDateString("en-US", options);
+  return date.toLocaleDateString("en-GB", options);
 }
 
 interface Term {

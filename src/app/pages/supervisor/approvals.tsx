@@ -116,7 +116,7 @@ export function SupervisorApprovalsPage() {
                     </div>
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Clock className="w-3.5 h-3.5" />
-                      Invited {new Date(invitation.created_at || invitation.invited_at).toLocaleDateString()}
+                      Invited {new Date(invitation.created_at || invitation.invited_at).toLocaleDateString("en-GB")}
                     </div>
                   </div>
                 </div>

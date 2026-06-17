@@ -32,7 +32,7 @@ export function exportLogbookToPDF(companyName: string, entries: any[]) {
       <body>
         <h1>${companyName}</h1>
         <div class="meta">
-          <p>Generated on ${new Date().toLocaleDateString()}</p>
+          <p>Generated on ${new Date().toLocaleDateString("en-GB")}</p>
           <p>Total Entries: ${entries.length}</p>
           <p>Approved: ${entries.filter((e) => e.status === "approved").length}</p>
         </div>
@@ -42,7 +42,7 @@ export function exportLogbookToPDF(companyName: string, entries: any[]) {
                 .map(
                   (entry) => `
             <div class="entry">
-              <div class="entry-date">${new Date(entry.entry_date).toLocaleDateString()}</div>
+              <div class="entry-date">${new Date(entry.entry_date).toLocaleDateString("en-GB")}</div>
               <div class="entry-activities"><strong>Activities:</strong> ${entry.activities_description || "—"}</div>
               ${entry.skills_learned ? `<div class="entry-skills"><strong>Skills:</strong> ${entry.skills_learned}</div>` : ""}
               <div class="entry-status status-${entry.status}">${entry.status.replace(/_/g, " ").toUpperCase()}</div>

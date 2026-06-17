@@ -308,7 +308,7 @@ export function AuditLogsPage() {
                   className={`border-b border-border last:border-0 hover:bg-muted/20 ${selectedLog === log.id ? "bg-primary/5" : ""}`}
                 >
                   <td className="px-4 py-3 text-muted-foreground whitespace-nowrap" style={{ fontSize: "0.8rem" }}>
-                    <p>{new Date(log.timestamp).toLocaleDateString()}</p>
+                    <p>{new Date(log.timestamp).toLocaleDateString("en-GB")}</p>
                     <p style={{ fontSize: "0.7rem" }}>{new Date(log.timestamp).toLocaleTimeString()}</p>
                   </td>
                   <td className="px-4 py-3" style={{ fontSize: "0.85rem" }}>

@@ -302,7 +302,7 @@ export function EvaluatePage() {
                   const filled = !!rubricsByWeek[w.weekNumber];
                   const isCurrent = w.weekNumber === currentWeekNumber;
                   const isExpanded = weekNumber === w.weekNumber && !collapsedWeeks[w.weekNumber];
-                  const weekRange = `${new Date(w.weekStart).toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${new Date(w.weekEnd).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+                  const weekRange = `${new Date(w.weekStart).toLocaleDateString("en-GB", { month: "short", day: "numeric" })} - ${new Date(w.weekEnd).toLocaleDateString("en-GB", { month: "short", day: "numeric" })}`;
 
                   return (
                     <Card key={w.weekNumber} className="overflow-hidden">

@@ -292,7 +292,7 @@ export function NotificationBell() {
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {new Date(notification.created_at).toLocaleDateString("en-US", {
+                      {new Date(notification.created_at).toLocaleDateString("en-GB", {
                         month: "short",
                         day: "numeric",
                         hour: "2-digit",

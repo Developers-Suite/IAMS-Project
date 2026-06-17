@@ -313,7 +313,7 @@ export function DLODashboard() {
                 <p style={{ fontSize: "0.75rem" }} className="text-muted-foreground">{n.message ?? n.body}</p>
               </div>
               <span className="ml-auto text-muted-foreground shrink-0" style={{ fontSize: "0.7rem" }}>
-                {new Date(n.created_at ?? n.timestamp).toLocaleDateString()}
+                {new Date(n.created_at ?? n.timestamp).toLocaleDateString("en-GB")}
               </span>
             </div>
           ))}

@@ -150,7 +150,7 @@ export function StudentDashboard() {
           {activeInternship ? (
             <div className="bg-primary rounded-2xl p-8 text-white relative overflow-hidden">
               <div className="relative z-10">
-                <p className="text-sm opacity-90 mb-2">{new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</p>
+                <p className="text-sm opacity-90 mb-2">{new Date().toLocaleDateString("en-GB", { month: "long", day: "numeric", year: "numeric" })}</p>
                 <h1 className="text-3xl font-bold mb-2">Welcome back, {user?.name?.split(" ")[0]}!</h1>
                 <p className="opacity-90 text-sm">Always stay updated with your internship progress</p>
               </div>
@@ -235,7 +235,7 @@ export function StudentDashboard() {
                   <div className="text-xs font-semibold text-muted-foreground mb-2">Applied</div>
                   <div className="text-sm font-semibold">
                     {pendingApplication?.created_at
-                      ? new Date(pendingApplication.created_at).toLocaleDateString("en-US", {
+                      ? new Date(pendingApplication.created_at).toLocaleDateString("en-GB", {
                           month: "short",
                           day: "numeric",
                         })
@@ -285,7 +285,7 @@ export function StudentDashboard() {
                 </h3>
                 <p className="text-muted-foreground text-xs">
                   {activeInternship?.term?.year ? `Year ${activeInternship.term.year}` :
-                   activeInternship?.start_date ? `Started ${new Date(activeInternship.start_date).toLocaleDateString()}` :
+                   activeInternship?.start_date ? `Started ${new Date(activeInternship.start_date).toLocaleDateString("en-GB")}` :
                    "Pending approval"}
                 </p>
               </div>
@@ -309,7 +309,7 @@ export function StudentDashboard() {
                   <BookMarked className="w-4 h-4 text-blue-600" />
                 </div>
                 <h3 className="text-2xl font-bold">{recentLogbooks.length}</h3>
-                <p className="text-muted-foreground text-xs">{recentLogbooks.length > 0 ? "Latest: " + new Date(recentLogbooks[0].entry_date).toLocaleDateString() : "Start logging"}</p>
+                <p className="text-muted-foreground text-xs">{recentLogbooks.length > 0 ? "Latest: " + new Date(recentLogbooks[0].entry_date).toLocaleDateString("en-GB") : "Start logging"}</p>
               </div>
 
               {/* Attendance Card */}

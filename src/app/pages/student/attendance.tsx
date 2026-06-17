@@ -206,7 +206,7 @@ export function StudentAttendancePage() {
       <Card className="p-4 border-border/60 shadow-sm">
         <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3 flex items-center gap-2">
           <Clock className="w-4 h-4" />
-          Today — {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+          Today — {new Date().toLocaleDateString("en-GB", { weekday: 'long', month: 'long', day: 'numeric' })}
         </h3>
         {todayRecord ? (
           <div className="space-y-1">
@@ -246,11 +246,11 @@ export function StudentAttendancePage() {
           </div>
           <div>
             <p className="text-muted-foreground text-xs">Start Date</p>
-            <p className="font-medium">{internshipInfo?.start_date ? new Date(internshipInfo.start_date).toLocaleDateString() : "—"}</p>
+            <p className="font-medium">{internshipInfo?.start_date ? new Date(internshipInfo.start_date).toLocaleDateString("en-GB") : "—"}</p>
           </div>
           <div>
             <p className="text-muted-foreground text-xs">End Date</p>
-            <p className="font-medium">{internshipInfo?.end_date ? new Date(internshipInfo.end_date).toLocaleDateString() : "—"}</p>
+            <p className="font-medium">{internshipInfo?.end_date ? new Date(internshipInfo.end_date).toLocaleDateString("en-GB") : "—"}</p>
           </div>
           <div>
             <p className="text-muted-foreground text-xs">Status</p>
@@ -289,11 +289,11 @@ export function StudentAttendancePage() {
                 <div className="bg-white dark:bg-slate-900 rounded p-3 space-y-2 text-xs">
                   <div className="flex justify-between">
                     <span className="text-blue-600 dark:text-blue-400 font-medium">Start Date:</span>
-                    <span className="font-semibold">{internshipInfo?.start_date ? new Date(internshipInfo.start_date).toLocaleDateString() : "—"}</span>
+                    <span className="font-semibold">{internshipInfo?.start_date ? new Date(internshipInfo.start_date).toLocaleDateString("en-GB") : "—"}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-blue-600 dark:text-blue-400 font-medium">End Date:</span>
-                    <span className="font-semibold">{internshipInfo?.end_date ? new Date(internshipInfo.end_date).toLocaleDateString() : "—"}</span>
+                    <span className="font-semibold">{internshipInfo?.end_date ? new Date(internshipInfo.end_date).toLocaleDateString("en-GB") : "—"}</span>
                   </div>
                 </div>
                 <p className="text-xs text-blue-600 dark:text-blue-400 mt-3">
@@ -314,7 +314,7 @@ export function StudentAttendancePage() {
                       <div className="flex items-center gap-3">
                         <div className="hidden sm:block w-10 text-center">
                           <span className="text-xs font-bold text-muted-foreground">
-                            {new Date(recordDate).toLocaleDateString(undefined, { weekday: 'short' })}
+                            {new Date(recordDate).toLocaleDateString("en-GB", { weekday: 'short' })}
                           </span>
                           <span className="block text-lg font-semibold">
                             {new Date(recordDate).getDate()}
@@ -322,10 +322,10 @@ export function StudentAttendancePage() {
                         </div>
                         <div>
                           <p className="font-medium text-sm sm:hidden">
-                            {new Date(recordDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', weekday: 'short' })}
+                            {new Date(recordDate).toLocaleDateString("en-GB", { month: 'short', day: 'numeric', weekday: 'short' })}
                           </p>
                           <p className="hidden sm:block text-sm font-medium">
-                            {new Date(recordDate).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+                            {new Date(recordDate).toLocaleDateString("en-GB", { month: 'long', day: 'numeric', year: 'numeric' })}
                           </p>
                           {record.check_in_time && (
                             <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">

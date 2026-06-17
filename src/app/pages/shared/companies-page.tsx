@@ -516,7 +516,7 @@ export function CompaniesPage({ viewRole }: Props) {
                             {supervisor.mobile_phone && <p>📱 {typeof supervisor.mobile_phone === "string" ? supervisor.mobile_phone : "—"}</p>}
                             {supervisor.years_of_experience && <p>⏰ {typeof supervisor.years_of_experience === "string" ? supervisor.years_of_experience : String(supervisor.years_of_experience)} years experience</p>}
                             <p>👥 {typeof supervisor.current_interns === "number" ? supervisor.current_interns : 0} / {typeof supervisor.max_interns === "number" ? supervisor.max_interns : 0} interns</p>
-                            {supervisor.last_login_at && <p>Last active: {new Date(String(supervisor.last_login_at)).toLocaleDateString()}</p>}
+                            {supervisor.last_login_at && <p>Last active: {new Date(String(supervisor.last_login_at)).toLocaleDateString("en-GB")}</p>}
                           </div>
                         </div>
                       ))}
@@ -546,7 +546,7 @@ export function CompaniesPage({ viewRole }: Props) {
                       {selected.approved_at && (
                         <div>
                           <p style={{ fontSize: "0.7rem" }} className="text-muted-foreground uppercase tracking-wider">Approved At</p>
-                          <p style={{ fontSize: "0.85rem" }} className="font-medium">{new Date(selected.approved_at).toLocaleDateString()}</p>
+                          <p style={{ fontSize: "0.85rem" }} className="font-medium">{new Date(selected.approved_at).toLocaleDateString("en-GB")}</p>
                         </div>
                       )}
                     </>
@@ -559,7 +559,7 @@ export function CompaniesPage({ viewRole }: Props) {
                   )}
                   <div className="border-t border-border pt-3">
                     <p style={{ fontSize: "0.7rem" }} className="text-muted-foreground uppercase tracking-wider">Created</p>
-                    <p style={{ fontSize: "0.85rem" }} className="font-medium">{new Date(selected.created_at).toLocaleDateString()}</p>
+                    <p style={{ fontSize: "0.85rem" }} className="font-medium">{new Date(selected.created_at).toLocaleDateString("en-GB")}</p>
                   </div>
                 </Tabs.Content>
 

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { StatusBadge } from "../../components/status-badge";
 import { Pagination } from "../../components/ui/pagination";
 import { useAppContext } from "../../lib/context";
+import { fmtDate } from "../../lib/date-utils";
 import { apiClient } from "../../lib/api-client";
 import { SkeletonTableRows } from "../../components/skeleton";
 import {
@@ -29,7 +30,7 @@ function normalizeInternship(i: any) {
     level:       i.student?.level ?? "—",
     supervisorAssigned: i.academicSupervisor?.user?.name ?? i.academic_supervisor?.user?.name ?? "",
     status:      i.status ?? "active",
-    startDate:   i.start_date ?? i.created_at ?? "—",
+    startDate:   fmtDate(i.start_date ?? i.created_at),
   };
 }
 
@@ -558,7 +559,7 @@ export function StudentsPage({ viewRole }: Props) {
                           <div key={a.id} className="p-2.5 bg-secondary/30 rounded-lg flex items-center justify-between">
                             <div>
                               <p style={{ fontSize: "0.8rem", fontWeight: 500 }}>
-                                {a.attendance_date}
+                                {fmtDate(a.attendance_date)}
                                 <span className="text-muted-foreground ml-2" style={{ fontSize: "0.7rem" }}>
                                   <Clock className="w-3 h-3 inline" /> {a.check_in_time}
                                 </span>

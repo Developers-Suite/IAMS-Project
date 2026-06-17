@@ -20,7 +20,7 @@ function getDept(app: any): string        { return app.student?.department?.name
 function getDateApplied(app: any): string {
   const raw = app.created_at ?? app.submitted_at ?? app.dateApplied ?? "";
   if (!raw || raw === "—") return "—";
-  try { return new Date(raw).toLocaleDateString(); } catch { return raw; }
+  try { return new Date(raw).toLocaleDateString("en-GB"); } catch { return raw; }
 }
 
 function toDateStr(iso?: string): string {
@@ -436,7 +436,7 @@ export function CLODashboard() {
                   <p style={{ fontSize: "0.75rem" }} className="text-muted-foreground line-clamp-2">{n.message ?? n.body}</p>
                 </div>
                 <span className="text-muted-foreground shrink-0" style={{ fontSize: "0.7rem" }}>
-                  {n.created_at ? new Date(n.created_at).toLocaleDateString() : ""}
+                  {n.created_at ? new Date(n.created_at).toLocaleDateString("en-GB") : ""}
                 </span>
               </div>
             ))}

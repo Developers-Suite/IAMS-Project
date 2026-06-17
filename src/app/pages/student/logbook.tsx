@@ -175,7 +175,7 @@ export function LogbookPage() {
     const start = new Date(internshipStart.split("T")[0]);
     const weekStart = new Date(start.getTime() + (weekNum - 1) * 7 * 24 * 60 * 60 * 1000);
     const weekEnd = new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
-    return `${weekStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${weekEnd.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+    return `${weekStart.toLocaleDateString("en-GB", { month: "short", day: "numeric" })} - ${weekEnd.toLocaleDateString("en-GB", { month: "short", day: "numeric" })}`;
   };
 
   const groupedWeeks: Record<number, any[]> = {};
@@ -402,7 +402,7 @@ export function LogbookPage() {
                           <div className="flex items-center gap-2">
                             <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
                             <p className="font-semibold text-xs text-foreground">
-                              {new Date(entry.entry_date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                              {new Date(entry.entry_date).toLocaleDateString("en-GB", { weekday: "short", month: "short", day: "numeric" })}
                             </p>
                           </div>
                           <div className="flex items-center gap-2">
@@ -659,7 +659,7 @@ export function LogbookPage() {
               <div>
                 <h2 className="text-xl font-bold">Entry</h2>
                 <p className="text-muted-foreground text-sm mt-1">
-                  {new Date(viewingEntry.entry_date).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+                  {new Date(viewingEntry.entry_date).toLocaleDateString("en-GB", { weekday: "long", month: "long", day: "numeric" })}
                 </p>
               </div>
               <button onClick={() => setViewingEntry(null)} className="p-1 rounded-md hover:bg-accent text-muted-foreground">

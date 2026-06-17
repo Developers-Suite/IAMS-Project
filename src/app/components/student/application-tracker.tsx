@@ -104,7 +104,7 @@ function formatDisplayDate(value: string | undefined): string | undefined {
   if (!value) return undefined;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString();
+  return date.toLocaleDateString("en-GB");
 }
 
 export function ApplicationTracker({
@@ -138,7 +138,7 @@ export function ApplicationTracker({
 
   const statusHistory = getStatusHistory(myApp);
   const internshipStartDate = formatDisplayDate(getInternshipStartDate(myApp));
-  const dateApplied = myApp.created_at ? new Date(myApp.created_at).toLocaleDateString() : (myApp.dateApplied ?? "—");
+  const dateApplied = myApp.created_at ? new Date(myApp.created_at).toLocaleDateString("en-GB") : (myApp.dateApplied ?? "—");
 
   const handleDownloadLetter = () => {
     const companyName = typeof myApp.company?.name === "string" ? myApp.company.name : (typeof myApp.companyName === "string" ? myApp.companyName : "Company");

@@ -277,7 +277,7 @@ export function AcademicDashboard() {
                 <div key={n.id} className={`p-2.5 rounded-lg ${!n.is_read ? "bg-secondary/40" : ""}`}>
                   <p style={{ fontSize: "0.82rem" }}>{n.title}</p>
                   <p className="text-muted-foreground" style={{ fontSize: "0.7rem" }}>
-                    {new Date(n.created_at ?? n.timestamp).toLocaleDateString()}
+                    {new Date(n.created_at ?? n.timestamp).toLocaleDateString("en-GB")}
                   </p>
                 </div>
               ))

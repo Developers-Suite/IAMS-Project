@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { SkeletonTableRows } from "../../components/skeleton";
 import { apiClient } from "../../lib/api-client";
+import { fmtDate } from "../../lib/date-utils";
 import { CheckCircle2, XCircle, AlertTriangle, Clock, Search, X, Navigation, Shield } from "lucide-react";
 import { toast } from "sonner";
 import type { ExtendedRole } from "../../services/auth-service";
@@ -183,7 +184,7 @@ export function AttendancePage({ viewRole }: Props) {
                     <div className="flex-1 min-w-0">
                       <p className="font-medium" style={{ fontSize: "0.9rem" }}>{studentName(r)}</p>
                       <p className="text-muted-foreground" style={{ fontSize: "0.78rem" }}>
-                        {r.attendance_date} · {r.check_in_time ?? "—"}
+                        {fmtDate(r.attendance_date)} · {r.check_in_time ?? "—"}
                       </p>
                       {r.manual_reason && (
                         <p className="mt-1 text-amber-700 dark:text-amber-400 italic" style={{ fontSize: "0.8rem" }}>
@@ -244,7 +245,7 @@ export function AttendancePage({ viewRole }: Props) {
                       <div>
                         <p className="font-medium" style={{ fontSize: "0.9rem" }}>{studentName(r)}</p>
                         <p className="text-muted-foreground" style={{ fontSize: "0.78rem" }}>
-                          {r.attendance_date} · {r.check_in_time ?? "—"} · {r.status}
+                          {fmtDate(r.attendance_date)} · {r.check_in_time ?? "—"} · {r.status}
                         </p>
                       </div>
                     </div>
@@ -351,7 +352,7 @@ export function AttendancePage({ viewRole }: Props) {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-muted-foreground uppercase tracking-wider mb-1" style={{ fontSize: "0.65rem" }}>Date</p>
-                  <p style={{ fontSize: "0.9rem" }}>{selectedRecord.attendance_date}</p>
+                  <p style={{ fontSize: "0.9rem" }}>{fmtDate(selectedRecord.attendance_date)}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground uppercase tracking-wider mb-1" style={{ fontSize: "0.65rem" }}>Status</p>
@@ -459,7 +460,7 @@ export function AttendancePage({ viewRole }: Props) {
                       <p style={{ fontSize: "0.85rem" }}>{studentName(r)}</p>
                       <p className="text-muted-foreground" style={{ fontSize: "0.7rem" }}>{studentNum(r)}</p>
                     </td>
-                    <td className="px-4 py-4" style={{ fontSize: "0.85rem" }}>{r.attendance_date}</td>
+                    <td className="px-4 py-4" style={{ fontSize: "0.85rem" }}>{fmtDate(r.attendance_date)}</td>
                     <td className="px-4 py-4">
                       <span className="flex items-center gap-1" style={{ fontSize: "0.85rem" }}>
                         <Clock className="w-3 h-3 text-muted-foreground" /> {r.check_in_time ?? "—"}
