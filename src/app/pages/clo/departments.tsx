@@ -4,7 +4,7 @@ import { apiClient } from "../../lib/api-client";
 import { toast } from "sonner";
 import {
   Building2, Plus, Edit2, UserCheck, UserPlus,
-  Search, X, Layers, User, ChevronDown
+  Search, X, Layers, User, ChevronDown, BookOpen, Trash2
 } from "lucide-react";
 import { SkeletonStatCards, SkeletonCardGrid } from "../../components/skeleton";
 
@@ -24,6 +24,13 @@ interface Department {
   dloId?: string;
 }
 
+interface Programme {
+  id: string;
+  name: string;
+  code: string | null;
+  status: "active" | "inactive";
+}
+
 interface StaffOption {
   id: string;
   name: string;
@@ -34,7 +41,6 @@ interface StaffOption {
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function normalizeDept(d: any, index: number): Department {
-  // Backend now returns separate hod + dlo objects; department_head.user is legacy fallback.
   const legacyHead = d.department_head?.user ?? null;
   const legacyRole = legacyHead?.role ?? null;
   const hod = d.hod ?? (legacyRole === "hod" ? legacyHead : null);
@@ -154,6 +160,257 @@ function StaffPicker({
               </li>
             ))}
           </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Programme sub-panel ────────────────────────────────────────────────────────
+
+function ProgrammePanel({ dept }: { dept: Department }) {
+  const [programmes, setProgrammes] = useState<Programme[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
+  const [addName, setAddName] = useState("");
+  const [addCode, setAddCode] = useState("");
+  const [adding, setAdding] = useState(false);
+
+  const [editProg, setEditProg] = useState<Programme | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editCode, setEditCode] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const loadProgrammes = useCallback(async () => {
+    if (dept.id.startsWith("static-")) return;
+    setLoading(true);
+    const res = await apiClient.getProgrammes(dept.id);
+    if (res.success) setProgrammes(res.data);
+    setLoading(false);
+  }, [dept.id]);
+
+  useEffect(() => {
+    if (expanded && programmes.length === 0 && !loading) {
+      loadProgrammes();
+    }
+  }, [expanded]);
+
+  const handleAdd = async () => {
+    if (!addName.trim()) { toast.error("Programme name required."); return; }
+    setAdding(true);
+    const res = await apiClient.createProgramme(dept.id, {
+      name: addName.trim(),
+      code: addCode.trim() || undefined,
+    });
+    if (res.success) {
+      const prog = res.data?.data?.programme ?? res.data;
+      setProgrammes((p) => [...p, prog].sort((a, b) => a.name.localeCompare(b.name)));
+      setAddName("");
+      setAddCode("");
+      toast.success("Programme added.");
+    } else {
+      toast.error(res.message ?? "Failed to add programme.");
+    }
+    setAdding(false);
+  };
+
+  const openEdit = (prog: Programme) => {
+    setEditProg(prog);
+    setEditName(prog.name);
+    setEditCode(prog.code ?? "");
+  };
+
+  const handleEditSave = async () => {
+    if (!editProg || !editName.trim()) return;
+    setSaving(true);
+    const res = await apiClient.updateProgramme(editProg.id, {
+      name: editName.trim(),
+      code: editCode.trim() || undefined,
+    });
+    if (res.success) {
+      const updated = res.data?.data?.programme ?? { ...editProg, name: editName.trim(), code: editCode.trim() || null };
+      setProgrammes((p) => p.map((x) => x.id === editProg.id ? updated : x).sort((a, b) => a.name.localeCompare(b.name)));
+      setEditProg(null);
+      toast.success("Programme updated.");
+    } else {
+      toast.error(res.message ?? "Failed to update programme.");
+    }
+    setSaving(false);
+  };
+
+  const handleToggleStatus = async (prog: Programme) => {
+    const newStatus = prog.status === "active" ? "inactive" : "active";
+    const res = await apiClient.updateProgramme(prog.id, { status: newStatus });
+    if (res.success) {
+      setProgrammes((p) => p.map((x) => x.id === prog.id ? { ...x, status: newStatus } : x));
+    } else {
+      toast.error(res.message ?? "Failed to update status.");
+    }
+  };
+
+  const handleDelete = async (prog: Programme) => {
+    if (!confirm(`Remove "${prog.name}" from ${dept.name}?`)) return;
+    const res = await apiClient.deleteProgramme(prog.id);
+    if (res.success) {
+      setProgrammes((p) => p.filter((x) => x.id !== prog.id));
+      toast.success("Programme removed.");
+    } else {
+      toast.error(res.message ?? "Failed to remove programme.");
+    }
+  };
+
+  if (dept.id.startsWith("static-")) return null;
+
+  return (
+    <div className="mt-3 pt-3 border-t border-border/50">
+      <button
+        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors w-full"
+        style={{ fontSize: "0.78rem" }}
+        onClick={() => setExpanded((e) => !e)}
+      >
+        <BookOpen className="w-3.5 h-3.5" />
+        <span style={{ fontWeight: 500 }}>Programmes</span>
+        {!loading && programmes.length > 0 && (
+          <span className="ml-1 px-1.5 py-0.5 bg-primary/10 text-primary rounded-full" style={{ fontSize: "0.65rem" }}>
+            {programmes.length}
+          </span>
+        )}
+        <ChevronDown className={`w-3 h-3 ml-auto transition-transform ${expanded ? "rotate-180" : ""}`} />
+      </button>
+
+      {expanded && (
+        <div className="mt-2 space-y-2">
+          {loading ? (
+            <p className="text-muted-foreground" style={{ fontSize: "0.78rem" }}>Loading…</p>
+          ) : (
+            <>
+              {programmes.length === 0 ? (
+                <p className="text-muted-foreground" style={{ fontSize: "0.78rem" }}>No programmes yet.</p>
+              ) : (
+                <ul className="space-y-1">
+                  {programmes.map((prog) => (
+                    <li key={prog.id} className="flex items-center gap-2 group">
+                      <span
+                        className={`flex-1 truncate ${prog.status === "inactive" ? "line-through text-muted-foreground" : ""}`}
+                        style={{ fontSize: "0.8rem" }}
+                      >
+                        {prog.name}
+                        {prog.code && (
+                          <span className="ml-1.5 text-muted-foreground font-mono" style={{ fontSize: "0.68rem" }}>
+                            {prog.code}
+                          </span>
+                        )}
+                      </span>
+                      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => handleToggleStatus(prog)}
+                          className={`px-1.5 py-0.5 rounded text-xs ${prog.status === "active" ? "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200" : "bg-gray-100 dark:bg-gray-500/15 text-gray-600 hover:bg-gray-200"}`}
+                          title={prog.status === "active" ? "Deactivate" : "Activate"}
+                        >
+                          {prog.status}
+                        </button>
+                        <button
+                          onClick={() => openEdit(prog)}
+                          className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground"
+                        >
+                          <Edit2 className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(prog)}
+                          className="p-1 rounded hover:bg-red-50 dark:hover:bg-red-500/10 text-muted-foreground hover:text-red-600"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {/* Add programme inline */}
+              <div className="flex gap-1.5 pt-1">
+                <input
+                  type="text"
+                  value={addName}
+                  onChange={(e) => setAddName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); }}
+                  placeholder="Programme name"
+                  className="flex-1 min-w-0 px-2 py-1.5 border border-border rounded-lg bg-background"
+                  style={{ fontSize: "0.78rem" }}
+                />
+                <input
+                  type="text"
+                  value={addCode}
+                  onChange={(e) => setAddCode(e.target.value.toUpperCase().slice(0, 20))}
+                  placeholder="Code"
+                  className="w-16 px-2 py-1.5 border border-border rounded-lg bg-background font-mono"
+                  style={{ fontSize: "0.78rem" }}
+                />
+                <button
+                  onClick={handleAdd}
+                  disabled={adding}
+                  className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:opacity-60 shrink-0 flex items-center gap-1"
+                  style={{ fontSize: "0.78rem" }}
+                >
+                  <Plus className="w-3 h-3" />
+                  {adding ? "…" : "Add"}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Edit programme modal */}
+      {editProg && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setEditProg(null)}>
+          <div
+            className="bg-card border border-border rounded-2xl w-full max-w-sm p-5 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h2 style={{ fontSize: "0.95rem" }}>Edit Programme</h2>
+              <button onClick={() => setEditProg(null)} className="p-1.5 rounded-lg hover:bg-accent">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="block mb-1" style={{ fontSize: "0.8rem" }}>Name <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background"
+                  style={{ fontSize: "0.85rem" }}
+                />
+              </div>
+              <div>
+                <label className="block mb-1 text-muted-foreground" style={{ fontSize: "0.8rem" }}>Code</label>
+                <input
+                  type="text"
+                  value={editCode}
+                  onChange={(e) => setEditCode(e.target.value.toUpperCase().slice(0, 20))}
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background font-mono"
+                  style={{ fontSize: "0.85rem" }}
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button onClick={() => setEditProg(null)} className="px-4 py-2 border border-border rounded-lg hover:bg-accent" style={{ fontSize: "0.85rem" }}>
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                disabled={saving}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:opacity-60"
+                style={{ fontSize: "0.85rem" }}
+              >
+                {saving ? "Saving…" : "Save"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -481,6 +738,9 @@ export function DepartmentsPage() {
                 )}
               </div>
             )}
+
+            {/* Programme sub-panel */}
+            <ProgrammePanel dept={dept} />
           </div>
         ))}
 

@@ -788,6 +788,41 @@ export const apiClient = {
   },
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // PROGRAMMES
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  async getProgrammes(departmentId: string, filters?: { status?: string }): Promise<ApiResponse<any[]>> {
+    const response = await requestApi<unknown>(
+      replacePathParams(API_ENDPOINTS.DEPARTMENT_PROGRAMMES, { departmentId }),
+      { method: "GET", query: filters }
+    );
+    const payload = response.success ? (response.data as any) : null;
+    const list = payload?.programmes ?? (Array.isArray(payload) ? payload : []);
+    return { success: response.success, data: list, message: response.message };
+  },
+
+  async createProgramme(departmentId: string, data: { name: string; code?: string; status?: string }): Promise<ApiResponse<any | null>> {
+    return requestApi<any | null>(
+      replacePathParams(API_ENDPOINTS.DEPARTMENT_PROGRAMMES, { departmentId }),
+      { method: "POST", body: JSON.stringify(data) }
+    );
+  },
+
+  async updateProgramme(id: string, data: { name?: string; code?: string; status?: string }): Promise<ApiResponse<any | null>> {
+    return requestApi<any | null>(
+      replacePathParams(API_ENDPOINTS.PROGRAMME_BY_ID, { id }),
+      { method: "PUT", body: JSON.stringify(data) }
+    );
+  },
+
+  async deleteProgramme(id: string): Promise<ApiResponse<null>> {
+    return requestApi<null>(
+      replacePathParams(API_ENDPOINTS.PROGRAMME_BY_ID, { id }),
+      { method: "DELETE" }
+    );
+  },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // USERS
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

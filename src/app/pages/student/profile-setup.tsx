@@ -23,9 +23,14 @@ export function StudentProfileSetup() {
   // Academic Information
   const [studentId, setStudentId] = useState(user?.studentId || "");
   const [department, setDepartment] = useState(user?.department || "");
+  const [departmentId, setDepartmentId] = useState<string | null>(null);
   const [program, setProgram] = useState("");
   const [level, setLevel] = useState("200");
   const [languages, setLanguages] = useState("");
+
+  // API-driven departments + programmes
+  const [apiDepts, setApiDepts] = useState<{ id: string; name: string }[]>([]);
+  const [apiProgrammes, setApiProgrammes] = useState<{ id: string; name: string; code: string | null }[]>([]);
 
   // Internship Preferences
   const [preferredIndustries, setPreferredIndustries] = useState("");
@@ -101,6 +106,32 @@ export function StudentProfileSetup() {
     };
     load();
   }, [user?.id, user?.email]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch departments from API once
+  useEffect(() => {
+    apiClient.getDepartments({ status: "active" }).then((res) => {
+      if (res.success && res.data.length > 0) {
+        setApiDepts(res.data.map((d: any) => ({ id: String(d.id), name: d.name })));
+      }
+    }).catch(() => {});
+  }, []);
+
+  // When apiDepts load and we have a department name, resolve its ID
+  useEffect(() => {
+    if (department && apiDepts.length > 0) {
+      const match = apiDepts.find((d) => d.name.toLowerCase() === department.toLowerCase());
+      if (match) setDepartmentId(match.id);
+    }
+  }, [department, apiDepts]);
+
+  // Fetch programmes whenever departmentId changes
+  useEffect(() => {
+    if (!departmentId) { setApiProgrammes([]); return; }
+    apiClient.getProgrammes(departmentId, { status: "active" }).then((res) => {
+      if (res.success) setApiProgrammes(res.data.map((p: any) => ({ id: String(p.id), name: p.name, code: p.code ?? null })));
+      else setApiProgrammes([]);
+    }).catch(() => setApiProgrammes([]));
+  }, [departmentId]);
 
   // Auto-save draft to localStorage
   useEffect(() => {
@@ -331,24 +362,52 @@ export function StudentProfileSetup() {
           </div>
           <div>
             <label className="text-xs font-medium">Department *</label>
-            <select value={department} onChange={(e) => setDepartment(e.target.value)}
-              className="w-full mt-1 px-3 py-2 border border-border rounded-lg bg-background text-sm">
+            <select
+              value={department}
+              onChange={(e) => {
+                setDepartment(e.target.value);
+                setProgram("");
+                const match = apiDepts.find((d) => d.name === e.target.value);
+                setDepartmentId(match ? match.id : null);
+              }}
+              className="w-full mt-1 px-3 py-2 border border-border rounded-lg bg-background text-sm"
+            >
               <option value="">Select Department</option>
-              <option value="Computer Science">Computer Science</option>
-              <option value="Information Technology">Information Technology</option>
-              <option value="Software Engineering">Software Engineering</option>
-              <option value="Electrical Engineering">Electrical Engineering</option>
-              <option value="Mechanical Engineering">Mechanical Engineering</option>
-              <option value="Civil Engineering">Civil Engineering</option>
-              <option value="Business Administration">Business Administration</option>
-              <option value="Accounting">Accounting</option>
+              {apiDepts.length > 0
+                ? apiDepts.map((d) => <option key={d.id} value={d.name}>{d.name}</option>)
+                : (
+                  <>
+                    <option value="Computer Science">Computer Science</option>
+                    <option value="Information Technology">Information Technology</option>
+                    <option value="Software Engineering">Software Engineering</option>
+                    <option value="Electrical Engineering">Electrical Engineering</option>
+                    <option value="Mechanical Engineering">Mechanical Engineering</option>
+                    <option value="Civil Engineering">Civil Engineering</option>
+                    <option value="Business Administration">Business Administration</option>
+                    <option value="Accounting">Accounting</option>
+                  </>
+                )
+              }
             </select>
           </div>
           <div>
             <label className="text-xs font-medium">Program / Degree *</label>
-            <input type="text" value={program} onChange={(e) => setProgram(e.target.value)}
-              placeholder="e.g., BSc. Computer Science"
-              className="w-full mt-1 px-3 py-2 border border-border rounded-lg bg-background text-sm" />
+            {apiProgrammes.length > 0 ? (
+              <select
+                value={program}
+                onChange={(e) => setProgram(e.target.value)}
+                className="w-full mt-1 px-3 py-2 border border-border rounded-lg bg-background text-sm"
+              >
+                <option value="">Select Programme</option>
+                {apiProgrammes.map((p) => (
+                  <option key={p.id} value={p.name}>{p.name}{p.code ? ` (${p.code})` : ""}</option>
+                ))}
+              </select>
+            ) : (
+              <input type="text" value={program} onChange={(e) => setProgram(e.target.value)}
+                placeholder="e.g., BSc. Computer Science"
+                className="w-full mt-1 px-3 py-2 border border-border rounded-lg bg-background text-sm" />
+            )}
           </div>
           <div>
             <label className="text-xs font-medium">Languages</label>

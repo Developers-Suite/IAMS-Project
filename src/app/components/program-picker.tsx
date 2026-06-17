@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState, useEffect } from "react";
 import { Search, X } from "lucide-react";
-import { programsByDepartment } from "../lib/mock-data";
+import { apiClient } from "../lib/api-client";
 
 interface ProgramPickerProps {
   selectedDepartments: string[];
@@ -8,36 +8,78 @@ interface ProgramPickerProps {
   onChange: (programs: string[]) => void;
 }
 
+interface ProgramItem {
+  name: string;
+  department: string;
+}
+
 export function ProgramPicker({ selectedDepartments, selectedPrograms, onChange }: ProgramPickerProps) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
+  const [available, setAvailable] = useState<ProgramItem[]>([]);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  // All available programs across selected departments, with their dept tag.
-  const available = useMemo(() => {
-    const out: { program: string; department: string }[] = [];
-    selectedDepartments.forEach((dep) => {
-      (programsByDepartment[dep] || []).forEach((p) => out.push({ program: p, department: dep }));
-    });
-    return out;
-  }, [selectedDepartments]);
+  useEffect(() => {
+    if (selectedDepartments.length === 0) { setAvailable([]); return; }
+
+    let cancelled = false;
+
+    const load = async () => {
+      // Fetch all departments once to resolve names to IDs
+      const deptRes = await apiClient.getDepartments({ status: "active" }).catch(() => ({ success: false, data: [] }));
+      if (cancelled) return;
+
+      const deptMap: Record<string, string> = {};
+      if (deptRes.success) {
+        for (const d of deptRes.data) {
+          deptMap[d.name] = String(d.id);
+        }
+      }
+
+      const results: ProgramItem[] = [];
+      await Promise.all(
+        selectedDepartments.map(async (deptName) => {
+          const deptId = deptMap[deptName];
+          if (!deptId) return;
+          const res = await apiClient.getProgrammes(deptId, { status: "active" }).catch(() => ({ success: false, data: [] }));
+          if (!cancelled && res.success) {
+            res.data.forEach((p: any) => results.push({ name: p.name, department: deptName }));
+          }
+        })
+      );
+
+      if (!cancelled) {
+        results.sort((a, b) => a.name.localeCompare(b.name));
+        setAvailable(results);
+      }
+    };
+
+    load();
+    return () => { cancelled = true; };
+  }, [selectedDepartments.join(",")]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const matches = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return available.filter(({ program }) =>
-      !selectedPrograms.includes(program) && (q === "" || program.toLowerCase().includes(q))
+    return available.filter(({ name }) =>
+      !selectedPrograms.includes(name) && (q === "" || name.toLowerCase().includes(q))
     );
   }, [available, selectedPrograms, query]);
 
-  // Group selected programs by their parent department.
+  // Group selected programs by their parent department
   const groupedSelected = useMemo(() => {
+    const deptSets = new Map<string, Set<string>>();
+    available.forEach(({ name, department }) => {
+      if (!deptSets.has(department)) deptSets.set(department, new Set());
+      deptSets.get(department)!.add(name);
+    });
     const groups: Record<string, string[]> = {};
     selectedDepartments.forEach((dep) => {
-      const items = selectedPrograms.filter((p) => (programsByDepartment[dep] || []).includes(p));
+      const set = deptSets.get(dep);
+      const items = selectedPrograms.filter((p) => set?.has(p));
       if (items.length > 0) groups[dep] = items;
     });
     return groups;
-  }, [selectedDepartments, selectedPrograms]);
+  }, [available, selectedDepartments, selectedPrograms]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -73,14 +115,14 @@ export function ProgramPicker({ selectedDepartments, selectedPrograms, onChange 
         </div>
         {open && matches.length > 0 && (
           <div className="absolute z-10 mt-1 left-0 right-0 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
-            {matches.slice(0, 30).map(({ program, department }) => (
+            {matches.slice(0, 30).map(({ name, department }) => (
               <button
-                key={program}
-                onClick={() => addProgram(program)}
+                key={name}
+                onClick={() => addProgram(name)}
                 className="w-full text-left px-3 py-2 hover:bg-accent flex items-center justify-between gap-3"
                 style={{ fontSize: "0.8rem" }}
               >
-                <span>{program}</span>
+                <span>{name}</span>
                 <span className="text-muted-foreground shrink-0" style={{ fontSize: "0.7rem" }}>{department}</span>
               </button>
             ))}
