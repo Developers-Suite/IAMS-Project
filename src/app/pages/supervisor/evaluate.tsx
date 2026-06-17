@@ -344,6 +344,7 @@ export function EvaluatePage() {
                             weekEnd={w.weekEnd}
                             initialRatings={rubricsByWeek[w.weekNumber]?.ratings as WeeklyRubricRatings | undefined}
                             initialNotes={rubricsByWeek[w.weekNumber]?.notes}
+                            readOnly={filled}
                             onSubmit={async (ratings, notes) => {
                               const result = await runEvaluationAction(async () => {
                                 return apiClient.submitWeeklyRubric(getInternshipId(app), w.weekNumber, ratings, notes, actor);
@@ -356,6 +357,9 @@ export function EvaluatePage() {
                                   ...prev,
                                   [w.weekNumber]: { ratings, notes },
                                 }));
+                                setCollapsedWeeks((prev) => ({ ...prev, [w.weekNumber]: true }));
+                                const nextUnfilled = weeks.find((wk) => wk.weekNumber > w.weekNumber && !rubricsByWeek[wk.weekNumber]);
+                                if (nextUnfilled) setWeekNumber(nextUnfilled.weekNumber);
                               }
                             }}
                           />
