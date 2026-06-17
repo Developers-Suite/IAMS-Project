@@ -28,6 +28,7 @@ export function AttendancePage({ viewRole }: Props) {
   // Client-side filtering disabled to debug routing error
   const [records, setRecords] = useState<any[]>([]);
   const [missed, setMissed] = useState<any[]>([]);
+  const [pendingManual, setPendingManual] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -39,18 +40,26 @@ export function AttendancePage({ viewRole }: Props) {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [attRes, missedRes] = await Promise.all([
+      const promises: Promise<any>[] = [
         apiClient.getAttendance({
           from_date: dateFrom || undefined,
           to_date: dateTo || undefined,
           per_page: 100,
         }),
         apiClient.getMissedAttendance(),
-      ]);
+      ];
+      if (viewRole === "supervisor") {
+        promises.push(
+          apiClient.getAttendance({ check_in_type: "manual", unverified: "1", per_page: 100 } as any)
+        );
+      }
+
+      const [attRes, missedRes, manualRes] = await Promise.all(promises);
 
       // SECURITY: Backend filters by supervisor_id parameter (sent automatically)
       if (attRes.success) setRecords(attRes.data);
       if (missedRes.success) setMissed(missedRes.data);
+      if (manualRes?.success) setPendingManual(manualRes.data ?? []);
     } catch (error) {
       console.error("Error fetching attendance:", error);
       setRecords([]);
@@ -146,6 +155,69 @@ export function AttendancePage({ viewRole }: Props) {
               </div>
             ))}
           </div>
+        </Card>
+      )}
+
+      {/* Pending Manual Check-ins — supervisor only */}
+      {viewRole === "supervisor" && pendingManual.length > 0 && (
+        <Card className="border-amber-300 overflow-hidden">
+          <CardContent className="p-0">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-amber-200 bg-amber-50/60 dark:bg-amber-950/30">
+              <div>
+                <h3 className="font-semibold text-sm text-amber-800 dark:text-amber-300">Pending Manual Check-ins</h3>
+                <p className="text-amber-700 dark:text-amber-400" style={{ fontSize: "0.75rem" }}>
+                  Students who checked in from outside their registered location — verify or reject each one
+                </p>
+              </div>
+              <span className="text-xs px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-900/40 dark:text-amber-300">
+                {pendingManual.length} waiting
+              </span>
+            </div>
+            <div className="p-4 space-y-3">
+              {pendingManual.map((r: any) => (
+                <div key={r.id} className="rounded-xl border border-amber-200 bg-card p-4 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700 shrink-0" style={{ fontSize: "0.75rem", fontWeight: 600 }}>
+                      {studentName(r).split(" ").map((n: string) => n[0]).join("").substring(0, 2)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium" style={{ fontSize: "0.9rem" }}>{studentName(r)}</p>
+                      <p className="text-muted-foreground" style={{ fontSize: "0.78rem" }}>
+                        {r.attendance_date} · {r.check_in_time ?? "—"}
+                      </p>
+                      {r.manual_reason && (
+                        <p className="mt-1 text-amber-700 dark:text-amber-400 italic" style={{ fontSize: "0.8rem" }}>
+                          "{r.manual_reason}"
+                        </p>
+                      )}
+                      {r.notes && (
+                        <p className="mt-1 text-muted-foreground flex items-center gap-1" style={{ fontSize: "0.75rem" }}>
+                          <MapPin className="w-3 h-3 shrink-0" />
+                          {r.notes}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleVerify(String(r.id), "present")}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
+                      style={{ fontSize: "0.8rem" }}
+                    >
+                      <CheckCircle2 className="w-3 h-3" /> Verify Present
+                    </button>
+                    <button
+                      onClick={() => handleVerify(String(r.id), "absent")}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                      style={{ fontSize: "0.8rem" }}
+                    >
+                      <XCircle className="w-3 h-3" /> Reject
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
         </Card>
       )}
 
@@ -300,16 +372,26 @@ export function AttendancePage({ viewRole }: Props) {
                   </p>
                 </div>
               </div>
-              {(selectedRecord.gps_check_in_lat || selectedRecord.notes) && (
+              {(selectedRecord.gps_check_in_lat || selectedRecord.notes || selectedRecord.manual_reason) && (
                 <div>
-                  <p className="text-muted-foreground uppercase tracking-wider mb-2" style={{ fontSize: "0.65rem" }}>Location / Notes</p>
+                  <p className="text-muted-foreground uppercase tracking-wider mb-2" style={{ fontSize: "0.65rem" }}>Location</p>
                   <div className="bg-secondary/50 rounded-xl p-4 space-y-2 border border-border">
-                    {selectedRecord.gps_check_in_lat && (
-                      <p className="flex items-center gap-1.5" style={{ fontSize: "0.85rem" }}>
-                        <Navigation className="w-4 h-4 text-muted-foreground" /> {selectedRecord.gps_check_in_lat}, {selectedRecord.gps_check_in_lng}
+                    {selectedRecord.notes && (
+                      <p className="flex items-start gap-1.5" style={{ fontSize: "0.85rem" }}>
+                        <Navigation className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" /> {selectedRecord.notes}
                       </p>
                     )}
-                    {selectedRecord.notes && <p className="text-muted-foreground" style={{ fontSize: "0.85rem" }}>{selectedRecord.notes}</p>}
+                    {selectedRecord.gps_check_in_lat && (
+                      <p className="text-muted-foreground" style={{ fontSize: "0.75rem" }}>
+                        {selectedRecord.gps_check_in_lat}, {selectedRecord.gps_check_in_lng}
+                      </p>
+                    )}
+                    {selectedRecord.manual_reason && (
+                      <div className="pt-1 border-t border-border">
+                        <p className="text-muted-foreground uppercase tracking-wider mb-1" style={{ fontSize: "0.65rem" }}>Manual Reason</p>
+                        <p className="text-amber-700 dark:text-amber-400 italic" style={{ fontSize: "0.85rem" }}>"{selectedRecord.manual_reason}"</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
