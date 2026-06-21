@@ -21,7 +21,7 @@ function escapeHtml(value: any): string {
     .replace(/'/g, "&#39;");
 }
 
-function displayValue(value: any, fallback = "____________________"): string {
+function displayValue(value: any, fallback = ""): string {
   // 1. If it's null or undefined, return fallback immediately
   if (value === null || value === undefined) return fallback;
 
@@ -230,9 +230,9 @@ export async function downloadCompanyAcceptanceFormPDF(data: CompanyAcceptanceFo
       <div class="section-title">Company Details</div>
       <div class="grid">
         <div class="field"><strong>Company:</strong> ${displayValue(data.companyName)}</div>
-        <div class="field"><strong>Department/Unit:</strong> ____________________</div>
+        <div class="field"><strong>Department/Unit:</strong> </div>
         <div class="field"><strong>Address:</strong> ${displayValue(data.companyAddress)}</div>
-        <div class="field"><strong>Phone/Email:</strong> ____________________</div>
+        <div class="field"><strong>Phone/Email:</strong> </div>
       </div>
     </div>
 
@@ -252,10 +252,10 @@ export async function downloadCompanyAcceptanceFormPDF(data: CompanyAcceptanceFo
     <div class="section">
       <div class="section-title">Industry Supervisor</div>
       <div class="grid">
-        <div class="field"><strong>Name:</strong> ____________________</div>
-        <div class="field"><strong>Job Title:</strong> ____________________</div>
-        <div class="field"><strong>Email:</strong> ____________________</div>
-        <div class="field"><strong>Phone:</strong> ____________________</div>
+        <div class="field"><strong>Name:</strong> </div>
+        <div class="field"><strong>Job Title:</strong> </div>
+        <div class="field"><strong>Email:</strong> </div>
+        <div class="field"><strong>Phone:</strong> </div>
       </div>
     </div>
 

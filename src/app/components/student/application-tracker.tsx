@@ -8,6 +8,7 @@ import { openPlacementLetter } from "../../lib/generate-placement-letter";
 import { downloadCompanyAcceptanceFormPDF } from "../../lib/generate-company-acceptance-form";
 import { toast } from "sonner";
 import { apiClient } from "../../lib/api-client";
+import { getInternshipStartDate, getInternshipEndDate, formatDisplayDate, resolveDepartmentName } from "../../lib/application-helpers";
 
 interface ApplicationTrackerProps {
   myApp: any;
@@ -91,22 +92,6 @@ function getStatusHistory(app: any) {
   return history;
 }
 
-function getInternshipStartDate(app: any): string | undefined {
-  return app.confirmed_start_date
-    ?? app.internship?.confirmed_start_date
-    ?? app.internship?.start_date
-    ?? app.start_date
-    ?? app.proposed_start_date
-    ?? undefined;
-}
-
-function formatDisplayDate(value: string | undefined): string | undefined {
-  if (!value) return undefined;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("en-GB");
-}
-
 export function ApplicationTracker({
   myApp,
   terms,
@@ -148,13 +133,13 @@ export function ApplicationTracker({
     openPlacementLetter({
       studentName: myApp.student?.user?.name ?? myApp.studentName ?? "Student",
       studentId: myApp.student?.student_id ?? myApp.studentId ?? "—",
-      department: myApp.student?.department?.name ?? myApp.student?.department ?? myApp.department ?? "—",
+      department: resolveDepartmentName(myApp, "—"),
       level: myApp.student?.level ?? myApp.level ?? "—",
       companyName,
       companyAddress,
       supervisorName: myApp.internship?.academic_supervisor?.user?.name ?? supervisorName,
-      startDate: myApp.proposed_start_date,
-      endDate: myApp.proposed_end_date,
+      startDate: formatDisplayDate(getInternshipStartDate(myApp)),
+      endDate: formatDisplayDate(getInternshipEndDate(myApp)),
     });
   };
 
@@ -175,13 +160,13 @@ export function ApplicationTracker({
     try {
       const success = await downloadCompanyAcceptanceFormPDF({
         studentName: myApp.student?.user?.name ?? myApp.studentName ?? "Student",
-        studentId: myApp.student?.student_id ?? myApp.studentId ?? "____________________",
-        department: myApp.student?.department?.name ?? myApp.student?.department ?? myApp.department ?? "____________________",
-        level: myApp.student?.level ?? myApp.level ?? "____________________",
+        studentId: myApp.student?.student_id ?? myApp.studentId ?? "",
+        department: resolveDepartmentName(myApp, ""),
+        level: myApp.student?.level ?? myApp.level ?? "",
         companyName,
         companyAddress,
-        startDate: myApp.proposed_start_date,
-        endDate: myApp.proposed_end_date,
+        startDate: formatDisplayDate(getInternshipStartDate(myApp)),
+        endDate: formatDisplayDate(getInternshipEndDate(myApp)),
       });
 
       toast.dismiss(toastId);
@@ -244,7 +229,7 @@ export function ApplicationTracker({
         companyName={companyName}
         studentName={myApp.student?.user?.name ?? myApp.studentName ?? "Student"}
         studentId={myApp.student?.student_id ?? myApp.studentId}
-        department={myApp.student?.department?.name ?? myApp.student?.department ?? myApp.department}
+        department={resolveDepartmentName(myApp, "")}
         level={myApp.student?.level ?? myApp.level}
         companyAddress={typeof myApp.company?.address === "string" ? myApp.company.address : undefined}
         proposedStartDate={proposedStartDate}

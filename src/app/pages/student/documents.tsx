@@ -4,6 +4,7 @@ import { apiClient } from "../../lib/api-client";
 import { openPlacementLetter } from "../../lib/generate-placement-letter";
 import { downloadCompanyAcceptanceFormPDF } from "../../lib/generate-company-acceptance-form";
 import { exportLogbookToPDF } from "../../lib/logbook-export";
+import { getInternshipStartDate, getInternshipEndDate, formatDisplayDate, resolveDepartmentName } from "../../lib/application-helpers";
 import { CompanyAcceptanceModal } from "../../components/student/company-acceptance-modal";
 import { DocumentUploadModal } from "../../components/student/document-upload-modal";
 import { InviteSupervisorModal } from "../../components/student/invite-supervisor-modal";
@@ -92,13 +93,13 @@ export function DocumentsPage() {
     openPlacementLetter({
       studentName: myApp.student?.user?.name ?? myApp.studentName ?? user?.name ?? "Student",
       studentId: myApp.student?.student_id ?? myApp.studentId ?? user?.studentId ?? "—",
-      department: myApp.student?.department ?? myApp.department ?? user?.department ?? "—",
+      department: resolveDepartmentName(myApp, user?.department ?? "—"),
       level: myApp.student?.level ?? myApp.level ?? "—",
       companyName,
       companyAddress,
       supervisorName,
-      startDate: myApp.proposed_start_date,
-      endDate: myApp.proposed_end_date,
+      startDate: formatDisplayDate(getInternshipStartDate(myApp)),
+      endDate: formatDisplayDate(getInternshipEndDate(myApp)),
     });
   };
 
@@ -116,20 +117,16 @@ export function DocumentsPage() {
       const companyName = typeof myApp.company?.name === "string" ? myApp.company.name : (typeof myApp.companyName === "string" ? myApp.companyName : "Company");
       const companyAddress = typeof myApp.company?.address === "string" ? myApp.company.address : undefined;
       
-      // Safe resolution for department object or string variants
-      const deptRaw = myApp.student?.department?.name ?? myApp.student?.department ?? myApp.department ?? user?.department ?? "____________________";
-      const departmentString = typeof deptRaw === "object" && deptRaw !== null ? deptRaw.name : String(deptRaw);
-
       // Fire down the generator utility
       await downloadCompanyAcceptanceFormPDF({
         studentName: myApp.student?.user?.name ?? myApp.studentName ?? user?.name ?? "Student",
-        studentId: myApp.student?.student_id ?? myApp.studentId ?? user?.studentId ?? "____________________",
-        department: departmentString,
-        level: myApp.student?.level ?? myApp.level ?? "____________________",
+        studentId: myApp.student?.student_id ?? myApp.studentId ?? user?.studentId ?? "",
+        department: resolveDepartmentName(myApp, user?.department ?? ""),
+        level: myApp.student?.level ?? myApp.level ?? "",
         companyName,
         companyAddress,
-        startDate: myApp.proposed_start_date,
-        endDate: myApp.proposed_end_date,
+        startDate: formatDisplayDate(getInternshipStartDate(myApp)),
+        endDate: formatDisplayDate(getInternshipEndDate(myApp)),
       });
 
       toast.success("Acceptance Form downloaded successfully!", { id: toastId });
@@ -478,7 +475,7 @@ export function DocumentsPage() {
           companyName={typeof myApp.company?.name === "string" ? myApp.company.name : (typeof myApp.companyName === "string" ? myApp.companyName : "Company")}
           studentName={myApp.student?.user?.name ?? myApp.studentName ?? user?.name ?? "Student"}
           studentId={myApp.student?.student_id ?? myApp.studentId ?? user?.studentId}
-          department={myApp.student?.department?.name ?? myApp.student?.department ?? myApp.department ?? user?.department}
+          department={resolveDepartmentName(myApp, user?.department ?? "")}
           level={myApp.student?.level ?? myApp.level}
           companyAddress={typeof myApp.company?.address === "string" ? myApp.company.address : undefined}
           proposedStartDate={myApp.proposed_start_date}

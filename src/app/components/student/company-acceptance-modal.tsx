@@ -54,9 +54,9 @@ export function CompanyAcceptanceModal({
   const handleDownloadForm = () => {
     const opened = downloadCompanyAcceptanceFormPDF({
       studentName: studentName ?? "Student",
-      studentId: studentId ?? "____________________",
-      department: department ?? "____________________",
-      level: level ?? "____________________",
+      studentId: studentId ?? "",
+      department: department ?? "",
+      level: level ?? "",
       companyName,
       companyAddress,
       startDate: proposedStartDate,
