@@ -269,8 +269,8 @@ export async function sendTestNotification(): Promise<void> {
 
     await registration.showNotification("IAMS Notification", {
       body: "This is a test notification from IAMS",
-      icon: "/favicon/web-app-manifest-192x192.png",
-      badge: "/favicon/web-app-manifest-192x192.png",
+      icon: "/favicon/notification-icon-192.png",
+      badge: "/favicon/notification-icon-192.png",
       tag: "test-notification",
       requireInteraction: false,
       data: {

@@ -226,8 +226,8 @@ async function firePushNotification(title: string, body: string) {
           title,
           options: {
             body,
-            icon: "/favicon/web-app-manifest-192x192.png",
-            badge: "/favicon/web-app-manifest-192x192.png",
+            icon: "/favicon/notification-icon-192.png",
+            badge: "/favicon/notification-icon-192.png",
             tag: "iams-notification",
             requireInteraction: false,
             data: {
@@ -241,7 +241,7 @@ async function firePushNotification(title: string, body: string) {
   }
   // Fallback for browsers without service-worker support
   if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-    try { new Notification(title, { body, icon: "/favicon/web-app-manifest-192x192.png" }); } catch {}
+    try { new Notification(title, { body, icon: "/favicon/notification-icon-192.png" }); } catch {}
   }
 }
 
