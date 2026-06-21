@@ -94,6 +94,10 @@ export async function downloadCompanyAcceptanceFormPDF(data: CompanyAcceptanceFo
       padding-bottom: 0.22in;
       margin-bottom: 0.28in;
     }
+    .letterhead-logo {
+      height: 0.8in;
+      margin-bottom: 0.1in;
+    }
     .letterhead-title {
       font-size: 18px;
       font-weight: bold;
@@ -200,6 +204,7 @@ export async function downloadCompanyAcceptanceFormPDF(data: CompanyAcceptanceFo
     </div>
 
     <div class="letterhead">
+      <img class="letterhead-logo" src="/logo%201.png" alt="" />
       <div class="letterhead-title">${displayValue(data.universityName, "Ho Technical University")}</div>
       <div class="letterhead-subtitle">Department of Industrial Attachment & Mentoring</div>
     </div>

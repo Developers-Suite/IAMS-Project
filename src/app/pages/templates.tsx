@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Upload, FileText, Eye, Save, Download, Copy, Clock, X, Plus,
-  CheckCircle2, History, Edit3, Trash2, CheckSquare
+  CheckCircle2, History, Edit3, Trash2, CheckSquare, Loader2
 } from "lucide-react";
 import { toast } from "sonner";
+import { apiClient } from "../lib/api-client";
 
 interface Template {
   id: string;
@@ -18,6 +19,33 @@ interface Template {
   status: "Active" | "Draft";
   visibleTo: string[];
   body?: string;
+  signatureUrl?: string;
+}
+
+// Persisted overrides the CLO has saved — the live document generators
+// (e.g. generate-placement-letter.ts) read this same key directly.
+const TEMPLATE_OVERRIDES_KEY = "iams_template_overrides";
+
+interface TemplateOverride {
+  body?: string;
+  signatureUrl?: string;
+  lastModified?: string;
+  version?: string;
+}
+
+function loadTemplateOverrides(): Record<string, TemplateOverride> {
+  try {
+    const raw = localStorage.getItem(TEMPLATE_OVERRIDES_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveTemplateOverride(id: string, override: TemplateOverride) {
+  const all = loadTemplateOverrides();
+  all[id] = { ...all[id], ...override };
+  localStorage.setItem(TEMPLATE_OVERRIDES_KEY, JSON.stringify(all));
 }
 
 export function Templates() {
@@ -45,6 +73,9 @@ export function Templates() {
     body: "",
   });
   const [newPlaceholder, setNewPlaceholder] = useState("");
+  const [editBody, setEditBody] = useState("");
+  const [uploadingSignature, setUploadingSignature] = useState(false);
+  const signatureInputRef = useRef<HTMLInputElement>(null);
 
   const [templates, setTemplates] = useState<Template[]>([
     {
@@ -105,6 +136,15 @@ export function Templates() {
       visibleTo: ["CLO", "DLO", "Student"],
     },
   ]);
+
+  // Apply any CLO-saved overrides (body/signature/version) on top of the defaults above
+  useEffect(() => {
+    const overrides = loadTemplateOverrides();
+    if (Object.keys(overrides).length === 0) return;
+    setTemplates((prev) =>
+      prev.map((t) => (overrides[t.id] ? { ...t, ...overrides[t.id] } : t))
+    );
+  }, []);
 
   const versionHistory = [
     { version: "3.2", date: "2026-04-10", author: "Dr. Asante", changes: "Updated letterhead format and added QR verification code" },
@@ -198,6 +238,55 @@ export function Templates() {
 
   const filtered = categoryFilter === "all" ? templates : templates.filter((t) => t.category === categoryFilter);
   const selected = selectedTemplate ? templates.find((t) => t.id === selectedTemplate) : null;
+
+  // Reset the body draft whenever a different template is opened
+  useEffect(() => {
+    setEditBody(selected?.body || "");
+  }, [selectedTemplate]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const bumpVersion = (version: string) => {
+    const parts = version.split(".").map((n) => parseInt(n, 10) || 0);
+    parts[parts.length - 1] += 1;
+    return parts.join(".");
+  };
+
+  const handleSaveTemplateChanges = () => {
+    if (!selected) return;
+    const today = new Date().toISOString().split("T")[0];
+    const nextVersion = bumpVersion(selected.version);
+    setTemplates((prev) =>
+      prev.map((t) =>
+        t.id === selected.id ? { ...t, body: editBody, lastModified: today, version: nextVersion } : t
+      )
+    );
+    saveTemplateOverride(selected.id, { body: editBody, lastModified: today, version: nextVersion });
+    toast.success("Template saved.");
+  };
+
+  const handleSignatureFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !selected) return;
+    setUploadingSignature(true);
+    try {
+      const res = await apiClient.uploadFile(file, "iams/templates");
+      if (!res.success || !res.data?.url) {
+        toast.error(res.message ?? "Failed to upload signature.");
+        return;
+      }
+      const signatureUrl = res.data.url;
+      const today = new Date().toISOString().split("T")[0];
+      setTemplates((prev) =>
+        prev.map((t) => (t.id === selected.id ? { ...t, signatureUrl, lastModified: today } : t))
+      );
+      saveTemplateOverride(selected.id, { signatureUrl, lastModified: today });
+      toast.success("Signature uploaded.");
+    } catch {
+      toast.error("Failed to upload signature.");
+    } finally {
+      setUploadingSignature(false);
+    }
+  };
 
   const categoryColors: Record<string, string> = {
     placement: "bg-blue-100 text-blue-700",
@@ -370,19 +459,51 @@ export function Templates() {
                   </div>
                 </div>
 
+                {/* Template content (body) — editable, persists on Save Changes */}
+                <div className="pt-3 border-t border-border space-y-2">
+                  <label className="block text-sm font-medium">Template Content (Body)</label>
+                  <textarea
+                    value={editBody}
+                    onChange={(e) => setEditBody(e.target.value)}
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background resize-y h-40 font-mono text-sm leading-relaxed"
+                    placeholder="Type the body of the letter or document here...&#10;&#10;e.g. Dear [Student Name],&#10;We are pleased to inform you that you have been placed at [Company Name]."
+                  />
+                </div>
+
                 {/* Letterhead/Signature Upload */}
                 {selected.hasLetterhead && (
                   <div className="pt-3 border-t border-border space-y-2">
                     <div className="border-2 border-dashed border-border rounded-lg p-4 text-center hover:border-primary/40 transition-colors cursor-pointer">
                       <Upload className="w-5 h-5 mx-auto text-muted-foreground mb-1" />
                       <p style={{ fontSize: "0.75rem" }} className="text-muted-foreground">Upload letterhead</p>
-                      <p style={{ fontSize: "0.65rem" }} className="text-muted-foreground mt-0.5">Current: htu_letterhead_2026.png</p>
+                      <p style={{ fontSize: "0.65rem" }} className="text-muted-foreground mt-0.5">Current: HTU crest letterhead</p>
                     </div>
                     {selected.hasSignature && (
                       <>
-                        <div className="border-2 border-dashed border-border rounded-lg p-3 text-center hover:border-primary/40 transition-colors cursor-pointer">
-                          <p style={{ fontSize: "0.75rem" }} className="text-muted-foreground">Upload signature image</p>
-                          <p style={{ fontSize: "0.65rem" }} className="text-muted-foreground mt-0.5">Current: vc_signature.png</p>
+                        <input
+                          ref={signatureInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleSignatureFileChange}
+                        />
+                        <div
+                          onClick={() => signatureInputRef.current?.click()}
+                          className="border-2 border-dashed border-border rounded-lg p-3 text-center hover:border-primary/40 transition-colors cursor-pointer"
+                        >
+                          {uploadingSignature ? (
+                            <Loader2 className="w-5 h-5 mx-auto animate-spin text-primary" />
+                          ) : selected.signatureUrl ? (
+                            <img src={selected.signatureUrl} alt="Signature" className="h-10 mx-auto object-contain mb-1" />
+                          ) : (
+                            <Upload className="w-5 h-5 mx-auto text-muted-foreground mb-1" />
+                          )}
+                          <p style={{ fontSize: "0.75rem" }} className="text-muted-foreground">
+                            {selected.signatureUrl ? "Click to replace signature image" : "Upload signature image"}
+                          </p>
+                          {!selected.signatureUrl && (
+                            <p style={{ fontSize: "0.65rem" }} className="text-muted-foreground mt-0.5">No signature uploaded yet</p>
+                          )}
                         </div>
                         <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
                           <span style={{ fontSize: "0.8rem" }}>Allow dept. override</span>
@@ -407,7 +528,7 @@ export function Templates() {
                       <History className="w-3.5 h-3.5" /> History
                     </button>
                   </div>
-                  <button onClick={() => toast.success("Template saved.")} className="w-full py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 flex items-center justify-center gap-1.5" style={{ fontSize: "0.8rem" }}>
+                  <button onClick={handleSaveTemplateChanges} className="w-full py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 flex items-center justify-center gap-1.5" style={{ fontSize: "0.8rem" }}>
                     <Save className="w-3.5 h-3.5" /> Save Changes
                   </button>
                 </div>
@@ -609,6 +730,7 @@ export function Templates() {
               <div className="p-8">
                 {tpl.hasLetterhead && (
                   <div className="border-b-2 border-blue-800 pb-4 mb-6 text-center">
+                    <img src="/logo%201.png" alt="" className="h-14 mx-auto mb-2 object-contain" />
                     <p className="text-blue-900" style={{ fontSize: "1.1rem" }}>HO TECHNICAL UNIVERSITY</p>
                     <p className="text-gray-600" style={{ fontSize: "0.8rem" }}>P.O. Box HP 217, Ho, Volta Region, Ghana</p>
                     <p className="text-gray-500" style={{ fontSize: "0.75rem" }}>Tel: +233 362 194 410 · Email: liaison@htu.edu.gh</p>
@@ -641,7 +763,11 @@ export function Templates() {
                 
                 {tpl.hasSignature && (
                   <div className="mt-8 pt-4 border-t border-gray-200">
-                    <div className="w-32 h-12 border-b-2 border-gray-400 mb-1" />
+                    {tpl.signatureUrl ? (
+                      <img src={tpl.signatureUrl} alt="Signature" className="h-12 mb-1 object-contain" />
+                    ) : (
+                      <div className="w-32 h-12 border-b-2 border-gray-400 mb-1" />
+                    )}
                     <p style={{ fontSize: "0.85rem" }}>Central Liaison Officer</p>
                     <p className="text-gray-500" style={{ fontSize: "0.75rem" }}>Ho Technical University</p>
                   </div>

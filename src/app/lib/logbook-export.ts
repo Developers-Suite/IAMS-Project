@@ -15,7 +15,9 @@ export function exportLogbookToPDF(companyName: string, entries: any[]) {
         <title>${companyName} - Logbook Entries</title>
         <style>
           body { font-family: Arial, sans-serif; margin: 20px; }
-          h1 { color: #1a1a2e; margin-bottom: 5px; }
+          .header { display: flex; align-items: center; gap: 12px; margin-bottom: 5px; }
+          .header img { height: 50px; }
+          h1 { color: #1a1a2e; margin: 0; }
           .meta { color: #666; font-size: 0.9em; margin-bottom: 20px; }
           .entry { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
           .entry-date { font-weight: bold; color: #0B5ED7; }
@@ -30,7 +32,10 @@ export function exportLogbookToPDF(companyName: string, entries: any[]) {
         </style>
       </head>
       <body>
-        <h1>${companyName}</h1>
+        <div class="header">
+          <img src="/logo%201.png" alt="" />
+          <h1>${companyName}</h1>
+        </div>
         <div class="meta">
           <p>Generated on ${new Date().toLocaleDateString("en-GB")}</p>
           <p>Total Entries: ${entries.length}</p>

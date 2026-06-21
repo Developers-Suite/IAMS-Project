@@ -20,6 +20,48 @@ export interface PlacementLetterData {
   universityName?: string;
 }
 
+// Persisted by the CLO from the Templates page (see src/app/pages/templates.tsx).
+// Falls back to the hardcoded letter below when no custom template has been saved.
+const TEMPLATE_OVERRIDES_KEY = "iams_template_overrides";
+const PLACEMENT_LETTER_TEMPLATE_ID = "t1";
+
+interface TemplateOverride {
+  body?: string;
+  signatureUrl?: string;
+}
+
+function getPlacementLetterOverride(): TemplateOverride | null {
+  try {
+    const raw = localStorage.getItem(TEMPLATE_OVERRIDES_KEY);
+    if (!raw) return null;
+    const all = JSON.parse(raw);
+    return all?.[PLACEMENT_LETTER_TEMPLATE_ID] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function fillPlaceholders(body: string, data: PlacementLetterData): string {
+  const supervisor = data.supervisorName || data.dloName || "";
+  return body
+    .split("[Student Name]").join(data.studentName)
+    .split("[Student ID]").join(data.studentId)
+    .split("[Company Name]").join(data.companyName)
+    .split("[Start Date]").join(data.startDate || "")
+    .split("[End Date]").join(data.endDate || "")
+    .split("[Department]").join(data.department)
+    .split("[Supervisor Name]").join(supervisor);
+}
+
+function renderCustomBody(body: string, data: PlacementLetterData): string {
+  const filled = fillPlaceholders(body, data);
+  return filled
+    .split("\n")
+    .filter((line) => line.trim().length > 0)
+    .map((line) => `<p>${line}</p>`)
+    .join("\n");
+}
+
 export function openPlacementLetter(data: PlacementLetterData): void {
   const today = new Date();
   const dateStr = today.toLocaleDateString("en-GB", {
@@ -32,6 +74,8 @@ export function openPlacementLetter(data: PlacementLetterData): void {
   const supervisorLine = data.supervisorName
     ? `For queries, please contact ${data.supervisorName}, Department of ${data.department}.`
     : `For queries, please contact the Department of ${data.department}.`;
+
+  const override = getPlacementLetterOverride();
 
   const html = `
 <!DOCTYPE html>
@@ -75,6 +119,10 @@ export function openPlacementLetter(data: PlacementLetterData): void {
       border-bottom: 3px solid #1e3a5f;
       padding-bottom: 0.3in;
       margin-bottom: 0.3in;
+    }
+    .letterhead-logo {
+      height: 0.8in;
+      margin-bottom: 0.1in;
     }
     .letterhead-title {
       font-size: 18px;
@@ -127,6 +175,11 @@ export function openPlacementLetter(data: PlacementLetterData): void {
       margin-bottom: 0.05in;
       display: inline-block;
     }
+    .signature-image {
+      height: 0.6in;
+      display: block;
+      margin-top: 0.2in;
+    }
     .signature-title {
       font-weight: bold;
       font-size: 11px;
@@ -162,6 +215,7 @@ export function openPlacementLetter(data: PlacementLetterData): void {
     </div>
 
     <div class="letterhead">
+      <img class="letterhead-logo" src="/logo%201.png" alt="" />
       <div class="letterhead-title">Ho Technical University</div>
       <div class="letterhead-subtitle">Department of Industrial Attachment & Mentoring</div>
     </div>
@@ -177,6 +231,7 @@ export function openPlacementLetter(data: PlacementLetterData): void {
     <div class="salutation">Dear Sir/Madam,</div>
 
     <div class="body">
+      ${override?.body ? renderCustomBody(override.body, data) : `
       <p><strong>LETTER OF INTRODUCTION — INDUSTRIAL ATTACHMENT</strong></p>
 
       <p>
@@ -195,12 +250,15 @@ export function openPlacementLetter(data: PlacementLetterData): void {
       </p>
 
       <p>${supervisorLine}</p>
+      `}
     </div>
 
     <div class="closing">Yours faithfully,</div>
 
     <div class="signature-block">
-      <div class="signature-line"></div>
+      ${override?.signatureUrl
+        ? `<img class="signature-image" src="${override.signatureUrl}" alt="" />`
+        : `<div class="signature-line"></div>`}
       <div class="signature-title">${data.dloName || "The Departmental Liaison Officer"}</div>
       <div class="signature-subtitle">Department of Industrial Attachment & Mentoring</div>
       <div class="signature-subtitle">${data.universityName || "Ho Technical University"}</div>
