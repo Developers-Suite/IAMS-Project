@@ -248,8 +248,14 @@ export const API_ENDPOINTS = {
   TERM_ACTIVE: "/api/v1/terms/active",
   TERM_BY_ID: "/api/v1/terms/:id",
   TERM_PUBLISH: "/api/v1/terms/:id/publish",
+  TERM_ACTIVATE: "/api/v1/terms/:id/activate",
+  TERM_UNPUBLISH: "/api/v1/terms/:id/unpublish",
   TERM_ARCHIVE: "/api/v1/terms/:id/archive",
   TERM_DASHBOARD: "/api/v1/terms/:id/dashboard",
+
+  // Templates
+  TEMPLATES: "/api/v1/templates",
+  TEMPLATE_BY_ID: "/api/v1/templates/:id",
 
   // Students
   STUDENTS: "/api/v1/students",

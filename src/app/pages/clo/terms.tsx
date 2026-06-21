@@ -238,7 +238,11 @@ export function TermsPage() {
   // ── Status actions ─────────────────────────────────────────────────────────────
 
   const handleActivate = async (term: TermShape) => {
-    await apiClient.publishTerm(term.id);
+    const res = await apiClient.activateTerm(term.id);
+    if (!res.success) {
+      toast.error(res.message ?? "Failed to activate term.");
+      return;
+    }
     const updated: TermShape = { ...term, status: "Active" };
     setTerms((prev) => prev.map((t) => {
       if (t.id === term.id) return updated;
@@ -250,7 +254,7 @@ export function TermsPage() {
   };
 
   const handleUnpublish = async (term: TermShape) => {
-    const res = await apiClient.updateTerm(term.id, { status: "Draft" });
+    const res = await apiClient.unpublishTerm(term.id);
     if (!res.success) {
       toast.error(res.message ?? "Failed to unpublish term.");
       return;
@@ -262,7 +266,7 @@ export function TermsPage() {
   };
 
   const handlePublish = async (term: TermShape) => {
-    const res = await apiClient.updateTerm(term.id, { status: "Upcoming" });
+    const res = await apiClient.publishTerm(term.id);
     if (!res.success) {
       toast.error(res.message ?? "Failed to publish term.");
       return;
@@ -274,7 +278,11 @@ export function TermsPage() {
   };
 
   const handleArchive = async (term: TermShape) => {
-    await apiClient.archiveTerm(term.id);
+    const res = await apiClient.archiveTerm(term.id);
+    if (!res.success) {
+      toast.error(res.message ?? "Failed to archive term.");
+      return;
+    }
     const updated: TermShape = { ...term, status: "Archived" };
     setTerms((prev) => prev.map((t) => t.id === term.id ? updated : t));
     if (selectedTerm?.id === term.id) setSelectedTerm(updated);

@@ -723,10 +723,62 @@ export const apiClient = {
     );
   },
 
+  async activateTerm(id: string): Promise<ApiResponse<null>> {
+    return requestApi<null>(
+      replacePathParams(API_ENDPOINTS.TERM_ACTIVATE, { id }),
+      { method: "PATCH" }
+    );
+  },
+
+  async unpublishTerm(id: string): Promise<ApiResponse<null>> {
+    return requestApi<null>(
+      replacePathParams(API_ENDPOINTS.TERM_UNPUBLISH, { id }),
+      { method: "PATCH" }
+    );
+  },
+
   async archiveTerm(id: string): Promise<ApiResponse<null>> {
     return requestApi<null>(
       replacePathParams(API_ENDPOINTS.TERM_ARCHIVE, { id }),
       { method: "PATCH" }
+    );
+  },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // TEMPLATES
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  async getTemplates(): Promise<ApiResponse<any[]>> {
+    const response = await requestApi<unknown>(API_ENDPOINTS.TEMPLATES, { method: "GET" });
+    return {
+      success: response.success,
+      data: response.success ? extractCollection<any>(response, "templates") : [],
+      message: response.message,
+    };
+  },
+
+  async createTemplate(data: Record<string, unknown>): Promise<ApiResponse<any | null>> {
+    const response = await requestApi<unknown>(API_ENDPOINTS.TEMPLATES, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+    if (!response.success) return { success: false, data: null, message: response.message };
+    return { success: true, data: unwrapEntity<any>(response, "template"), message: response.message };
+  },
+
+  async updateTemplate(id: string, data: Record<string, unknown>): Promise<ApiResponse<any | null>> {
+    const response = await requestApi<unknown>(
+      replacePathParams(API_ENDPOINTS.TEMPLATE_BY_ID, { id }),
+      { method: "PUT", body: JSON.stringify(data) }
+    );
+    if (!response.success) return { success: false, data: null, message: response.message };
+    return { success: true, data: unwrapEntity<any>(response, "template"), message: response.message };
+  },
+
+  async deleteTemplate(id: string): Promise<ApiResponse<null>> {
+    return requestApi<null>(
+      replacePathParams(API_ENDPOINTS.TEMPLATE_BY_ID, { id }),
+      { method: "DELETE" }
     );
   },
 

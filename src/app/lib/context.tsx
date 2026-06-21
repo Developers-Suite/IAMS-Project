@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useSyncExternalStore, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useState, useSyncExternalStore, useEffect, useRef, type ReactNode } from "react";
 import type { AuthUser, ExtendedRole } from "../services/auth-service";
 import { subscribe, getState, type StoreState } from "./store";
 import { setCurrentUser, apiClient } from "./api-client";
@@ -61,70 +61,82 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const store = useSyncExternalStore(subscribe, getState, getState);
 
+  // Track which user ID we have already backfilled so the effect doesn't
+  // re-run after it writes studentId/department back into state.
+  const backfilledRef = useRef<string | null>(null);
+
   // SECURITY: Sync loaded user to API client on mount AND refetch if incomplete
   useEffect(() => {
-    const refreshUser = async () => {
-      if (user && user.id && user.role) {
-        setCurrentUser({ 
-          id: user.id, 
-          role: user.role, 
-          department_id: user.department_id,
-          student_id: user.id // For students, the user ID is the student ID
-        });
-        // If user is missing name or email, refetch from API
-        if (!user.name || !user.email) {
-          try {
-            const res = await apiClient.me();
-            if (res?.success && res?.data) {
-              const rawUser = (res.data as any).user ?? res.data;
-              const freshUser = normalizeApiUser(rawUser);
-              setUserState(freshUser);
-              saveUser(freshUser);
-              setCurrentUser({ 
-                id: freshUser.id, 
-                role: freshUser.role, 
-                department_id: freshUser.department_id,
-                student_id: freshUser.id
+    if (!user?.id || !user?.role) {
+      setCurrentUser(null);
+      return;
+    }
+
+    setCurrentUser({
+      id: user.id,
+      role: user.role,
+      department_id: user.department_id,
+      student_id: user.id,
+    });
+
+    // Only backfill once per user session to avoid a state-update loop.
+    if (backfilledRef.current === user.id) return;
+    backfilledRef.current = user.id;
+
+    const backfill = async () => {
+      // If user is missing name or email, refetch from API
+      if (!user.name || !user.email) {
+        try {
+          const res = await apiClient.me();
+          if (res?.success && res?.data) {
+            const rawUser = (res.data as any).user ?? res.data;
+            const freshUser = normalizeApiUser(rawUser);
+            setUserState(freshUser);
+            saveUser(freshUser);
+            setCurrentUser({
+              id: freshUser.id,
+              role: freshUser.role,
+              department_id: freshUser.department_id,
+              student_id: freshUser.id,
+            });
+          }
+        } catch {
+          // Silently fail — keep the user we have
+        }
+      }
+
+      // Students' studentId/department live on the `students` table, not `users` —
+      // the /me response above won't carry them, so backfill from the student profile.
+      if (user.role === "student" && (!user.studentId || !user.department)) {
+        try {
+          const res = await apiClient.getStudentProfile(user.id);
+          if (res.success && res.data) {
+            const p: any = res.data;
+            const studentId = user.studentId || p.student_id || undefined;
+            const department =
+              user.department || p.department_name ||
+              (typeof p.department === "string" ? p.department : p.department?.name) || undefined;
+            const department_id = user.department_id ?? p.department_id ?? undefined;
+            if (studentId !== user.studentId || department !== user.department || department_id !== user.department_id) {
+              const merged: AuthUser = { ...user, studentId, department, department_id };
+              setUserState(merged);
+              saveUser(merged);
+              setCurrentUser({
+                id: merged.id,
+                role: merged.role,
+                department_id: merged.department_id,
+                student_id: merged.id,
               });
             }
-          } catch {
-            // Silently fail — keep the user we have
           }
+        } catch {
+          // Silently fail — keep the user we have
         }
-        // Students' studentId/department live on the `students` table, not `users` —
-        // the /me response above won't carry them, so backfill from the student profile.
-        if (user.role === "student" && (!user.studentId || !user.department)) {
-          try {
-            const res = await apiClient.getStudentProfile(user.id);
-            if (res.success && res.data) {
-              const p: any = res.data;
-              const studentId = user.studentId || p.student_id || undefined;
-              const department =
-                user.department || p.department_name ||
-                (typeof p.department === "string" ? p.department : p.department?.name) || undefined;
-              const department_id = user.department_id ?? p.department_id ?? undefined;
-              if (studentId !== user.studentId || department !== user.department || department_id !== user.department_id) {
-                const merged: AuthUser = { ...user, studentId, department, department_id };
-                setUserState(merged);
-                saveUser(merged);
-                setCurrentUser({
-                  id: merged.id,
-                  role: merged.role,
-                  department_id: merged.department_id,
-                  student_id: merged.id,
-                });
-              }
-            }
-          } catch {
-            // Silently fail — keep the user we have
-          }
-        }
-      } else {
-        setCurrentUser(null);
       }
     };
-    refreshUser();
-  }, [user?.id, user?.role, user?.department_id, user?.studentId, user?.department]);
+
+    backfill();
+  }, [user?.id, user?.role, user?.department_id]);
 
   const setUser = (u: AuthUser | null) => {
     saveUser(u);
