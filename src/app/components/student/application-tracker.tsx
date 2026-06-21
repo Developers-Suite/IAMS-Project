@@ -122,7 +122,7 @@ export function ApplicationTracker({
   }
 
   const statusHistory = getStatusHistory(myApp);
-  const internshipStartDate = formatDisplayDate(getInternshipStartDate(myApp));
+  const internshipStartDate = formatDisplayDate(getInternshipStartDate(myApp, terms));
   const dateApplied = myApp.created_at ? new Date(myApp.created_at).toLocaleDateString("en-GB") : (myApp.dateApplied ?? "—");
 
   const handleDownloadLetter = () => {
@@ -138,8 +138,8 @@ export function ApplicationTracker({
       companyName,
       companyAddress,
       supervisorName: myApp.internship?.academic_supervisor?.user?.name ?? supervisorName,
-      startDate: formatDisplayDate(getInternshipStartDate(myApp)),
-      endDate: formatDisplayDate(getInternshipEndDate(myApp)),
+      startDate: formatDisplayDate(getInternshipStartDate(myApp, terms)),
+      endDate: formatDisplayDate(getInternshipEndDate(myApp, terms)),
     });
   };
 
@@ -165,8 +165,8 @@ export function ApplicationTracker({
         level: myApp.student?.level ?? myApp.level ?? "",
         companyName,
         companyAddress,
-        startDate: formatDisplayDate(getInternshipStartDate(myApp)),
-        endDate: formatDisplayDate(getInternshipEndDate(myApp)),
+        startDate: formatDisplayDate(getInternshipStartDate(myApp, terms)),
+        endDate: formatDisplayDate(getInternshipEndDate(myApp, terms)),
       });
 
       toast.dismiss(toastId);
@@ -201,8 +201,8 @@ export function ApplicationTracker({
   };
 
   const companyName = typeof myApp.company?.name === "string" ? myApp.company.name : (typeof myApp.companyName === "string" ? myApp.companyName : "Company");
-  const proposedStartDate = typeof myApp.proposed_start_date === "string" ? myApp.proposed_start_date : undefined;
-  const proposedEndDate = typeof myApp.proposed_end_date === "string" ? myApp.proposed_end_date : undefined;
+  const proposedStartDate = getInternshipStartDate(myApp, terms);
+  const proposedEndDate = getInternshipEndDate(myApp, terms);
 
   return (
     <div className="space-y-5">

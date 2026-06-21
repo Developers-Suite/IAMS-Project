@@ -19,6 +19,7 @@ export function DocumentsPage() {
   const [myApp, setMyApp] = useState<any | null>(null);
   const [internshipId, setInternshipId] = useState<string | null>(null);
   const [currentCompanyName, setCurrentCompanyName] = useState<string>("Company");
+  const [terms, setTerms] = useState<any[]>([]);
 
   // Modals state
   const [isAcceptanceOpen, setIsAcceptanceOpen] = useState(false);
@@ -45,6 +46,10 @@ export function DocumentsPage() {
   });
 
   const fetchApplicationData = () => {
+    apiClient.getTerms().then((res) => {
+      if (res.success) setTerms(res.data);
+    });
+
     apiClient.getApplications().then((res) => {
       if (res.success && res.data.length > 0) {
         const sorted = [...res.data].sort((a, b) => (b.created_at ?? "") > (a.created_at ?? "") ? 1 : -1);
@@ -98,8 +103,8 @@ export function DocumentsPage() {
       companyName,
       companyAddress,
       supervisorName,
-      startDate: formatDisplayDate(getInternshipStartDate(myApp)),
-      endDate: formatDisplayDate(getInternshipEndDate(myApp)),
+      startDate: formatDisplayDate(getInternshipStartDate(myApp, terms)),
+      endDate: formatDisplayDate(getInternshipEndDate(myApp, terms)),
     });
   };
 
@@ -125,8 +130,8 @@ export function DocumentsPage() {
         level: myApp.student?.level ?? myApp.level ?? "",
         companyName,
         companyAddress,
-        startDate: formatDisplayDate(getInternshipStartDate(myApp)),
-        endDate: formatDisplayDate(getInternshipEndDate(myApp)),
+        startDate: formatDisplayDate(getInternshipStartDate(myApp, terms)),
+        endDate: formatDisplayDate(getInternshipEndDate(myApp, terms)),
       });
 
       toast.success("Acceptance Form downloaded successfully!", { id: toastId });
