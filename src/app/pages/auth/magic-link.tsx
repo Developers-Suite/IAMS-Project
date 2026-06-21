@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router";
 import { apiClient } from "../../lib/api-client";
-import { GraduationCap, CheckCircle, XCircle, Loader2, User, Phone, Briefcase, Building2 } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, User, Phone, Briefcase, Building2 } from "lucide-react";
 import { toast } from "sonner";
 
 type Stage = "form" | "submitting" | "success" | "error";
@@ -60,15 +60,10 @@ export function MagicLinkPage() {
       <div className="w-full max-w-md space-y-6">
         {/* Header */}
         <div className="text-center space-y-3">
-          <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center mx-auto shadow-sm">
-            <GraduationCap className="w-8 h-8 text-primary-foreground" />
-          </div>
-          <div>
-            <h1 className="text-xl font-semibold">HTU Attachment System</h1>
-            <p className="text-muted-foreground mt-1" style={{ fontSize: "0.85rem" }}>
-              Industry Supervisor Invitation
-            </p>
-          </div>
+          <img src="/logo%202.png" alt="HTU IAMS" className="h-12 w-auto object-contain mx-auto" />
+          <p className="text-muted-foreground" style={{ fontSize: "0.85rem" }}>
+            Industry Supervisor Invitation
+          </p>
         </div>
 
         <div className="bg-card rounded-2xl p-6 space-y-5 shadow-sm border border-border">

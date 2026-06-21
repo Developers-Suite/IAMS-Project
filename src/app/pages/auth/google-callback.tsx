@@ -4,7 +4,7 @@ import { useAppContext } from "../../lib/context";
 import { normalizeApiUser } from "../../lib/context";
 import { apiClient, setApiAuthToken } from "../../lib/api-client";
 import { getRoutePrefix } from "../../services/auth-service";
-import { GraduationCap, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 type State = "processing" | "success" | "error";
@@ -65,13 +65,8 @@ export function GoogleCallbackPage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm space-y-6">
         {/* Header */}
-        <div className="text-center space-y-3">
-          <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center mx-auto">
-            <GraduationCap className="w-8 h-8 text-primary-foreground" />
-          </div>
-          <div>
-            <h1>HTU Attachment System</h1>
-          </div>
+        <div className="text-center">
+          <img src="/logo%202.png" alt="HTU IAMS" className="h-12 w-auto object-contain mx-auto" />
         </div>
 
         <div className="bg-card rounded-2xl p-6 space-y-4 text-center">
