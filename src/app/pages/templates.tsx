@@ -141,7 +141,7 @@ function mergeApiTemplates(builtIns: Template[], apiTemplates: any[]): Template[
       body: t.body ?? undefined,
       signatureUrl: t.signature_url ?? undefined,
       versionHistory: t.version_history ?? [],
-      isBuiltIn: existingIdx !== -1,
+      isBuiltIn: false,
     };
     if (existingIdx !== -1) {
       result[existingIdx] = merged;
@@ -252,6 +252,17 @@ export function Templates() {
           ? { ...t, apiId: res.data?.id, body: editBody, lastModified: today, version: nextVersion, versionHistory: [...t.versionHistory, newEntry] }
           : t
       ));
+    }
+
+    // Keep localStorage in sync for the placement-letter so generate-placement-letter.ts can read it.
+    if (selected.id === "placement-letter") {
+      try {
+        const existing = JSON.parse(localStorage.getItem("iams_template_overrides") ?? "{}");
+        localStorage.setItem("iams_template_overrides", JSON.stringify({
+          ...existing,
+          "placement-letter": { body: editBody, signatureUrl: selected.signatureUrl ?? "" },
+        }));
+      } catch {}
     }
 
     setSaving(false);
@@ -398,12 +409,17 @@ h1{color:#1e3a5f;font-size:1.2rem;margin-bottom:1rem}.placeholder{color:#0b5ed7;
       isBuiltIn: false,
     };
 
+    if (!res.success) {
+      toast.error(res.message ?? "Failed to create template. Please try again.");
+      setSaving(false);
+      return;
+    }
+
     setTemplates([newTpl, ...templates]);
     setShowNewTemplate(false);
     setNewTemplate({ name: "", desc: "", category: "placement", hasLetterhead: true, hasSignature: true, placeholders: [], visibleTo: defaultRoles["placement"], body: "" });
     setSaving(false);
-    if (!res.success) toast.warning("Template saved locally but could not persist to server.");
-    else toast.success("Template created successfully.");
+    toast.success("Template created successfully.");
   };
 
   const handleAddPlaceholder = () => {

@@ -1,5 +1,14 @@
 import { toast } from "sonner";
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export function exportLogbookToPDF(companyName: string, entries: any[]) {
   // Create a printable HTML
   const printWindow = window.open("", "", "width=800,height=600");
@@ -12,7 +21,7 @@ export function exportLogbookToPDF(companyName: string, entries: any[]) {
     <!DOCTYPE html>
     <html>
       <head>
-        <title>${companyName} - Logbook Entries</title>
+        <title>${escapeHtml(companyName)} - Logbook Entries</title>
         <style>
           body { font-family: Arial, sans-serif; margin: 20px; }
           .header { display: flex; align-items: center; gap: 12px; margin-bottom: 5px; }
@@ -34,7 +43,7 @@ export function exportLogbookToPDF(companyName: string, entries: any[]) {
       <body>
         <div class="header">
           <img src="/logo%201.png" alt="" />
-          <h1>${companyName}</h1>
+          <h1>${escapeHtml(companyName)}</h1>
         </div>
         <div class="meta">
           <p>Generated on ${new Date().toLocaleDateString("en-GB")}</p>
@@ -47,10 +56,10 @@ export function exportLogbookToPDF(companyName: string, entries: any[]) {
                 .map(
                   (entry) => `
             <div class="entry">
-              <div class="entry-date">${new Date(entry.entry_date).toLocaleDateString("en-GB")}</div>
-              <div class="entry-activities"><strong>Activities:</strong> ${entry.activities_description || "—"}</div>
-              ${entry.skills_learned ? `<div class="entry-skills"><strong>Skills:</strong> ${entry.skills_learned}</div>` : ""}
-              <div class="entry-status status-${entry.status}">${entry.status.replace(/_/g, " ").toUpperCase()}</div>
+              <div class="entry-date">${escapeHtml(new Date(entry.entry_date).toLocaleDateString("en-GB"))}</div>
+              <div class="entry-activities"><strong>Activities:</strong> ${escapeHtml(entry.activities_description || "—")}</div>
+              ${entry.skills_learned ? `<div class="entry-skills"><strong>Skills:</strong> ${escapeHtml(entry.skills_learned)}</div>` : ""}
+              <div class="entry-status status-${escapeHtml(entry.status)}">${escapeHtml(entry.status.replace(/_/g, " ").toUpperCase())}</div>
             </div>
           `
                 )

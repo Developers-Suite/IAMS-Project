@@ -23,7 +23,16 @@ export interface PlacementLetterData {
 // Persisted by the CLO from the Templates page (see src/app/pages/templates.tsx).
 // Falls back to the hardcoded letter below when no custom template has been saved.
 const TEMPLATE_OVERRIDES_KEY = "iams_template_overrides";
-const PLACEMENT_LETTER_TEMPLATE_ID = "t1";
+const PLACEMENT_LETTER_TEMPLATE_ID = "placement-letter";
+
+function isSafeUrl(url: string): boolean {
+  try {
+    const u = new URL(url);
+    return u.protocol === "https:" || u.protocol === "http:";
+  } catch {
+    return false;
+  }
+}
 
 interface TemplateOverride {
   body?: string;
@@ -256,7 +265,7 @@ export function openPlacementLetter(data: PlacementLetterData): void {
     <div class="closing">Yours faithfully,</div>
 
     <div class="signature-block">
-      ${override?.signatureUrl
+      ${override?.signatureUrl && isSafeUrl(override.signatureUrl)
         ? `<img class="signature-image" src="${override.signatureUrl}" alt="" />`
         : `<div class="signature-line"></div>`}
       <div class="signature-title">${data.dloName || "The Departmental Liaison Officer"}</div>
