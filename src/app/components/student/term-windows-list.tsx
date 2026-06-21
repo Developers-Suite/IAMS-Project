@@ -58,18 +58,20 @@ export function TermWindowsList({
             const internshipEnd = term.internshipEnd ?? "";
             const isOpen = appDeadline && today <= appDeadline;
             const internshipEnded = internshipEnd && today > internshipEnd;
+            const isClosed = !!appDeadline && !isOpen && !internshipEnded;
             const daysLeft = isOpen && appDeadline
               ? Math.max(0, Math.ceil((new Date(appDeadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
               : null;
 
             const termName = String(term.name ?? "Term");
-            // If internship period has ended, show as "Completed"
-            const termStatus = internshipEnded ? "Completed" : String(term.status ?? "Upcoming");
+            // If internship period has ended, show as "Completed"; if just the deadline has passed, show "Closed"
+            const termStatus = internshipEnded ? "Completed" : isClosed ? "Closed" : String(term.status ?? "Upcoming");
             const termType = String(term.type ?? "Unknown");
 
             const statusColorMap: Record<string, { border: string; bgLight: string; text: string; icon: string }> = {
               active: { border: "border-l-emerald-500", bgLight: "bg-emerald-50 dark:bg-emerald-950/20", text: "text-emerald-700 dark:text-emerald-400", icon: "✓" },
               upcoming: { border: "border-l-blue-500", bgLight: "bg-blue-50 dark:bg-blue-950/20", text: "text-blue-700 dark:text-blue-400", icon: "⏱" },
+              closed: { border: "border-l-red-500", bgLight: "bg-red-50 dark:bg-red-950/20", text: "text-red-700 dark:text-red-400", icon: "🔒" },
               completed: { border: "border-l-gray-500", bgLight: "bg-gray-50 dark:bg-gray-950/20", text: "text-gray-700 dark:text-gray-400", icon: "✔" },
               archived: { border: "border-l-gray-500", bgLight: "bg-gray-50 dark:bg-gray-950/20", text: "text-gray-700 dark:text-gray-400", icon: "📦" },
             };
@@ -154,11 +156,12 @@ export function TermWindowsList({
         const statusColorMap: Record<string, { text: string; icon: string }> = {
           active: { text: "text-emerald-700 dark:text-emerald-400", icon: "✓" },
           upcoming: { text: "text-blue-700 dark:text-blue-400", icon: "⏱" },
+          closed: { text: "text-red-700 dark:text-red-400", icon: "🔒" },
           completed: { text: "text-gray-700 dark:text-gray-400", icon: "✔" },
           archived: { text: "text-gray-700 dark:text-gray-400", icon: "📦" },
         };
-        // If internship has ended, show as "completed"
-        const displayStatus = internshipEnded ? "completed" : (term.status ?? "upcoming").toLowerCase();
+        // If internship has ended, show as "completed"; if just the deadline has passed, show "closed"
+        const displayStatus = internshipEnded ? "completed" : isClosed ? "closed" : (term.status ?? "upcoming").toLowerCase();
         const statusLower = displayStatus.toLowerCase();
         const statusStyle = statusColorMap[statusLower] || statusColorMap.upcoming;
 

@@ -327,15 +327,12 @@ export function StudentApplicationsPage() {
     }
   };
 
-  const handleCancelApplication = async () => {
-    if (!myApp?.id) return;
-    const res = await apiClient.deleteApplication(String(myApp.id));
-    if (res.success) {
-      setMyApp(null);
-      clearDraft();
-      setView("windows");
-    }
-    return res;
+  // Called after ApplicationTracker has already withdrawn the application
+  // server-side (apiClient.withdrawApplication) — just reset local UI state.
+  const handleCancelApplication = () => {
+    setMyApp(null);
+    clearDraft();
+    setView("windows");
   };
 
   const handleSubmit = async () => {

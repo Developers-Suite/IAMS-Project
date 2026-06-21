@@ -9,7 +9,7 @@ import type { TermDashboardResponse } from "../../types/api";
 import { ProgramPicker } from "../../components/program-picker";
 import {
   Plus, Calendar, Archive, Eye, X, Play, Edit2, CheckCircle2,
-  Clock, FileText, TrendingUp, GraduationCap, Layers
+  Clock, FileText, TrendingUp, GraduationCap, Layers, EyeOff, Send
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -19,7 +19,7 @@ interface TermShape {
   id: string;
   name: string;
   type: "Vacation" | "Semestrial";
-  status: "Upcoming" | "Active" | "Completed" | "Archived";
+  status: "Draft" | "Upcoming" | "Active" | "Completed" | "Archived";
   applicationStart: string;
   applicationEnd: string;
   internshipStart: string;
@@ -53,7 +53,7 @@ const TERM_STATUS_MAP: Record<string, TermShape["status"]> = {
   active: "Active",
   completed: "Completed",
   archived: "Archived",
-  draft: "Upcoming",
+  draft: "Draft",
 };
 
 function normalizeTerm(t: any, index: number): TermShape {
@@ -249,6 +249,30 @@ export function TermsPage() {
     toast.success(`${term.name} activated.`);
   };
 
+  const handleUnpublish = async (term: TermShape) => {
+    const res = await apiClient.updateTerm(term.id, { status: "Draft" });
+    if (!res.success) {
+      toast.error(res.message ?? "Failed to unpublish term.");
+      return;
+    }
+    const updated: TermShape = { ...term, status: "Draft" };
+    setTerms((prev) => prev.map((t) => t.id === term.id ? updated : t));
+    if (selectedTerm?.id === term.id) setSelectedTerm(updated);
+    toast.success(`${term.name} unpublished. Students can no longer see this window.`);
+  };
+
+  const handlePublish = async (term: TermShape) => {
+    const res = await apiClient.updateTerm(term.id, { status: "Upcoming" });
+    if (!res.success) {
+      toast.error(res.message ?? "Failed to publish term.");
+      return;
+    }
+    const updated: TermShape = { ...term, status: "Upcoming" };
+    setTerms((prev) => prev.map((t) => t.id === term.id ? updated : t));
+    if (selectedTerm?.id === term.id) setSelectedTerm(updated);
+    toast.success(`${term.name} published. Students can now view this window.`);
+  };
+
   const handleArchive = async (term: TermShape) => {
     await apiClient.archiveTerm(term.id);
     const updated: TermShape = { ...term, status: "Archived" };
@@ -260,7 +284,7 @@ export function TermsPage() {
   // ── Derived ───────────────────────────────────────────────────────────────────
 
   const sortedTerms = useMemo(() => [...terms].sort((a, b) => {
-    const order: Record<string, number> = { Active: 0, Upcoming: 1, Completed: 2, Archived: 3 };
+    const order: Record<string, number> = { Active: 0, Upcoming: 1, Draft: 2, Completed: 3, Archived: 4 };
     return (order[a.status] ?? 99) - (order[b.status] ?? 99);
   }), [terms]);
 
@@ -419,6 +443,15 @@ export function TermsPage() {
                 >
                   <Edit2 className="w-3.5 h-3.5" />
                 </button>
+                {t.status === "Draft" && (
+                  <button
+                    onClick={() => handlePublish(t)}
+                    className="flex-1 py-1.5 bg-cyan-600 text-white rounded-lg hover:opacity-90 flex items-center justify-center gap-1 transition-opacity"
+                    style={{ fontSize: "0.8rem" }}
+                  >
+                    <Send className="w-3.5 h-3.5" /> Publish
+                  </button>
+                )}
                 {t.status === "Upcoming" && (
                   <button
                     onClick={() => handleActivate(t)}
@@ -426,6 +459,15 @@ export function TermsPage() {
                     style={{ fontSize: "0.8rem" }}
                   >
                     <Play className="w-3.5 h-3.5" /> Activate
+                  </button>
+                )}
+                {(t.status === "Upcoming" || t.status === "Active") && (
+                  <button
+                    onClick={() => handleUnpublish(t)}
+                    className="py-1.5 px-3 border border-border rounded-lg hover:bg-accent text-muted-foreground transition-colors"
+                    title="Unpublish (hide from students)"
+                  >
+                    <EyeOff className="w-3.5 h-3.5" />
                   </button>
                 )}
                 {(t.status === "Completed" || t.status === "Active") && (
@@ -836,6 +878,15 @@ export function TermsPage() {
               >
                 <Edit2 className="w-4 h-4" /> Edit
               </button>
+              {selectedTerm.status === "Draft" && (
+                <button
+                  onClick={() => { handlePublish(selectedTerm); setSelectedTerm(null); }}
+                  className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:opacity-90 flex items-center gap-2"
+                  style={{ fontSize: "0.85rem" }}
+                >
+                  <Send className="w-4 h-4" /> Publish
+                </button>
+              )}
               {selectedTerm.status === "Upcoming" && (
                 <button
                   onClick={() => { handleActivate(selectedTerm); setSelectedTerm(null); }}
@@ -843,6 +894,15 @@ export function TermsPage() {
                   style={{ fontSize: "0.85rem" }}
                 >
                   <Play className="w-4 h-4" /> Activate
+                </button>
+              )}
+              {(selectedTerm.status === "Upcoming" || selectedTerm.status === "Active") && (
+                <button
+                  onClick={() => { handleUnpublish(selectedTerm); setSelectedTerm(null); }}
+                  className="px-4 py-2 border border-border rounded-lg hover:bg-accent flex items-center gap-2"
+                  style={{ fontSize: "0.85rem" }}
+                >
+                  <EyeOff className="w-4 h-4" /> Unpublish
                 </button>
               )}
               {(selectedTerm.status === "Completed" || selectedTerm.status === "Active") && (
