@@ -1,4 +1,4 @@
-const CACHE_NAME = "iams-v1";
+const CACHE_NAME = "iams-v2";
 const ASSETS_TO_CACHE = [
   "/",
   "/index.html",
@@ -148,7 +148,28 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // For other requests, try cache first, then network
+  // HTML/navigation requests must always go to the network first — caching
+  // index.html stale is what causes it to reference deleted JS chunk hashes
+  // after a new deploy ("Failed to fetch dynamically imported module").
+  const isNavigation =
+    event.request.mode === "navigate" || event.request.headers.get("accept")?.includes("text/html");
+  if (isNavigation) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request).then((cached) => cached || new Response("You are offline", { status: 503 })))
+    );
+    return;
+  }
+
+  // Hashed build assets (/assets/*.js, *.css, etc.) are immutable per filename,
+  // so cache-first is safe and fast here.
   event.respondWith(
     caches.match(event.request).then((response) => {
       if (response) {
