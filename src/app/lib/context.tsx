@@ -91,12 +91,40 @@ export function AppProvider({ children }: { children: ReactNode }) {
             // Silently fail — keep the user we have
           }
         }
+        // Students' studentId/department live on the `students` table, not `users` —
+        // the /me response above won't carry them, so backfill from the student profile.
+        if (user.role === "student" && (!user.studentId || !user.department)) {
+          try {
+            const res = await apiClient.getStudentProfile(user.id);
+            if (res.success && res.data) {
+              const p: any = res.data;
+              const studentId = user.studentId || p.student_id || undefined;
+              const department =
+                user.department || p.department_name ||
+                (typeof p.department === "string" ? p.department : p.department?.name) || undefined;
+              const department_id = user.department_id ?? p.department_id ?? undefined;
+              if (studentId !== user.studentId || department !== user.department || department_id !== user.department_id) {
+                const merged: AuthUser = { ...user, studentId, department, department_id };
+                setUserState(merged);
+                saveUser(merged);
+                setCurrentUser({
+                  id: merged.id,
+                  role: merged.role,
+                  department_id: merged.department_id,
+                  student_id: merged.id,
+                });
+              }
+            }
+          } catch {
+            // Silently fail — keep the user we have
+          }
+        }
       } else {
         setCurrentUser(null);
       }
     };
     refreshUser();
-  }, [user?.id, user?.role, user?.department_id]);
+  }, [user?.id, user?.role, user?.department_id, user?.studentId, user?.department]);
 
   const setUser = (u: AuthUser | null) => {
     saveUser(u);

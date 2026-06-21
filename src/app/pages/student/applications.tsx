@@ -186,14 +186,21 @@ export function StudentApplicationsPage() {
   // Pre-fill contact details from the student's saved profile (only fields not already set by a restored draft)
   useEffect(() => {
     if (!user?.id) return;
-    apiClient.getStudentProfile(String(user.id)).then((res) => {
-      if (!res.success || !res.data) return;
-      const p: any = res.data;
+    Promise.all([
+      apiClient.getStudentProfile(String(user.id)),
+      apiClient.getUser(String(user.id)).catch(() => null),
+    ]).then(([profileRes, userRes]) => {
+      const p: any = profileRes.success ? profileRes.data : null;
+      const u: any = userRes?.success
+        ? (userRes.data?.user ?? userRes.data?.data?.user ?? userRes.data?.data ?? userRes.data)
+        : null;
+      if (!p && !u) return;
       setForm((prev) => ({
         ...prev,
-        phoneNumber: prev.phoneNumber || p.phone || "",
-        emergencyContact: prev.emergencyContact || p.emergency_contact || p.emergency_contact_name || "",
-        emergencyPhone: prev.emergencyPhone || p.emergency_contact_phone || "",
+        // `phone` lives on the users table, not the student profile, so fall back to it
+        phoneNumber: prev.phoneNumber || p?.phone || u?.phone || "",
+        emergencyContact: prev.emergencyContact || p?.emergency_contact || p?.emergency_contact_name || "",
+        emergencyPhone: prev.emergencyPhone || p?.emergency_contact_phone || "",
       }));
     }).catch(() => { /* profile prefill is best-effort */ });
   }, [user?.id]);
