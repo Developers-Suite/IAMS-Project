@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { GraduationCap, AlertCircle, Loader2, ClipboardList, Users, BarChart3 } from "lucide-react";
+import { AlertCircle, Loader2, ClipboardList, Users, BarChart3 } from "lucide-react";
 import { getApiUrl } from "../../lib/api-client";
 import { API_ENDPOINTS } from "../../lib/constants";
 
 const BG_IMAGE =
-  "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1600&q=80";
+  "/IMG-20250228-WA0051.jpg";
 
 export function LoginPage() {
   const [loading, setLoading] = useState(false);
@@ -32,13 +32,8 @@ export function LoginPage() {
         {/* Desktop branding content */}
         <div className="hidden lg:flex relative h-full flex-col justify-between p-14 text-white">
           {/* Top: logo mark */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-              <GraduationCap className="w-5 h-5" />
-            </div>
-            <span className="font-semibold tracking-wide" style={{ fontSize: "1rem" }}>
-              HTU · IAMS
-            </span>
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl px-3 py-2 inline-flex self-start">
+            <img src="/logo%202.png" alt="HTU IAMS" className="h-9 w-auto object-contain" />
           </div>
 
           {/* Bottom: tagline + feature bullets */}
@@ -76,13 +71,10 @@ export function LoginPage() {
         <div className="w-full max-w-sm space-y-6">
           {/* Mobile logo + title (not shown on desktop — desktop branding is on the left) */}
           <div className="text-center text-white lg:hidden">
-            <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto">
-              <GraduationCap className="w-7 h-7" />
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl px-4 py-2.5 inline-flex mx-auto">
+              <img src="/logo%202.png" alt="HTU IAMS" className="h-10 w-auto object-contain" />
             </div>
-            <h1 className="mt-3 font-bold" style={{ fontSize: "1.2rem" }}>
-              HTU Attachment System
-            </h1>
-            <p className="text-white/70 mt-0.5" style={{ fontSize: "0.82rem" }}>
+            <p className="text-white/70 mt-2.5" style={{ fontSize: "0.82rem" }}>
               Industrial Attachment Management Portal
             </p>
           </div>
