@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { GitBranch, Search, Building2, Plus, AlertCircle, Info, User, Mail, Phone, MapPin } from "lucide-react";
+import { GitBranch, Search, Building2, Plus, AlertCircle, Info, User, Mail, MapPin } from "lucide-react";
 import { StatusBadge } from "../status-badge";
 import { ghanaRegions } from "../../lib/mock-data";
 import { apiClient } from "../../lib/api-client";
@@ -19,15 +19,11 @@ interface FormData {
   newBranchName: string;
   newBranchRegion: string;
   newBranchLocation: string;
-  newBranchAddress: string;
-  newBranchTelephone: string;
   phoneNumber: string;
   emergencyContact: string;
   emergencyPhone: string;
   preferredStartDate: string;
   additionalNotes: string;
-  uploadCV: boolean;
-  uploadMotivation: boolean;
   agreeToTerms: boolean;
 }
 
@@ -250,7 +246,6 @@ export function CompanyBranchSelector({
                 const branchName = typeof b.name === "string" ? b.name : "Branch";
                 const location = typeof b.location === "string" ? b.location : "—";
                 const region = typeof b.region === "string" ? b.region : "—";
-                const telephone = typeof b.telephone === "string" ? b.telephone : "—";
                 const address = typeof b.address === "string" ? b.address : "—";
                 const branchId = typeof b.id === "string" ? b.id : String(b.id);
 
@@ -271,7 +266,7 @@ export function CompanyBranchSelector({
                           {branchName}
                         </p>
                         <p className="text-muted-foreground mt-0.5" style={{ fontSize: "0.75rem" }}>
-                          {location}, {region} · {telephone}
+                          {location}, {region}
                         </p>
                         <p className="text-muted-foreground" style={{ fontSize: "0.7rem" }}>
                           {address}
@@ -465,39 +460,14 @@ function BranchFieldsBlock({ form, updateForm, ghanaRegions, dupWarning }: Branc
         </select>
       </div>
       <div>
-        <label style={{ fontSize: "0.8rem" }}>Location (Town/City) *</label>
-        <input
-          type="text"
-          value={form.newBranchLocation}
-          onChange={(e) => updateForm({ newBranchLocation: e.target.value })}
-          placeholder="e.g., Accra, Ho, Kumasi"
-          className="w-full mt-1 px-3 py-2 border border-border rounded-lg bg-background"
-          style={{ fontSize: "0.85rem" }}
-        />
-      </div>
-      <div>
-        <label style={{ fontSize: "0.8rem" }}>Telephone Number *</label>
-        <div className="relative mt-1">
-          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input
-            type="tel"
-            value={form.newBranchTelephone}
-            onChange={(e) => updateForm({ newBranchTelephone: e.target.value })}
-            placeholder="+233..."
-            className="w-full pl-9 pr-3 py-2 border border-border rounded-lg bg-background"
-            style={{ fontSize: "0.85rem" }}
-          />
-        </div>
-      </div>
-      <div className="md:col-span-2">
-        <label style={{ fontSize: "0.8rem" }}>Branch Address *</label>
+        <label style={{ fontSize: "0.8rem" }}>Town/City *</label>
         <div className="relative mt-1">
           <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type="text"
-            value={form.newBranchAddress}
-            onChange={(e) => updateForm({ newBranchAddress: e.target.value })}
-            placeholder="Full street address"
+            value={form.newBranchLocation}
+            onChange={(e) => updateForm({ newBranchLocation: e.target.value })}
+            placeholder="e.g., Accra, Ho, Kumasi"
             className="w-full pl-9 pr-3 py-2 border border-border rounded-lg bg-background"
             style={{ fontSize: "0.85rem" }}
           />

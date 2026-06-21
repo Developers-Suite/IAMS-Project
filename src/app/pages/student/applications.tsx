@@ -71,14 +71,10 @@ interface FormData {
   newBranchName: string;
   newBranchRegion: string;
   newBranchLocation: string;
-  newBranchAddress: string;
-  newBranchTelephone: string;
   phoneNumber: string;
   emergencyContact: string;
   emergencyPhone: string;
   additionalNotes: string;
-  uploadCV: boolean;
-  uploadMotivation: boolean;
   agreeToTerms: boolean;
 }
 
@@ -94,14 +90,10 @@ const defaultForm: FormData = {
   newBranchName: "",
   newBranchRegion: ghanaRegions[6] ?? "Greater Accra",
   newBranchLocation: "",
-  newBranchAddress: "",
-  newBranchTelephone: "",
   phoneNumber: "",
   emergencyContact: "",
   emergencyPhone: "",
   additionalNotes: "",
-  uploadCV: false,
-  uploadMotivation: false,
   agreeToTerms: false,
 };
 
@@ -191,6 +183,21 @@ export function StudentApplicationsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Pre-fill contact details from the student's saved profile (only fields not already set by a restored draft)
+  useEffect(() => {
+    if (!user?.id) return;
+    apiClient.getStudentProfile(String(user.id)).then((res) => {
+      if (!res.success || !res.data) return;
+      const p: any = res.data;
+      setForm((prev) => ({
+        ...prev,
+        phoneNumber: prev.phoneNumber || p.phone || "",
+        emergencyContact: prev.emergencyContact || p.emergency_contact || p.emergency_contact_name || "",
+        emergencyPhone: prev.emergencyPhone || p.emergency_contact_phone || "",
+      }));
+    }).catch(() => { /* profile prefill is best-effort */ });
+  }, [user?.id]);
+
   // Save draft only while the student is actively in the apply flow
   useEffect(() => {
     if (view === "apply") {
@@ -241,8 +248,6 @@ export function StudentApplicationsPage() {
         name: form.newBranchName,
         region: form.newBranchRegion,
         location: form.newBranchLocation,
-        address: form.newBranchAddress,
-        telephone: form.newBranchTelephone,
       }
     : null;
 
@@ -293,9 +298,7 @@ export function StudentApplicationsPage() {
             return !!(
               form.newBranchName &&
               form.newBranchRegion &&
-              form.newBranchLocation &&
-              form.newBranchAddress &&
-              form.newBranchTelephone
+              form.newBranchLocation
             );
           }
           return false;
@@ -311,15 +314,18 @@ export function StudentApplicationsPage() {
             !hasDuplicateCompany &&
             form.newBranchName &&
             form.newBranchRegion &&
-            form.newBranchLocation &&
-            form.newBranchAddress &&
-            form.newBranchTelephone
+            form.newBranchLocation
           );
         }
         return false;
       }
       case 3:
-        return !!(form.phoneNumber && form.emergencyContact && form.emergencyPhone);
+        return !!(
+          form.phoneNumber &&
+          form.emergencyContact &&
+          form.emergencyPhone &&
+          form.phoneNumber.trim() !== form.emergencyPhone.trim()
+        );
       case 4:
         return form.agreeToTerms;
       default:
@@ -355,8 +361,6 @@ export function StudentApplicationsPage() {
               name: form.newBranchName,
               region: form.newBranchRegion,
               location: form.newBranchLocation,
-              address: form.newBranchAddress,
-              telephone: form.newBranchTelephone,
             });
             if (!branchRes.success || !branchRes.data) {
               return { success: false, data: null, message: branchRes.message || "Failed to create branch." };
@@ -375,8 +379,6 @@ export function StudentApplicationsPage() {
               name: form.newBranchName,
               region: form.newBranchRegion,
               location: form.newBranchLocation,
-              address: form.newBranchAddress,
-              telephone: form.newBranchTelephone,
               addedBy: actor,
               autoApprove: false,
             }

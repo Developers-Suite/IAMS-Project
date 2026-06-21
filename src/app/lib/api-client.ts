@@ -542,13 +542,12 @@ export const apiClient = {
   // The real API has no branch concept — this creates a company and returns a synthetic branch
   async createCompanyWithBranch(
     companyData: { name: string; contactPerson?: string; contactEmail?: string; [key: string]: unknown },
-    branchData: { name: string; region?: string; location?: string; address?: string; telephone?: string; [key: string]: unknown }
+    branchData: { name: string; region?: string; location?: string; [key: string]: unknown }
   ): Promise<ApiResponse<{ company: CompanyResponse; branch: { id: string; name: string } } | null>> {
     const payload: Record<string, unknown> = {
       name: companyData.name,
       email: companyData.contactEmail ?? "",
-      phone: branchData.telephone ?? "",
-      address: branchData.address ?? branchData.location ?? "",
+      address: branchData.location ?? "",
       city: branchData.location ?? "",
       region: branchData.region ?? "Greater Accra",
       country: "Ghana",

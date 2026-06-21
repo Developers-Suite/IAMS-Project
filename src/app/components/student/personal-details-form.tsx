@@ -1,4 +1,4 @@
-import { Phone, Upload, CheckCircle2 } from "lucide-react";
+import { Phone, AlertCircle } from "lucide-react";
 
 type CompanyChoice = "none" | "existing" | "new";
 type BranchChoice = "none" | "existing" | "new";
@@ -15,14 +15,10 @@ interface FormData {
   newBranchName: string;
   newBranchRegion: string;
   newBranchLocation: string;
-  newBranchAddress: string;
-  newBranchTelephone: string;
   phoneNumber: string;
   emergencyContact: string;
   emergencyPhone: string;
   additionalNotes: string;
-  uploadCV: boolean;
-  uploadMotivation: boolean;
   agreeToTerms: boolean;
 }
 
@@ -33,12 +29,15 @@ interface PersonalDetailsFormProps {
 }
 
 export function PersonalDetailsForm({ form, updateForm, user }: PersonalDetailsFormProps) {
+  const samePhoneNumbers =
+    !!form.phoneNumber && !!form.emergencyPhone && form.phoneNumber.trim() === form.emergencyPhone.trim();
+
   return (
     <div className="space-y-5">
       <div>
-        <h3>Your Details & Documents</h3>
+        <h3>Your Details</h3>
         <p className="text-muted-foreground mt-1" style={{ fontSize: "0.85rem" }}>
-          Provide contact information and optionally upload supporting documents.
+          Provide your contact information.
         </p>
       </div>
 
@@ -101,10 +100,16 @@ export function PersonalDetailsForm({ form, updateForm, user }: PersonalDetailsF
               value={form.emergencyPhone}
               onChange={(e) => updateForm({ emergencyPhone: e.target.value })}
               placeholder="+233..."
-              className="w-full pl-9 pr-3 py-2 border border-border rounded-lg bg-background"
+              className={`w-full pl-9 pr-3 py-2 border rounded-lg bg-background ${samePhoneNumbers ? "border-red-400" : "border-border"}`}
               style={{ fontSize: "0.85rem" }}
             />
           </div>
+          {samePhoneNumbers && (
+            <p className="text-red-600 mt-1 flex items-center gap-1" style={{ fontSize: "0.75rem" }}>
+              <AlertCircle className="w-3.5 h-3.5" />
+              Emergency contact phone must be different from your own phone number.
+            </p>
+          )}
         </div>
         <div className="md:col-span-2">
           <label style={{ fontSize: "0.8rem" }}>Additional Notes</label>
@@ -116,79 +121,6 @@ export function PersonalDetailsForm({ form, updateForm, user }: PersonalDetailsF
             className="w-full mt-1 px-3 py-2 border border-border rounded-lg bg-background"
             style={{ fontSize: "0.85rem" }}
           />
-        </div>
-      </div>
-
-      {/* Optional Document Uploads */}
-      <div className="border-t border-border pt-5">
-        <h4 className="flex items-center gap-2 mb-1">
-          <Upload className="w-4 h-4 text-primary" />
-          Optional Supporting Documents
-        </h4>
-        <p className="text-muted-foreground mb-4" style={{ fontSize: "0.8rem" }}>
-          You may upload a CV and/or motivation letter to strengthen your application. These are not required.
-        </p>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {/* CV Upload */}
-          <div
-            className={`border-2 border-dashed rounded-xl p-5 text-center transition-colors cursor-pointer ${
-              form.uploadCV ? "border-emerald-400 bg-emerald-50" : "border-border hover:border-primary/40 bg-card"
-            }`}
-            onClick={() => updateForm({ uploadCV: !form.uploadCV })}
-          >
-            {form.uploadCV ? (
-              <>
-                <CheckCircle2 className="w-6 h-6 text-emerald-600 mx-auto mb-2" />
-                <p style={{ fontSize: "0.85rem" }} className="text-emerald-700 font-medium">
-                  CV_{user?.name?.replace(/\s+/g, "_") || "student"}.pdf
-                </p>
-                <p className="text-emerald-600 mt-1 animate-pulse" style={{ fontSize: "0.7rem" }}>
-                  Click to remove
-                </p>
-              </>
-            ) : (
-              <>
-                <Upload className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
-                <p style={{ fontSize: "0.85rem" }} className="font-medium text-foreground">
-                  Upload CV / Resume
-                </p>
-                <p className="text-muted-foreground mt-1" style={{ fontSize: "0.7rem" }}>
-                  PDF, DOC · Max 5MB
-                </p>
-              </>
-            )}
-          </div>
-
-          {/* Motivation Letter Upload */}
-          <div
-            className={`border-2 border-dashed rounded-xl p-5 text-center transition-colors cursor-pointer ${
-              form.uploadMotivation ? "border-emerald-400 bg-emerald-50" : "border-border hover:border-primary/40 bg-card"
-            }`}
-            onClick={() => updateForm({ uploadMotivation: !form.uploadMotivation })}
-          >
-            {form.uploadMotivation ? (
-              <>
-                <CheckCircle2 className="w-6 h-6 text-emerald-600 mx-auto mb-2" />
-                <p style={{ fontSize: "0.85rem" }} className="text-emerald-700 font-medium">
-                  Motivation_Letter.pdf
-                </p>
-                <p className="text-emerald-600 mt-1 animate-pulse" style={{ fontSize: "0.7rem" }}>
-                  Click to remove
-                </p>
-              </>
-            ) : (
-              <>
-                <Upload className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
-                <p style={{ fontSize: "0.85rem" }} className="font-medium text-foreground">
-                  Upload Motivation Letter
-                </p>
-                <p className="text-muted-foreground mt-1" style={{ fontSize: "0.7rem" }}>
-                  PDF, DOC · Max 5MB
-                </p>
-              </>
-            )}
-          </div>
         </div>
       </div>
     </div>

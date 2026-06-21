@@ -17,8 +17,10 @@ export function StudentProfileSetup() {
   const [fullName, setFullName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
   const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
   const [emergencyContact, setEmergencyContact] = useState("");
   const [emergencyPhone, setEmergencyPhone] = useState("");
+  const [emergencyRelationship, setEmergencyRelationship] = useState("");
 
   // Academic Information
   const [studentId, setStudentId] = useState(user?.studentId || "");
@@ -60,8 +62,10 @@ export function StudentProfileSetup() {
           const d = JSON.parse(saved);
           setFullName(d.fullName || user?.name || "");
           setPhone(d.phone || "");
+          setAddress(d.address || "");
           setEmergencyContact(d.emergencyContact || "");
           setEmergencyPhone(d.emergencyPhone || "");
+          setEmergencyRelationship(d.emergencyRelationship || "");
           setStudentId(d.studentId || (user?.email ? user.email.split("@")[0] : ""));
           setDepartment(d.department || "");
           setProgram(d.program || "");
@@ -74,12 +78,20 @@ export function StudentProfileSetup() {
           setIsEditMode(false);
         } else if (user?.id) {
           const res = await apiClient.getStudentProfile(String(user.id));
+          // The students table has no `phone` column — it lives on the users table,
+          // so pull it from there separately and merge it in.
+          const userRes = await apiClient.getUser(String(user.id)).catch(() => null);
+          const u: any = userRes?.success
+            ? (userRes.data?.user ?? userRes.data?.data?.user ?? userRes.data?.data ?? userRes.data)
+            : null;
           if (res.success && res.data) {
             const p = res.data;
             setFullName(p.name || p.user?.name || user?.name || "");
-            setPhone(p.phone || "");
+            setPhone(p.phone || u?.phone || "");
+            setAddress(p.address || "");
             setEmergencyContact(p.emergency_contact || p.emergency_contact_name || "");
             setEmergencyPhone(p.emergency_contact_phone || "");
+            setEmergencyRelationship(p.emergency_contact_relationship || "");
             setStudentId(p.student_id || (user?.email ? user.email.split("@")[0] : ""));
             setDepartment(p.department_name || (typeof p.department === "string" ? p.department : p.department?.name) || "");
             setProgram(p.program || "");
@@ -92,8 +104,11 @@ export function StudentProfileSetup() {
             setIsProfileComplete(isComplete);
             // Always show view page first - whether complete or not
             setIsEditMode(false);
-          } else if (user?.email) {
-            setStudentId(user.email.split("@")[0]);
+          } else {
+            if (u?.phone) setPhone(u.phone);
+            if (user?.email) {
+              setStudentId(user.email.split("@")[0]);
+            }
             // No profile found - still show view page with empty/placeholder data
             setIsEditMode(false);
           }
@@ -135,9 +150,9 @@ export function StudentProfileSetup() {
 
   // Auto-save draft to localStorage
   useEffect(() => {
-    const draft = { fullName, phone, emergencyContact, emergencyPhone, studentId, department, program, level, languages, preferredIndustries, desiredRoles };
+    const draft = { fullName, phone, address, emergencyContact, emergencyPhone, emergencyRelationship, studentId, department, program, level, languages, preferredIndustries, desiredRoles };
     try { localStorage.setItem(draftKey, JSON.stringify(draft)); setLastSaved(new Date()); } catch {}
-  }, [fullName, phone, emergencyContact, emergencyPhone, studentId, department, program, level, languages, preferredIndustries, desiredRoles]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fullName, phone, address, emergencyContact, emergencyPhone, emergencyRelationship, studentId, department, program, level, languages, preferredIndustries, desiredRoles]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Completion: count filled fields out of 9 required
   useEffect(() => {
@@ -178,6 +193,8 @@ export function StudentProfileSetup() {
       if (languages.trim()) data.languages = languages;
       if (preferredIndustries.trim()) data.preferred_industries = preferredIndustries;
       if (desiredRoles.trim()) data.desired_roles = desiredRoles;
+      if (address.trim()) data.address = address;
+      if (emergencyRelationship.trim()) data.emergency_contact_relationship = emergencyRelationship;
 
       const res = await apiClient.updateUser(String(user?.id || ""), data);
       if (res.success) {
@@ -228,8 +245,10 @@ export function StudentProfileSetup() {
             <div><span className="text-muted-foreground">Name:</span> <span className="font-medium">{fullName}</span></div>
             <div><span className="text-muted-foreground">Email:</span> <span className="font-medium">{email}</span></div>
             <div><span className="text-muted-foreground">Phone:</span> <span className="font-medium">{phone || "—"}</span></div>
+            <div><span className="text-muted-foreground">Address:</span> <span className="font-medium">{address || "—"}</span></div>
             <div><span className="text-muted-foreground">Emergency Contact:</span> <span className="font-medium">{emergencyContact || "—"}</span></div>
             <div><span className="text-muted-foreground">Emergency Phone:</span> <span className="font-medium">{emergencyPhone || "—"}</span></div>
+            <div><span className="text-muted-foreground">Relationship:</span> <span className="font-medium">{emergencyRelationship || "—"}</span></div>
           </div>
 
           <div className="bg-card border border-border rounded-lg p-4 space-y-2 text-sm">
@@ -322,6 +341,13 @@ export function StudentProfileSetup() {
               placeholder="+233 50 123 4567"
               className="w-full mt-1 px-3 py-2 border border-border rounded-lg bg-background text-sm" />
           </div>
+          <div>
+            <label className="text-xs font-medium">Address</label>
+            <textarea value={address} onChange={(e) => setAddress(e.target.value)}
+              placeholder="Your residential address"
+              rows={2}
+              className="w-full mt-1 px-3 py-2 border border-border rounded-lg bg-background text-sm" />
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium">Emergency Contact Name *</label>
@@ -333,6 +359,12 @@ export function StudentProfileSetup() {
               <label className="text-xs font-medium">Emergency Contact Phone *</label>
               <input type="tel" value={emergencyPhone} onChange={(e) => setEmergencyPhone(e.target.value)}
                 placeholder="+233 50 000 0000"
+                className="w-full mt-1 px-3 py-2 border border-border rounded-lg bg-background text-sm" />
+            </div>
+            <div>
+              <label className="text-xs font-medium">Relationship</label>
+              <input type="text" value={emergencyRelationship} onChange={(e) => setEmergencyRelationship(e.target.value)}
+                placeholder="e.g., Mother, Father, Guardian"
                 className="w-full mt-1 px-3 py-2 border border-border rounded-lg bg-background text-sm" />
             </div>
           </div>

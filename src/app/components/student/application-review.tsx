@@ -1,5 +1,3 @@
-import { FileText } from "lucide-react";
-
 type CompanyChoice = "none" | "existing" | "new";
 type BranchChoice = "none" | "existing" | "new";
 
@@ -15,15 +13,11 @@ interface FormData {
   newBranchName: string;
   newBranchRegion: string;
   newBranchLocation: string;
-  newBranchAddress: string;
-  newBranchTelephone: string;
   phoneNumber: string;
   emergencyContact: string;
   emergencyPhone: string;
   preferredStartDate: string;
   additionalNotes: string;
-  uploadCV: boolean;
-  uploadMotivation: boolean;
   agreeToTerms: boolean;
 }
 
@@ -108,7 +102,7 @@ export function ApplicationReview({
                 {selectedBranch.location}, {selectedBranch.region}
               </p>
               <p className="text-muted-foreground" style={{ fontSize: "0.7rem" }}>
-                {selectedBranch.address} · {selectedBranch.telephone}
+                {selectedBranch.address}
               </p>
             </>
           ) : (
@@ -121,9 +115,6 @@ export function ApplicationReview({
               </p>
               <p className="text-muted-foreground" style={{ fontSize: "0.75rem" }}>
                 {form.newBranchLocation}, {form.newBranchRegion}
-              </p>
-              <p className="text-muted-foreground" style={{ fontSize: "0.7rem" }}>
-                {form.newBranchAddress} · {form.newBranchTelephone}
               </p>
             </>
           )}
@@ -153,27 +144,6 @@ export function ApplicationReview({
           </p>
         </div>
       </div>
-
-      {/* Documents Summary */}
-      {(form.uploadCV || form.uploadMotivation) && (
-        <div className="bg-secondary/30 rounded-xl p-4 bg-card border border-border">
-          <p className="text-muted-foreground uppercase tracking-wider mb-2 font-semibold" style={{ fontSize: "0.65rem" }}>
-            Attached Documents
-          </p>
-          <div className="flex gap-3">
-            {form.uploadCV && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-card border border-border rounded-lg" style={{ fontSize: "0.8rem" }}>
-                <FileText className="w-3.5 h-3.5 text-primary" /> CV_{user?.name?.replace(/\s+/g, "_") || "student"}.pdf
-              </span>
-            )}
-            {form.uploadMotivation && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-card border border-border rounded-lg" style={{ fontSize: "0.8rem" }}>
-                <FileText className="w-3.5 h-3.5 text-primary" /> Motivation_Letter.pdf
-              </span>
-            )}
-          </div>
-        </div>
-      )}
 
       {form.additionalNotes && (
         <div className="bg-secondary/30 rounded-xl p-4">
