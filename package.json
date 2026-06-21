@@ -6,8 +6,7 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
-    "test": "vitest",
-    "generate-logos": "node scripts/generate-logos.js"
+    "test": "vitest"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
@@ -79,7 +78,6 @@
     "@vitejs/plugin-react": "^4.7.0",
     "jsdom": "^29.1.1",
     "node-fetch": "^3.3.2",
-    "sharp": "^0.34.5",
     "tailwindcss": "4.1.12",
     "vite": "6.3.5",
     "vitest": "^4.1.8"

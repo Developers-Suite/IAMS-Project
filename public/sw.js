@@ -2,8 +2,8 @@ const CACHE_NAME = "iams-v2";
 const ASSETS_TO_CACHE = [
   "/",
   "/index.html",
-  "/iams-logo.svg",
-  "/logo-192.png",
+  "/favicon/favicon.svg",
+  "/favicon/web-app-manifest-192x192.png",
 ];
 
 // Install event - cache necessary files
@@ -49,8 +49,8 @@ self.addEventListener("push", (event) => {
   let notificationData = {
     title: "IAMS Notification",
     body: "You have a new notification",
-    icon: "/logo-192.png",
-    badge: "/logo-192.png",
+    icon: "/favicon/web-app-manifest-192x192.png",
+    badge: "/favicon/web-app-manifest-192x192.png",
     tag: "iams-notification",
   };
 
