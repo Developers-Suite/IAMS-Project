@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { GitBranch, Search, Building2, Plus, AlertCircle, Info, User, Mail, MapPin } from "lucide-react";
+import { GitBranch, Search, Building2, Plus, AlertCircle, Info, User, Mail, MapPin, Phone } from "lucide-react";
 import { StatusBadge } from "../status-badge";
 import { ghanaRegions } from "../../lib/mock-data";
 import { apiClient } from "../../lib/api-client";
@@ -14,6 +14,7 @@ interface FormData {
   newCompanyName: string;
   newCompanyContactPerson: string;
   newCompanyContactEmail: string;
+  newCompanyPhone: string;
   branchChoice: BranchChoice;
   selectedBranchId: string;
   newBranchName: string;
@@ -339,6 +340,7 @@ export function CompanyBranchSelector({
                   newCompanyName: "",
                   newCompanyContactPerson: "",
                   newCompanyContactEmail: "",
+                  newCompanyPhone: "",
                   branchChoice: "none",
                 })
               }
@@ -386,7 +388,7 @@ export function CompanyBranchSelector({
                 </div>
               </div>
               <div>
-                <label style={{ fontSize: "0.8rem" }}>Contact Email *</label>
+                <label style={{ fontSize: "0.8rem" }}>Contact Email</label>
                 <div className="relative mt-1">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input
@@ -394,6 +396,20 @@ export function CompanyBranchSelector({
                     value={form.newCompanyContactEmail}
                     onChange={(e) => updateForm({ newCompanyContactEmail: e.target.value })}
                     placeholder="email@company.com"
+                    className="w-full pl-9 pr-3 py-2 border border-border rounded-lg bg-background"
+                    style={{ fontSize: "0.85rem" }}
+                  />
+                </div>
+              </div>
+              <div>
+                <label style={{ fontSize: "0.8rem" }}>Company Phone</label>
+                <div className="relative mt-1">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="tel"
+                    value={form.newCompanyPhone}
+                    onChange={(e) => updateForm({ newCompanyPhone: e.target.value })}
+                    placeholder="+233..."
                     className="w-full pl-9 pr-3 py-2 border border-border rounded-lg bg-background"
                     style={{ fontSize: "0.85rem" }}
                   />

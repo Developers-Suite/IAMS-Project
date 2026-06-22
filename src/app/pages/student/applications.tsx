@@ -66,6 +66,7 @@ interface FormData {
   newCompanyName: string;
   newCompanyContactPerson: string;
   newCompanyContactEmail: string;
+  newCompanyPhone: string;
   branchChoice: BranchChoice;
   selectedBranchId: string;
   newBranchName: string;
@@ -85,6 +86,7 @@ const defaultForm: FormData = {
   newCompanyName: "",
   newCompanyContactPerson: "",
   newCompanyContactEmail: "",
+  newCompanyPhone: "",
   branchChoice: "none",
   selectedBranchId: "",
   newBranchName: "",
@@ -384,6 +386,7 @@ export function StudentApplicationsPage() {
               name: form.newCompanyName,
               contactPerson: form.newCompanyContactPerson,
               contactEmail: form.newCompanyContactEmail,
+              contactPhone: form.newCompanyPhone,
               addedBy: actor,
               autoApprove: false,
             },
