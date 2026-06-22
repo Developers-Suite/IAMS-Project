@@ -20,7 +20,7 @@ export function DLOGradingConfigPage() {
   const [showTermDropdown, setShowTermDropdown] = useState(false);
 
   const [config, setConfig] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
@@ -170,7 +170,7 @@ export function DLOGradingConfigPage() {
       )}
 
       {/* Config form */}
-      {loading ? (
+      {loading || !config ? (
         <div className="flex items-center justify-center h-48">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
