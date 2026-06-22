@@ -159,13 +159,11 @@ export function EvaluatePage() {
       return;
     }
     let cancelled = false;
-    apiClient.getActiveTerm().then((termRes) => {
-      const termId = termRes.success ? termRes.data?.term?.id : undefined;
-      apiClient.getGradingConfigs({ department: getDepartmentName(app), ...(termId ? { term_id: termId } : {}) }).then((res) => {
-        if (cancelled) return;
-        const active = res.success ? res.data.find((c: any) => c.status === "active") : undefined;
-        setSectionWeights(active?.sectionWeights ?? null);
-      });
+    const termId = app.academic_term_id ?? app.term?.id;
+    apiClient.getGradingConfigs({ department: getDepartmentName(app), ...(termId ? { term_id: termId } : {}) }).then((res) => {
+      if (cancelled) return;
+      const active = res.success ? res.data.find((c: any) => c.status === "active") : undefined;
+      setSectionWeights(active?.sectionWeights ?? null);
     });
     return () => { cancelled = true; };
   }, [appId]); // eslint-disable-line react-hooks/exhaustive-deps

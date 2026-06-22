@@ -1668,7 +1668,7 @@ export const apiClient = {
     // Map camelCase to snake_case for the backend
     const payload = {
       department_id: data.department_id ?? data.departmentId,
-      academic_term_id: data.term_id ?? data.termId,
+      academic_term_id: data.academic_term_id ?? data.term_id ?? data.termId,
       structure: data.structure,
       structure_weights: data.structureWeights,
       section_weights: data.sectionWeights,
