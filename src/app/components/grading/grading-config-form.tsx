@@ -159,9 +159,7 @@ export function GradingConfigForm({ initial, readOnly, onSave, saveLabel = "Save
             onClick={() =>
               onSave({
                 structure,
-                structureWeights: includesW4
-                  ? { w1, w2, w3, w4 }
-                  : { w1, w2, w3 },
+                structureWeights: { w1, w2, w3, w4: includesW4 ? w4 : 0 },
                 sectionWeights: sec,
               })
             }

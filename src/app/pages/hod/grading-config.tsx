@@ -1,22 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
+import { useEffect, useState } from "react";
 import { Card } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { GradingConfigForm } from "../../components/grading/grading-config-form";
 import { useAppContext } from "../../lib/context";
 import { apiClient } from "../../lib/api-client";
 import { DEFAULT_STRUCTURE, DEFAULT_STRUCTURE_WEIGHTS, DEFAULT_SECTION_WEIGHTS } from "../../lib/constants";
-import type { GradingActor } from "../../types/grading";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 export function HODGradingConfigPage() {
   const { user } = useAppContext();
   const department = user?.department ?? "Computer Science";
-  
+
   const [config, setConfig] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [isApproving, setIsApproving] = useState(false);
   const [activeTermId, setActiveTermId] = useState<string | number | undefined>(undefined);
 
   useEffect(() => {
@@ -48,13 +44,6 @@ export function HODGradingConfigPage() {
     fetchConfig();
   }, [department, activeTermId]);
 
-  const actor: GradingActor = {
-    id: user?.id ?? "u-hod",
-    name: user?.name ?? "HOD",
-    role: "hod",
-    department,
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -69,7 +58,7 @@ export function HODGradingConfigPage() {
         <div>
           <h1 className="text-2xl text-[#1a1a2e]">Grading Configuration</h1>
           <p className="text-sm text-gray-600 mt-1">
-            Read-only view of {department}'s grading configuration. Approve a pending submission to lock it for the term.
+            Read-only view of {department}'s grading configuration. Configuration is managed by the DLO.
           </p>
         </div>
         <StatusBadge status={config?.status ?? "draft"} />
@@ -103,29 +92,6 @@ export function HODGradingConfigPage() {
         )}
       </Card>
 
-      {config?.status === "pending_approval" && (
-        <div className="flex justify-end">
-          <Button
-            className="bg-[#0B5ED7] hover:bg-[#0a52bd]"
-            disabled={isApproving}
-            onClick={async () => {
-              if (!config?.id) return;
-              setIsApproving(true);
-              const res = await apiClient.approveGradingConfig(config.id);
-              if (res.success) {
-                toast.success("Configuration approved and locked for the term.");
-                fetchConfig();
-              } else {
-                toast.error(res.message ?? "Failed to approve configuration.");
-              }
-              setIsApproving(false);
-            }}
-          >
-            {isApproving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="size-4 mr-2" />}
-            Approve & Lock for Term
-          </Button>
-        </div>
-      )}
     </div>
   );
 }

@@ -1,10 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { SkeletonList } from "../../components/skeleton";
 import { StatusBadge } from "../../components/status-badge";
-import {
-  CheckCircle2, X, GraduationCap, ChevronDown, ChevronUp, RotateCcw,
-} from "lucide-react";
-import { toast } from "sonner";
+import { GraduationCap, ChevronDown, ChevronUp } from "lucide-react";
 import { apiClient } from "../../lib/api-client";
 import { getNameInitials } from "../../lib/validation";
 
@@ -35,8 +32,6 @@ export function HODApprovalsPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterTab>("pending");
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [showRevisionModal, setShowRevisionModal] = useState<string | null>(null);
-  const [revisionReason, setRevisionReason] = useState("");
 
   const fetchGrades = useCallback(async () => {
     setLoading(true);
@@ -53,29 +48,6 @@ export function HODApprovalsPage() {
 
   const displayed = filter === "pending" ? pendingApproval : filter === "approved" ? approvedGrades : allGraded;
 
-  const handleApprove = async (gradeId: string) => {
-    const res = await apiClient.approveGrade(gradeId);
-    if (res.success) { toast.success(res.message ?? "Grade approved."); setExpandedId(null); fetchGrades(); }
-    else toast.error(res.message ?? "Failed to approve.");
-  };
-
-  const handleRequestRevision = async (gradeId: string) => {
-    if (!revisionReason.trim()) { toast.error("Please provide a reason."); return; }
-    const res = await apiClient.requestGradeRevision(gradeId, revisionReason);
-    if (res.success) { toast.success(res.message ?? "Revision requested."); setShowRevisionModal(null); setRevisionReason(""); setExpandedId(null); fetchGrades(); }
-    else toast.error(res.message ?? "Failed to request revision.");
-  };
-
-  const handleBulkApprove = async () => {
-    let count = 0;
-    for (const g of pendingApproval) {
-      const res = await apiClient.approveGrade(g.id);
-      if (res.success) count++;
-    }
-    toast.success(`${count} grade${count !== 1 ? "s" : ""} approved.`);
-    fetchGrades();
-  };
-
   const getGradeColor = (grade: string) => {
     if (["A", "A+", "A-"].includes(grade)) return "bg-emerald-100 text-emerald-700";
     if (["B+", "B", "B-"].includes(grade)) return "bg-blue-100 text-blue-700";
@@ -85,26 +57,18 @@ export function HODApprovalsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1>Grade Approvals</h1>
-          <p className="text-muted-foreground" style={{ fontSize: "0.85rem" }}>
-            Review and approve final grades for your department
-          </p>
-        </div>
-        {pendingApproval.length > 0 && (
-          <button onClick={handleBulkApprove}
-            className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-2" style={{ fontSize: "0.85rem" }}>
-            <CheckCircle2 className="w-4 h-4" /> Approve All ({pendingApproval.length})
-          </button>
-        )}
+      <div>
+        <h1>Grade Overview</h1>
+        <p className="text-muted-foreground" style={{ fontSize: "0.85rem" }}>
+          Read-only view of final grades for your department. Grade approval is handled by the DLO.
+        </p>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
           <p className="text-amber-800" style={{ fontSize: "2rem", lineHeight: 1.1 }}>{pendingApproval.length}</p>
-          <p className="text-amber-600 mt-1" style={{ fontSize: "0.8rem" }}>Pending Approval</p>
+          <p className="text-amber-600 mt-1" style={{ fontSize: "0.8rem" }}>Awaiting DLO Approval</p>
         </div>
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-center">
           <p className="text-emerald-800" style={{ fontSize: "2rem", lineHeight: 1.1 }}>{approvedGrades.length}</p>
@@ -131,33 +95,6 @@ export function HODApprovalsPage() {
         ))}
       </div>
 
-      {/* Revision Modal */}
-      {showRevisionModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-xl p-6 w-full max-w-md space-y-4">
-            <div className="flex items-center justify-between">
-              <h3>Request Grade Revision</h3>
-              <button onClick={() => { setShowRevisionModal(null); setRevisionReason(""); }} className="text-muted-foreground hover:text-foreground"><X className="w-5 h-5" /></button>
-            </div>
-            <p className="text-muted-foreground" style={{ fontSize: "0.85rem" }}>The DLO will be notified to review and recompile the grade.</p>
-            <div>
-              <label style={{ fontSize: "0.8rem" }}>Reason for Revision *</label>
-              <textarea value={revisionReason} onChange={(e) => setRevisionReason(e.target.value)}
-                placeholder="Explain why the grade needs revision..."
-                className="w-full mt-1 px-3 py-2 border border-border rounded-lg bg-background min-h-[100px]" style={{ fontSize: "0.85rem" }} />
-            </div>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => { setShowRevisionModal(null); setRevisionReason(""); }}
-                className="px-4 py-2 border border-border rounded-lg hover:bg-accent" style={{ fontSize: "0.85rem" }}>Cancel</button>
-              <button onClick={() => handleRequestRevision(showRevisionModal)} disabled={!revisionReason.trim()}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50" style={{ fontSize: "0.85rem" }}>
-                Send Revision Request
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Grades List */}
       {loading ? (
         <SkeletonList rows={5} />
@@ -166,7 +103,7 @@ export function HODApprovalsPage() {
           <GraduationCap className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h3>No grades to display</h3>
           <p className="text-muted-foreground mt-1" style={{ fontSize: "0.85rem" }}>
-            {filter === "pending" ? "No grades are pending your approval." : "No grades found for this filter."}
+            {filter === "pending" ? "No grades are pending DLO approval." : "No grades found for this filter."}
           </p>
         </div>
       ) : (
@@ -193,16 +130,6 @@ export function HODApprovalsPage() {
                     <span className={`px-3 py-1.5 rounded-lg ${getGradeColor(g.grade)}`} style={{ fontSize: "1.1rem" }}>{g.grade}</span>
                     <StatusBadge status={g.gradeStatus} />
                   </div>
-                  {g.gradeStatus === "Submitted" && (
-                    <div className="flex gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
-                      <button onClick={() => handleApprove(g.id)} className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-1" style={{ fontSize: "0.8rem" }}>
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Approve
-                      </button>
-                      <button onClick={() => setShowRevisionModal(g.id)} className="px-3 py-1.5 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 flex items-center gap-1" style={{ fontSize: "0.8rem" }}>
-                        <RotateCcw className="w-3.5 h-3.5" /> Revise
-                      </button>
-                    </div>
-                  )}
                   <div className="shrink-0 text-muted-foreground">{isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}</div>
                 </button>
 
@@ -232,16 +159,6 @@ export function HODApprovalsPage() {
                         <StatusBadge status={g.gradeStatus} />
                       </div>
                     </div>
-                    {g.gradeStatus === "Submitted" && (
-                      <div className="flex gap-2">
-                        <button onClick={() => handleApprove(g.id)} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-2" style={{ fontSize: "0.85rem" }}>
-                          <CheckCircle2 className="w-4 h-4" /> Approve Grade
-                        </button>
-                        <button onClick={() => setShowRevisionModal(g.id)} className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 flex items-center gap-2" style={{ fontSize: "0.85rem" }}>
-                          <RotateCcw className="w-4 h-4" /> Request Revision
-                        </button>
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
