@@ -7,7 +7,7 @@ import { GradingConfigForm } from "../../components/grading/grading-config-form"
 import { useAppContext } from "../../lib/context";
 import { apiClient } from "../../lib/api-client";
 import { DEFAULT_STRUCTURE, DEFAULT_STRUCTURE_WEIGHTS, DEFAULT_SECTION_WEIGHTS } from "../../lib/constants";
-import { ChevronDown, Send, CheckCircle2, Loader2 } from "lucide-react";
+import { ChevronDown, Lock, Loader2 } from "lucide-react";
 import type { TermResponse } from "../../types/api";
 
 export function DLOGradingConfigPage() {
@@ -21,30 +21,41 @@ export function DLOGradingConfigPage() {
 
   const [config, setConfig] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isApproving, setIsApproving] = useState(false);
+  const [pendingInput, setPendingInput] = useState<any>(null);
+  const [isActivating, setIsActivating] = useState(false);
 
-  // Load all terms once
+  // Load terms eligible for this department
   useEffect(() => {
     setTermsLoading(true);
     apiClient.getTerms().then((res) => {
       if (res.success && res.data.length > 0) {
-        const sorted = [...res.data].sort((a, b) => {
-          const order = { active: 0, upcoming: 1, completed: 2, archived: 3 };
-          const aO = order[(a.status as string).toLowerCase() as keyof typeof order] ?? 4;
-          const bO = order[(b.status as string).toLowerCase() as keyof typeof order] ?? 4;
-          return aO - bO;
+        const eligible = res.data.filter((t) => {
+          const depts = (t.departments ?? []).map((d: any) =>
+            typeof d === "string" ? d : d.name ?? String(d)
+          );
+          // Empty departments means unrestricted (all departments)
+          return depts.length === 0 || depts.includes(department);
+        });
+        const sorted = [...eligible].sort((a, b) => {
+          const order: Record<string, number> = { active: 0, upcoming: 1, completed: 2, archived: 3 };
+          return (order[(a.status as string).toLowerCase()] ?? 4) - (order[(b.status as string).toLowerCase()] ?? 4);
         });
         setTerms(sorted);
-        const active = sorted.find((t) => (t.status as string).toLowerCase() === "active");
-        setSelectedTermId((active ?? sorted[0]).id);
+        if (sorted.length > 0) {
+          const active = sorted.find((t) => (t.status as string).toLowerCase() === "active");
+          setSelectedTermId((active ?? sorted[0]).id);
+        } else {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
       }
     }).finally(() => setTermsLoading(false));
-  }, []);
+  }, [department]);
 
   const fetchConfig = async (termId: string | number) => {
     setLoading(true);
+    setPendingInput(null);
     const res = await apiClient.getGradingConfigs({ department, term_id: termId });
     if (res.success && res.data.length > 0) {
       setConfig(res.data[0]);
@@ -66,48 +77,45 @@ export function DLOGradingConfigPage() {
 
   const selectedTerm = terms.find((t) => String(t.id) === String(selectedTermId));
   const isLocked = config?.status === "active";
-  const isPendingApproval = config?.status === "pending_approval";
 
-  const handleSaveDraft = async (input: any) => {
-    setIsSaving(true);
-    const res = await apiClient.saveGradingConfig({
+  // Single action: save draft → submit → approve in one click
+  const handleSaveAndActivate = async (input: any) => {
+    setPendingInput(input);
+    setIsActivating(true);
+
+    // Step 1: save/update the config
+    const saveRes = await apiClient.saveGradingConfig({
       department_id: department,
       academic_term_id: selectedTermId,
       ...input,
     });
-    if (res.success) {
-      setConfig(res.data);
-      toast.success("Grading configuration draft saved.");
-    } else {
-      toast.error(res.message ?? "Failed to save draft.");
+    if (!saveRes.success) {
+      toast.error(saveRes.message ?? "Failed to save configuration.");
+      setIsActivating(false);
+      return;
     }
-    setIsSaving(false);
-  };
+    const savedConfig = saveRes.data;
+    setConfig(savedConfig);
 
-  const handleSubmit = async () => {
-    if (!config?.id) { toast.error("Save a draft before submitting."); return; }
-    setIsSubmitting(true);
-    const res = await apiClient.submitGradingConfigForApproval(config.id);
-    if (res.success) {
-      toast.success("Configuration ready for approval.");
-      fetchConfig(selectedTermId!);
-    } else {
-      toast.error(res.message ?? "Failed to submit.");
+    // Step 2: submit for approval (moves to pending_approval)
+    const submitRes = await apiClient.submitGradingConfigForApproval(savedConfig.id);
+    if (!submitRes.success) {
+      toast.error(submitRes.message ?? "Failed to submit configuration.");
+      setIsActivating(false);
+      return;
     }
-    setIsSubmitting(false);
-  };
 
-  const handleApprove = async () => {
-    if (!config?.id) return;
-    setIsApproving(true);
-    const res = await apiClient.approveGradingConfig(config.id);
-    if (res.success) {
-      toast.success("Configuration approved and locked for the term.");
-      fetchConfig(selectedTermId!);
-    } else {
-      toast.error(res.message ?? "Failed to approve.");
+    // Step 3: approve and lock
+    const approveRes = await apiClient.approveGradingConfig(savedConfig.id);
+    if (!approveRes.success) {
+      toast.error(approveRes.message ?? "Failed to activate configuration.");
+      setIsActivating(false);
+      return;
     }
-    setIsApproving(false);
+
+    toast.success("Grading configuration saved and locked for the term.");
+    fetchConfig(selectedTermId!);
+    setIsActivating(false);
   };
 
   return (
@@ -122,23 +130,24 @@ export function DLOGradingConfigPage() {
         </div>
 
         {/* Term dropdown */}
-        <div className="relative shrink-0" style={{ minWidth: "220px" }}>
+        <div className="relative shrink-0" style={{ minWidth: "240px" }}>
           <button
             type="button"
-            disabled={termsLoading}
+            disabled={termsLoading || terms.length === 0}
             onClick={() => setShowTermDropdown((v) => !v)}
             className="w-full flex items-center justify-between gap-2 px-4 py-2.5 border border-border rounded-lg bg-background hover:bg-accent transition-colors text-sm font-medium disabled:opacity-50"
           >
             <span className="truncate">
-              {termsLoading ? "Loading terms…" : selectedTerm ? selectedTerm.name : "Select term"}
+              {termsLoading ? "Loading terms…" : terms.length === 0 ? "No eligible terms" : selectedTerm ? selectedTerm.name : "Select term"}
             </span>
             <ChevronDown className={`w-4 h-4 shrink-0 text-muted-foreground transition-transform ${showTermDropdown ? "rotate-180" : ""}`} />
           </button>
 
-          {showTermDropdown && (
+          {showTermDropdown && terms.length > 0 && (
             <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-background border border-border rounded-lg shadow-lg max-h-64 overflow-y-auto">
               {terms.map((t) => {
-                const isActive = (t.status as string).toLowerCase() === "active";
+                const statusLower = (t.status as string).toLowerCase();
+                const isActive = statusLower === "active";
                 const isSelected = String(t.id) === String(selectedTermId);
                 return (
                   <button
@@ -148,8 +157,8 @@ export function DLOGradingConfigPage() {
                     className={`w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm text-left hover:bg-accent transition-colors ${isSelected ? "text-primary font-medium" : "text-foreground"}`}
                   >
                     <span className="truncate">{t.name}</span>
-                    <span className={`text-xs px-1.5 py-0.5 rounded shrink-0 ${isActive ? "bg-emerald-100 text-emerald-700" : "bg-secondary text-muted-foreground"}`}>
-                      {isActive ? "Active" : (t.status as string)}
+                    <span className={`text-xs px-1.5 py-0.5 rounded capitalize shrink-0 ${isActive ? "bg-emerald-100 text-emerald-700" : "bg-secondary text-muted-foreground"}`}>
+                      {statusLower}
                     </span>
                   </button>
                 );
@@ -159,12 +168,12 @@ export function DLOGradingConfigPage() {
         </div>
       </div>
 
-      {/* Status banner */}
-      {config && (
-        <div className="flex items-center justify-between">
+      {/* Status badge */}
+      {config && !loading && (
+        <div className="flex items-center gap-3">
           <StatusBadge status={config.status ?? "draft"} />
           {isLocked && (
-            <p className="text-sm text-emerald-700">This configuration is locked for the selected term.</p>
+            <p className="text-sm text-emerald-700">This configuration is locked for {selectedTerm?.name}.</p>
           )}
         </div>
       )}
@@ -174,40 +183,19 @@ export function DLOGradingConfigPage() {
         <div className="flex items-center justify-center h-48">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
+      ) : terms.length === 0 ? (
+        <Card className="p-12 text-center text-muted-foreground">
+          No terms are currently assigned to the {department} department.
+        </Card>
       ) : (
         <Card className="p-6">
           <GradingConfigForm
             initial={config}
             readOnly={isLocked}
-            onSave={handleSaveDraft}
-            saveLabel={isSaving ? "Saving…" : "Save Draft"}
+            onSave={handleSaveAndActivate}
+            saveLabel={isActivating ? "Activating…" : "Save & Activate for Term"}
           />
         </Card>
-      )}
-
-      {/* Action buttons */}
-      {!loading && !isLocked && (
-        <div className="flex justify-end gap-3">
-          {isPendingApproval ? (
-            <Button
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
-              disabled={isApproving}
-              onClick={handleApprove}
-            >
-              {isApproving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="size-4 mr-2" />}
-              Approve & Lock for Term
-            </Button>
-          ) : (
-            <Button
-              variant="outline"
-              disabled={!config?.id || config?.status !== "draft" || isSubmitting}
-              onClick={handleSubmit}
-            >
-              {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="size-4 mr-2" />}
-              Submit for Approval
-            </Button>
-          )}
-        </div>
       )}
     </div>
   );
