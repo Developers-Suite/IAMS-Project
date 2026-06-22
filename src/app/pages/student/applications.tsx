@@ -183,7 +183,9 @@ export function StudentApplicationsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Pre-fill contact details from the student's saved profile (only fields not already set by a restored draft)
+  const [fetchedProfile, setFetchedProfile] = useState<{ studentId?: string; department?: string } | null>(null);
+
+  // Pre-fill contact details and profile info from the student's saved profile
   useEffect(() => {
     if (!user?.id) return;
     Promise.all([
@@ -195,11 +197,14 @@ export function StudentApplicationsPage() {
         ? (userRes.data?.user ?? userRes.data?.data?.user ?? userRes.data?.data ?? userRes.data)
         : null;
       if (!p && !u) return;
+      setFetchedProfile({
+        studentId: p?.student_id ?? "",
+        department: p?.department?.name ?? "",
+      });
       setForm((prev) => ({
         ...prev,
-        // `phone` lives on the users table, not the student profile, so fall back to it
-        phoneNumber: prev.phoneNumber || p?.phone || u?.phone || "",
-        emergencyContact: prev.emergencyContact || p?.emergency_contact || p?.emergency_contact_name || "",
+        phoneNumber: prev.phoneNumber || p?.phone || p?.user?.phone || u?.phone || "",
+        emergencyContact: prev.emergencyContact || p?.emergency_contact_name || p?.emergency_contact || "",
         emergencyPhone: prev.emergencyPhone || p?.emergency_contact_phone || "",
       }));
     }).catch(() => { /* profile prefill is best-effort */ });
@@ -620,7 +625,7 @@ export function StudentApplicationsPage() {
                 branches={branches}
               />
             )}
-            {step === 3 && <PersonalDetailsForm form={form} updateForm={updateForm} user={user} />}
+            {step === 3 && <PersonalDetailsForm form={form} updateForm={updateForm} user={user} fetchedProfile={fetchedProfile} />}
             {step === 4 && (
               <ApplicationReview
                 form={form}

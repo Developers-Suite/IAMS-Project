@@ -18,19 +18,19 @@ interface Props {
   viewRole: ExtendedRole;
 }
 
-// Normalize backend internship to the flat shape the UI expects
-function normalizeInternship(i: any) {
+function normalizeUserWithInternship(u: any, internship?: any) {
   return {
-    id: String(i.id),
-    studentName: i.student?.user?.name ?? "—",
-    studentId:   i.student?.student_id ?? "—",
-    studentUserId: String(i.student?.user?.id ?? ""),
-    companyName: i.company?.name ?? "—",
-    department:  i.student?.department?.name ?? i.student?.department ?? "—",
-    level:       i.student?.level ?? "—",
-    supervisorAssigned: i.academicSupervisor?.user?.name ?? i.academic_supervisor?.user?.name ?? "",
-    status:      i.status ?? "active",
-    startDate:   fmtDate(i.start_date ?? i.created_at),
+    id: String(u.id),
+    internshipId: internship ? String(internship.id) : null,
+    studentName: u.name ?? "—",
+    studentId: u.student_profile?.student_id ?? "—",
+    studentUserId: String(u.id),
+    companyName: internship?.company?.name ?? "—",
+    department: u.student_profile?.department?.name ?? u.department ?? "—",
+    level: u.student_profile?.level ?? "—",
+    supervisorAssigned: internship?.academic_supervisor?.user?.name ?? internship?.academicSupervisor?.user?.name ?? "",
+    status: internship?.status ?? "registered",
+    startDate: internship ? fmtDate(internship.start_date ?? internship.created_at) : "—",
   };
 }
 
@@ -72,25 +72,27 @@ export function StudentsPage({ viewRole }: Props) {
 
   const fetchStudents = useCallback(async () => {
     setLoading(true);
-    // Fetch with pagination parameters
-    const res = await apiClient.getInternships({ 
-      page: currentPage, 
-      per_page: itemsPerPage 
-    });
-    if (res.success) {
-      setEnrolledStudents(res.data.map(normalizeInternship));
-      // Extract pagination info from the meta if available, otherwise estimate
-      if (res.meta?.total_pages) {
-        setTotalPages(res.meta.total_pages);
-      } else if (res.meta?.total_count) {
-        setTotalPages(Math.ceil(res.meta.total_count / itemsPerPage));
-      } else {
-        // Fallback for mock/simple APIs
-        setTotalPages(res.data.length < itemsPerPage ? currentPage : currentPage + 1);
+    const [usersRes, internshipsRes] = await Promise.all([
+      apiClient.getUsers({ role: "student", per_page: 200 }),
+      apiClient.getInternships({ per_page: 200 }),
+    ]);
+    if (usersRes.success) {
+      // Build a map from userId → internship
+      const internshipMap = new Map<string, any>();
+      if (internshipsRes.success) {
+        for (const i of internshipsRes.data) {
+          const uid = String(i.student?.user?.id ?? "");
+          if (uid) internshipMap.set(uid, i);
+        }
       }
+      const rows = usersRes.data.map((u: any) =>
+        normalizeUserWithInternship(u, internshipMap.get(String(u.id)))
+      );
+      setEnrolledStudents(rows);
+      setTotalPages(Math.ceil(rows.length / itemsPerPage) || 1);
     }
     setLoading(false);
-  }, [currentPage, itemsPerPage]);
+  }, [itemsPerPage]);
 
   const fetchMissed = useCallback(async () => {
     const [r3, r7] = await Promise.all([
@@ -112,11 +114,18 @@ export function StudentsPage({ viewRole }: Props) {
       setReportScore(""); setReportComment(""); setPresScore(""); setPresComment("");
       return;
     }
+    const row = enrolledStudents.find((s) => s.id === selectedStudent);
+    const internshipId = row?.internshipId;
+    if (!internshipId) {
+      // Student has no internship yet — nothing to load
+      setDetailLoading(false);
+      return;
+    }
     setDetailLoading(true);
     Promise.all([
-      apiClient.getInternshipLogbooks(selectedStudent, { per_page: 5 }),
-      apiClient.getInternshipAttendance(selectedStudent, {}),
-      apiClient.getGrade(selectedStudent),
+      apiClient.getInternshipLogbooks(internshipId, { per_page: 5 }),
+      apiClient.getInternshipAttendance(internshipId, {}),
+      apiClient.getGrade(internshipId),
     ]).then(([logsRes, attRes, gradeRes]) => {
       if (logsRes.success) setDetailLogEntries(logsRes.data ?? []);
       if (attRes.success) setDetailAttendance(Array.isArray(attRes.data) ? attRes.data : attRes.data?.attendance ?? []);
@@ -129,7 +138,7 @@ export function StudentsPage({ viewRole }: Props) {
         setPresComment(g?.presentation_comments ?? "");
       }
     }).finally(() => setDetailLoading(false));
-  }, [selectedStudent]);
+  }, [selectedStudent, enrolledStudents]);
 
   // Compute activity status from last logbook entry
   const getActivityFromLogs = (internshipId: string) => {
@@ -151,6 +160,7 @@ export function StudentsPage({ viewRole }: Props) {
   });
 
   const detail = selectedStudent ? enrolledStudents.find((a) => a.id === selectedStudent) : null;
+  const selectedInternshipId = detail?.internshipId ?? null;
 
   // Compute last log date from detailLogEntries when a student is selected
   const lastLogDate = detailLogEntries.length > 0
@@ -158,7 +168,7 @@ export function StudentsPage({ viewRole }: Props) {
     : null;
 
   const handleSaveReport = async () => {
-    if (!selectedStudent || !reportScore) return;
+    if (!selectedInternshipId || !reportScore) return;
     setScoreSaving(true);
 
     // Convert single score (0-100) to 5 sub-scores (0-4 each)
@@ -167,7 +177,7 @@ export function StudentsPage({ viewRole }: Props) {
     const scorePercentage = Number(reportScore) / 100;
     const subScore = scorePercentage * 4;
 
-    const res = await apiClient.gradeReport(selectedStudent, {
+    const res = await apiClient.gradeReport(selectedInternshipId, {
       content_quality: subScore,
       organization: subScore,
       technical_depth: subScore,
@@ -178,8 +188,7 @@ export function StudentsPage({ viewRole }: Props) {
     setScoreSaving(false);
     if (res.success) {
       toast.success("Report score saved.");
-      // Refresh grade
-      const gr = await apiClient.getGrade(selectedStudent);
+      const gr = await apiClient.getGrade(selectedInternshipId);
       if (gr.success) setDetailGrade((gr.data as any)?.grade ?? gr.data);
     } else {
       toast.error(res.message ?? "Failed to save report score.");
@@ -187,7 +196,7 @@ export function StudentsPage({ viewRole }: Props) {
   };
 
   const handleSavePresentation = async () => {
-    if (!selectedStudent || !presScore) return;
+    if (!selectedInternshipId || !presScore) return;
     setScoreSaving(true);
 
     try {
@@ -195,9 +204,8 @@ export function StudentsPage({ viewRole }: Props) {
       let presentationId = detailGrade?.presentation_id;
 
       if (!presentationId) {
-        // Need to create presentation first with today's date
         const schedRes = await apiClient.schedulePresentationScore({
-          internship_id: Number(selectedStudent),
+          internship_id: Number(selectedInternshipId),
           presentation_date: new Date().toISOString().split('T')[0],
         });
 
@@ -229,8 +237,7 @@ export function StudentsPage({ viewRole }: Props) {
       setScoreSaving(false);
       if (gradeRes.success) {
         toast.success("Presentation score saved.");
-        // Refresh grade
-        const gr = await apiClient.getGrade(selectedStudent);
+        const gr = await apiClient.getGrade(selectedInternshipId!);
         if (gr.success) setDetailGrade((gr.data as any)?.grade ?? gr.data);
       } else {
         toast.error(gradeRes.message ?? "Failed to save presentation score.");
@@ -246,7 +253,7 @@ export function StudentsPage({ viewRole }: Props) {
     const res = await apiClient.approveGrade(String(detailGrade.id));
     if (res.success) {
       toast.success("Grade approved.");
-      const gr = await apiClient.getGrade(selectedStudent!);
+      const gr = await apiClient.getGrade(selectedInternshipId!);
       if (gr.success) setDetailGrade((gr.data as any)?.grade ?? gr.data);
     } else {
       toast.error(res.message ?? "Failed to approve grade.");
@@ -254,20 +261,16 @@ export function StudentsPage({ viewRole }: Props) {
   };
 
   const handleCompileGrade = async () => {
-    if (!selectedStudent) return;
+    if (!selectedInternshipId) return;
 
-    // For structures with 0% weight on report or presentation, auto-create them with 0 score
-    // so the compile endpoint doesn't fail
     try {
       const cfg = gradingConfig;
       if (cfg && structure) {
-        // Check which components need auto-fill
         const reportWeight = cfg.report_weight ?? 0;
         const presentationWeight = cfg.presentation_weight ?? 0;
 
-        // Auto-create report with 0 score if weight is 0
         if (reportWeight === 0 && !reportScore) {
-          const resReport = await apiClient.gradeReport(selectedStudent, {
+          const resReport = await apiClient.gradeReport(selectedInternshipId, {
             content_quality: 0, organization: 0, technical_depth: 0,
             writing_quality: 0, formatting: 0,
             comments: "Auto-filled (not part of this structure)",
@@ -278,12 +281,11 @@ export function StudentsPage({ viewRole }: Props) {
           }
         }
 
-        // Auto-create presentation with 0 score if weight is 0
         if (presentationWeight === 0 && !presScore) {
           let presentationId = detailGrade?.presentation_id;
           if (!presentationId) {
             const schedRes = await apiClient.schedulePresentationScore({
-              internship_id: Number(selectedStudent),
+              internship_id: Number(selectedInternshipId),
               presentation_date: new Date().toISOString().split('T')[0],
             });
             if (schedRes.success) {
@@ -300,13 +302,12 @@ export function StudentsPage({ viewRole }: Props) {
       }
     } catch (error) {
       console.error("Error preparing components:", error);
-      // Continue anyway, maybe components already exist
     }
 
-    const res = await apiClient.compileGrade(selectedStudent);
+    const res = await apiClient.compileGrade(selectedInternshipId);
     if (res.success) {
       toast.success("Grade compiled.");
-      const gr = await apiClient.getGrade(selectedStudent);
+      const gr = await apiClient.getGrade(selectedInternshipId);
       if (gr.success) setDetailGrade((gr.data as any)?.grade ?? gr.data);
     } else {
       toast.error(res.message ?? "Failed to compile grade.");
@@ -512,9 +513,9 @@ export function StudentsPage({ viewRole }: Props) {
                 <>
                   {[
                     ["Department", detail.department],
-                    ["Company", detail.companyName],
+                    ["Company", detail.companyName !== "—" ? detail.companyName : "No internship yet"],
                     ["Academic Supervisor", detail.supervisorAssigned || "Not assigned"],
-                    ["Started", detail.startDate],
+                    ["Started", detail.startDate !== "—" ? detail.startDate : "No internship yet"],
                   ].map(([l, v]) => (
                     <div key={l}>
                       <p className="text-muted-foreground" style={{ fontSize: "0.7rem" }}>{l}</p>
@@ -522,8 +523,16 @@ export function StudentsPage({ viewRole }: Props) {
                     </div>
                   ))}
 
+                  {!selectedInternshipId && (
+                    <div className="pt-3 border-t border-border">
+                      <p className="text-muted-foreground italic text-center" style={{ fontSize: "0.82rem" }}>
+                        Student has not started an internship yet.
+                      </p>
+                    </div>
+                  )}
+
                   {/* Recent Logbook */}
-                  <div className="pt-3 border-t border-border">
+                  {selectedInternshipId && <div className="pt-3 border-t border-border">
                     <p className="text-muted-foreground mb-2 flex items-center gap-1" style={{ fontSize: "0.75rem" }}>
                       <BookMarked className="w-3.5 h-3.5" />
                       RECENT LOGBOOK ENTRIES
@@ -544,10 +553,10 @@ export function StudentsPage({ viewRole }: Props) {
                         ))}
                       </div>
                     )}
-                  </div>
+                  </div>}
 
                   {/* Recent Attendance */}
-                  <div className="pt-3 border-t border-border">
+                  {selectedInternshipId && <div className="pt-3 border-t border-border">
                     <p className="text-muted-foreground mb-2 flex items-center gap-1" style={{ fontSize: "0.75rem" }}>
                       <MapPin className="w-3.5 h-3.5" /> RECENT CHECK-INS
                     </p>
@@ -577,7 +586,7 @@ export function StudentsPage({ viewRole }: Props) {
                         ))}
                       </div>
                     )}
-                  </div>
+                  </div>}
                 </>
               )}
 

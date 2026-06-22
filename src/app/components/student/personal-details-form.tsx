@@ -26,9 +26,10 @@ interface PersonalDetailsFormProps {
   form: FormData;
   updateForm: (updates: Partial<FormData>) => void;
   user: any;
+  fetchedProfile?: { studentId?: string; department?: string } | null;
 }
 
-export function PersonalDetailsForm({ form, updateForm, user }: PersonalDetailsFormProps) {
+export function PersonalDetailsForm({ form, updateForm, user, fetchedProfile }: PersonalDetailsFormProps) {
   const samePhoneNumbers =
     !!form.phoneNumber && !!form.emergencyPhone && form.phoneNumber.trim() === form.emergencyPhone.trim();
 
@@ -49,8 +50,8 @@ export function PersonalDetailsForm({ form, updateForm, user }: PersonalDetailsF
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
             ["Full Name", user?.name || ""],
-            ["Student ID", user?.studentId || ""],
-            ["Department", user?.department || ""],
+            ["Student ID", fetchedProfile?.studentId || user?.studentId || "—"],
+            ["Department", fetchedProfile?.department || user?.department || "—"],
             ["Email", user?.email || ""],
           ].map(([label, value]) => (
             <div key={label}>

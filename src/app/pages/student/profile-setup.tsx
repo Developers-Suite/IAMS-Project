@@ -87,7 +87,7 @@ export function StudentProfileSetup() {
           if (res.success && res.data) {
             const p = res.data;
             setFullName(p.name || p.user?.name || user?.name || "");
-            setPhone(p.phone || u?.phone || "");
+            setPhone(p.phone || p.user?.phone || u?.phone || "");
             setAddress(p.address || "");
             setEmergencyContact(p.emergency_contact || p.emergency_contact_name || "");
             setEmergencyPhone(p.emergency_contact_phone || "");
