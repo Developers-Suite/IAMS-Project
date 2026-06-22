@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { SkeletonTableRows } from "../../components/skeleton";
 import { apiClient } from "../../lib/api-client";
 import { fmtDate } from "../../lib/date-utils";
-import { CheckCircle2, XCircle, AlertTriangle, Clock, Search, X, Navigation, Shield } from "lucide-react";
+import { CheckCircle2, XCircle, AlertTriangle, Clock, Search, X, Navigation, Shield, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import type { ExtendedRole } from "../../services/auth-service";
 import { Card, CardContent } from "../../components/ui/card";
