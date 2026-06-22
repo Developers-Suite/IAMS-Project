@@ -48,6 +48,7 @@ export function CheckInModal({
   const [outsideInternshipPeriod, setOutsideInternshipPeriod] = useState(false);
   const [warningStep, setWarningStep] = useState(0); // 0=skip, 1/2/3=first-checkin warnings
   const [outsideGeofence, setOutsideGeofence] = useState(false);
+  const [manualMode, setManualMode] = useState(false);
   const [manualReason, setManualReason] = useState("");
   const [isSubmittingManual, setIsSubmittingManual] = useState(false);
   const inFlightRef = useRef(false);
@@ -71,6 +72,7 @@ export function CheckInModal({
       setOutsideInternshipPeriod(false);
       setWarningStep(0);
       setOutsideGeofence(false);
+      setManualMode(false);
       setManualReason("");
       setIsSubmittingManual(false);
       inFlightRef.current = false;
@@ -389,24 +391,37 @@ export function CheckInModal({
                 <CheckCircle2 className="w-4 h-4" /> Close
               </button>
             </>
-          ) : outsideGeofence ? (
-            /* Outside-geofence manual check-in panel */
+          ) : (outsideGeofence || manualMode) ? (
+            /* Manual check-in panel — triggered by geofence rejection or voluntary choice */
             <>
-              <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-lg p-4 space-y-2">
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0" />
-                  <p className="font-semibold text-red-700 dark:text-red-300">Outside check-in area</p>
-                </div>
-                <p className="text-sm text-red-600 dark:text-red-400">
-                  You appear to be outside your company's check-in area. Submit a manual
-                  check-in and your supervisor will be notified to verify it.
-                </p>
-                {locationDetails && (
-                  <p className="text-xs text-red-500 dark:text-red-400">
-                    Your location: {locationDetails}
+              {outsideGeofence ? (
+                <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-lg p-4 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0" />
+                    <p className="font-semibold text-red-700 dark:text-red-300">Outside check-in area</p>
+                  </div>
+                  <p className="text-sm text-red-600 dark:text-red-400">
+                    You appear to be outside your company's check-in area. Submit a manual
+                    check-in and your supervisor will be notified to verify it.
                   </p>
-                )}
-              </div>
+                  {locationDetails && (
+                    <p className="text-xs text-red-500 dark:text-red-400">
+                      Your location: {locationDetails}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg p-4 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
+                    <p className="font-semibold text-amber-700 dark:text-amber-300">Manual check-in</p>
+                  </div>
+                  <p className="text-sm text-amber-600 dark:text-amber-400">
+                    Provide a reason for checking in manually. Your supervisor will be
+                    notified to verify your attendance.
+                  </p>
+                </div>
+              )}
               <div>
                 <label className="text-xs font-semibold text-muted-foreground mb-2 block">
                   Reason for manual check-in *
@@ -436,7 +451,7 @@ export function CheckInModal({
                 )}
               </button>
               <button
-                onClick={() => setOutsideGeofence(false)}
+                onClick={() => { setOutsideGeofence(false); setManualMode(false); }}
                 className="w-full py-2 border border-border rounded-lg hover:bg-accent font-medium text-sm transition-colors"
               >
                 ← Try GPS again
@@ -512,6 +527,15 @@ export function CheckInModal({
                 className="w-full py-2 border border-border rounded-lg hover:bg-accent font-medium text-sm transition-colors disabled:opacity-50"
               >
                 Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setManualMode(true)}
+                disabled={isSubmitting || !canCheckIn}
+                className="w-full py-1.5 text-sm text-muted-foreground hover:text-foreground underline-offset-2 hover:underline transition-colors disabled:opacity-40"
+              >
+                Can't use GPS? Request manual check-in
               </button>
             </>
           )}
