@@ -2,6 +2,7 @@ import { useState } from "react";
 import { AlertCircle, Loader2, ClipboardList, Users, BarChart3 } from "lucide-react";
 import { getApiUrl } from "../../lib/api-client";
 import { API_ENDPOINTS } from "../../lib/constants";
+import { useSearchParams } from "react-router";
 
 const BG_IMAGE =
   "/IMG-20250228-WA0051.jpg";
@@ -9,6 +10,8 @@ const BG_IMAGE =
 export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [params] = useSearchParams();
+  const sessionExpired = params.get("expired") === "true";
 
   const handleGoogleSignIn = () => {
     setError("");
@@ -95,6 +98,13 @@ export function LoginPage() {
               backdropFilter: "blur(12px)",
             }}
           >
+            {sessionExpired && (
+              <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                <p className="text-amber-800 font-medium" style={{ fontSize: "0.8rem" }}>Your session has expired. Please sign in again.</p>
+              </div>
+            )}
+
             <button
               onClick={handleGoogleSignIn}
               disabled={loading}

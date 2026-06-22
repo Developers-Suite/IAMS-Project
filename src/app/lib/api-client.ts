@@ -266,7 +266,10 @@ async function requestApi<T>(
       // Handle 401 Unauthorized (Logout)
       if (response.status === 401) {
         clearApiAuthToken();
-        if (typeof window !== "undefined") window.location.href = "/login?expired=true";
+        setCurrentUser(null);
+        if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+          window.location.href = "/login?expired=true";
+        }
       }
 
       return {
