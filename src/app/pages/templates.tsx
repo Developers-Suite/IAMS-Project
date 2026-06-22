@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import {
   Upload, FileText, Eye, Save, Download, Copy, Clock, X, Plus,
-  CheckCircle2, History, Edit3, Trash2, Loader2, Send
+  CheckCircle2, History, Edit3, Trash2, Loader2, Send, ChevronDown, Check
 } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "../lib/api-client";
@@ -120,6 +120,15 @@ const BUILT_IN_TEMPLATES: Template[] = [
   },
 ];
 
+const SYSTEM_PLACEHOLDERS: Record<string, string[]> = {
+  "Student Info":        ["[Student Name]", "[Student ID]", "[Department]", "[Level]"],
+  "Company & Placement": ["[Company Name]", "[Start Date]", "[End Date]", "[Position]", "[Contact Person]", "[Ref No]"],
+  "Supervisor":          ["[Supervisor Name]", "[Supervisor Email]"],
+  "Evaluation":          ["[Evaluation Period]", "[Overall Grade]", "[Completion Date]", "[Grade]"],
+  "Logbook":             ["[Date]", "[Activities]", "[Skills Learned]", "[Challenges]"],
+  "Site Visit":          ["[Visit Date]", "[Observations]"],
+};
+
 function mergeApiTemplates(builtIns: Template[], apiTemplates: any[]): Template[] {
   const result = [...builtIns];
   for (const t of apiTemplates) {
@@ -176,8 +185,20 @@ export function Templates() {
     hasLetterhead: true, hasSignature: true,
     placeholders: [], visibleTo: defaultRoles["placement"], body: "",
   });
-  const [newPlaceholder, setNewPlaceholder] = useState("");
+  const [showPlaceholderDropdown, setShowPlaceholderDropdown] = useState(false);
+  const placeholderDropdownRef = useRef<HTMLDivElement>(null);
   const [editBody, setEditBody] = useState("");
+
+  useEffect(() => {
+    if (!showPlaceholderDropdown) return;
+    const handler = (e: MouseEvent) => {
+      if (placeholderDropdownRef.current && !placeholderDropdownRef.current.contains(e.target as Node)) {
+        setShowPlaceholderDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showPlaceholderDropdown]);
 
   // Load server-side templates and merge over built-ins
   useEffect(() => {
@@ -422,20 +443,20 @@ h1{color:#1e3a5f;font-size:1.2rem;margin-bottom:1rem}.placeholder{color:#0b5ed7;
     toast.success("Template created successfully.");
   };
 
-  const handleAddPlaceholder = () => {
-    if (!newPlaceholder.trim()) return;
-    const formatted = `[${newPlaceholder.trim()}]`;
-    if (!newTemplate.placeholders?.includes(formatted)) {
-      setNewTemplate(prev => ({ ...prev, placeholders: [...(prev.placeholders || []), formatted] }));
-    }
-    setNewPlaceholder("");
+  const handleTogglePlaceholder = (ph: string) => {
+    setNewTemplate(prev => {
+      const current = prev.placeholders || [];
+      if (current.includes(ph)) {
+        return { ...prev, placeholders: current.filter(p => p !== ph) };
+      }
+      return { ...prev, placeholders: [...current, ph] };
+    });
   };
 
   const handleRemovePlaceholder = (ph: string) => {
     setNewTemplate(prev => {
       const next = { ...prev };
       if (next.placeholders) next.placeholders = next.placeholders.filter(p => p !== ph);
-      if (next.body?.includes(ph)) next.body = next.body.split(ph).join(ph.slice(1, -1));
       return next;
     });
   };
@@ -751,18 +772,50 @@ h1{color:#1e3a5f;font-size:1.2rem;margin-bottom:1rem}.placeholder{color:#0b5ed7;
 
                 <div className="space-y-2 pt-2">
                   <label className="block text-sm font-medium">Dynamic Placeholders</label>
-                  <div className="flex gap-2">
-                    <input type="text" value={newPlaceholder}
-                      onChange={(e) => setNewPlaceholder(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddPlaceholder())}
-                      className="flex-1 px-3 py-2 border border-border rounded-lg bg-background" placeholder="e.g. Student Name" />
-                    <button onClick={handleAddPlaceholder} className="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:opacity-90">Add</button>
+                  <div ref={placeholderDropdownRef} className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowPlaceholderDropdown(v => !v)}
+                      className="w-full flex items-center justify-between px-3 py-2 border border-border rounded-lg bg-background hover:bg-accent text-sm transition-colors"
+                    >
+                      <span className="text-muted-foreground">
+                        {displayPlaceholders.length > 0 ? `${displayPlaceholders.length} placeholder${displayPlaceholders.length > 1 ? "s" : ""} selected` : "Select placeholders…"}
+                      </span>
+                      <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${showPlaceholderDropdown ? "rotate-180" : ""}`} />
+                    </button>
+
+                    {showPlaceholderDropdown && (
+                      <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg shadow-lg max-h-72 overflow-y-auto">
+                        {Object.entries(SYSTEM_PLACEHOLDERS).map(([group, items]) => (
+                          <div key={group}>
+                            <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide bg-muted/40 border-b border-border sticky top-0">
+                              {group}
+                            </div>
+                            {items.map((ph) => {
+                              const selected = displayPlaceholders.includes(ph);
+                              return (
+                                <button
+                                  key={ph}
+                                  type="button"
+                                  onClick={() => handleTogglePlaceholder(ph)}
+                                  className={`w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-accent transition-colors text-left ${selected ? "text-primary" : "text-foreground"}`}
+                                >
+                                  <span className="font-mono">{ph}</span>
+                                  {selected && <Check className="w-3.5 h-3.5 text-primary flex-shrink-0" />}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
+
                   {displayPlaceholders.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-3 p-3 bg-muted/30 rounded-lg border border-border">
+                    <div className="flex flex-wrap gap-2 mt-2 p-3 bg-muted/30 rounded-lg border border-border">
                       {displayPlaceholders.map((ph) => (
                         <span key={ph} className="flex items-center gap-1.5 px-2.5 py-1 bg-background border border-border rounded-full text-sm shadow-sm">
-                          <span className="text-primary font-medium">{ph}</span>
+                          <span className="text-primary font-medium font-mono">{ph}</span>
                           <button onClick={() => handleRemovePlaceholder(ph)} className="text-muted-foreground hover:text-foreground">
                             <X className="w-3 h-3" />
                           </button>
