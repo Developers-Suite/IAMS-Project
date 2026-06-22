@@ -78,7 +78,9 @@ export function AttendancePage({ viewRole }: Props) {
         studentNum(r).toLowerCase().includes(studentFilter.toLowerCase()))
     : records;
 
-  const pendingVerification = records.filter((r) => !r.verified_by);
+  const pendingVerification = records.filter((r) =>
+    !r.verified_by && (viewRole !== "supervisor" || r.check_in_type === "manual")
+  );
   const presentCount = records.filter((r) => r.status === "present").length;
   const lateCount = records.filter((r) => r.status === "late").length;
   const absentCount = records.filter((r) => r.status === "absent").length;
@@ -402,6 +404,10 @@ export function AttendancePage({ viewRole }: Props) {
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-200" style={{ fontSize: "0.8rem" }}>
                     <CheckCircle2 className="w-3.5 h-3.5" /> Verified
                   </span>
+                ) : selectedRecord.check_in_type !== "manual" ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200" style={{ fontSize: "0.8rem" }}>
+                    <Shield className="w-3.5 h-3.5" /> GPS Auto-verified
+                  </span>
                 ) : (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-100 text-amber-700 border border-amber-200" style={{ fontSize: "0.8rem" }}>
                     <Clock className="w-3.5 h-3.5" /> Pending Verification
@@ -409,7 +415,7 @@ export function AttendancePage({ viewRole }: Props) {
                 )}
               </div>
             </div>
-            {canVerify && !selectedRecord.verified_by && (
+            {canVerify && !selectedRecord.verified_by && (viewRole !== "supervisor" || selectedRecord.check_in_type === "manual") && (
               <div className="px-6 py-4 border-t border-border bg-secondary/20 flex justify-end gap-2">
                 <button
                   onClick={() => handleVerify(String(selectedRecord.id), "present")}
@@ -477,7 +483,9 @@ export function AttendancePage({ viewRole }: Props) {
                     <td className="px-4 py-4">
                       {r.verified_by
                         ? <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                        : <span className="flex items-center gap-1 text-amber-600" style={{ fontSize: "0.7rem" }}><Clock className="w-3 h-3" /> Pending</span>}
+                        : r.check_in_type !== "manual"
+                          ? <span className="flex items-center gap-1 text-emerald-600" style={{ fontSize: "0.7rem" }}><Shield className="w-3 h-3" /> GPS</span>
+                          : <span className="flex items-center gap-1 text-amber-600" style={{ fontSize: "0.7rem" }}><Clock className="w-3 h-3" /> Pending</span>}
                     </td>
                   </tr>
                 ))
