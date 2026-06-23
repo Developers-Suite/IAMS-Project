@@ -994,6 +994,17 @@ export const apiClient = {
     });
   },
 
+  async getAllAcademicSupervisors(search?: string): Promise<ApiResponse<any[]>> {
+    const url = API_ENDPOINTS.USERS_ALL_ACADEMIC_SUPERVISORS + (search ? `?search=${encodeURIComponent(search)}` : "");
+    return requestApi<any[]>(url);
+  },
+
+  async assignSupervisorToDepartment(id: string): Promise<ApiResponse<any | null>> {
+    return requestApi<any | null>(replacePathParams(API_ENDPOINTS.USERS_ASSIGN_DEPARTMENT, { id }), {
+      method: "POST",
+    });
+  },
+
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // LOGBOOK
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━

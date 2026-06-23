@@ -269,6 +269,8 @@ export const API_ENDPOINTS = {
   USERS_ACTIVATE: "/api/v1/users/:id/activate",
   USERS_DEACTIVATE: "/api/v1/users/:id/deactivate",
   USERS_IMPORTABLE: "/api/v1/users/staff/importable",
+  USERS_ASSIGN_DEPARTMENT: "/api/v1/users/:id/assign-department",
+  USERS_ALL_ACADEMIC_SUPERVISORS: "/api/v1/users/academic-supervisors/all",
 
   // Departments
   DEPARTMENTS: "/api/v1/departments",

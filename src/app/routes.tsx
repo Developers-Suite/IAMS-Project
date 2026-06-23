@@ -96,6 +96,7 @@ function DLOCommunications() { return <SuspensePage><CommunicationsPage viewRole
 function AcademicStudents() { return <SuspensePage><StudentsPage viewRole="academic" /></SuspensePage>; }
 function AcademicAttendance() { return <SuspensePage><AttendancePage viewRole="academic" /></SuspensePage>; }
 function AcademicCommunications() { return <SuspensePage><CommunicationsPage viewRole="academic" /></SuspensePage>; }
+function AcademicSettings() { return <SuspensePage><SettingsPage /></SuspensePage>; }
 
 function StudentIssues() { return <SuspensePage><IssuesPage viewRole="student" /></SuspensePage>; }
 function StudentCommunications() { return <SuspensePage><CommunicationsPage viewRole="student" /></SuspensePage>; }
@@ -262,6 +263,7 @@ export const router = createBrowserRouter([
           { path: "attendance", element: <SuspensePage><AttendancePage viewRole="academic" /></SuspensePage> },
           { path: "grades", element: <SuspensePage><GradesPage viewRole="academic" /></SuspensePage> },
           { path: "communications", Component: AcademicCommunications },
+          { path: "settings", Component: AcademicSettings },
           { path: "help", element: <SuspensePage><HelpPage /></SuspensePage> },
         ],
       },

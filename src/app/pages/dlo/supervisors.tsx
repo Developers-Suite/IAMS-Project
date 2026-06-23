@@ -1,12 +1,13 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { SkeletonList } from "../../components/skeleton";
 import { useAppContext } from "../../lib/context";
 import {
-  Users, CheckCircle2, X, Eye, BarChart3, AlertTriangle, Loader2,
+  Users, CheckCircle2, X, Eye, BarChart3, AlertTriangle, Loader2, Plus, Search,
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { apiClient } from "../../lib/api-client";
 import { getNameInitials } from "../../lib/validation";
+import { toast } from "sonner";
 
 interface SupervisorRow {
   id: string;
@@ -35,6 +36,12 @@ export function SupervisorsPage() {
   const [viewStudents, setViewStudents] = useState<{ supervisor: SupervisorRow; students: any[] } | null>(null);
   const [loadingStudents, setLoadingStudents] = useState(false);
 
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [allSupervisors, setAllSupervisors] = useState<any[]>([]);
+  const [loadingAll, setLoadingAll] = useState(false);
+  const [search, setSearch] = useState("");
+  const [assigningId, setAssigningId] = useState<string | null>(null);
+
   const fetchSupervisors = useCallback(async () => {
     setLoading(true);
     const res = await apiClient.getAvailableSupervisors({ department });
@@ -43,6 +50,15 @@ export function SupervisorsPage() {
   }, [department]);
 
   useEffect(() => { fetchSupervisors(); }, [fetchSupervisors]);
+
+  const openAddModal = async () => {
+    setShowAddModal(true);
+    setSearch("");
+    setLoadingAll(true);
+    const res = await apiClient.getAllAcademicSupervisors();
+    if (res.success) setAllSupervisors(res.data ?? []);
+    setLoadingAll(false);
+  };
 
   const handleViewStudents = async (sup: SupervisorRow) => {
     setLoadingStudents(true);
@@ -54,6 +70,30 @@ export function SupervisorsPage() {
     }
     setLoadingStudents(false);
   };
+
+  const handleAssign = async (userId: string) => {
+    setAssigningId(userId);
+    const res = await apiClient.assignSupervisorToDepartment(userId);
+    setAssigningId(null);
+    if (res.success) {
+      toast.success("Supervisor added to your department.");
+      setShowAddModal(false);
+      fetchSupervisors();
+    } else {
+      toast.error(res.message ?? "Failed to assign supervisor.");
+    }
+  };
+
+  const currentIds = useMemo(() => new Set(supervisors.map((s) => s.id)), [supervisors]);
+
+  const filteredAll = useMemo(() => {
+    const q = search.toLowerCase();
+    return allSupervisors.filter((u: any) => {
+      const name = (u.name ?? "").toLowerCase();
+      const email = (u.email ?? "").toLowerCase();
+      return !q || name.includes(q) || email.includes(q);
+    });
+  }, [allSupervisors, search]);
 
   const totalCapacity = supervisors.reduce((sum, s) => sum + s.maxLoad, 0);
   const totalLoad = supervisors.reduce((sum, s) => sum + s.currentLoad, 0);
@@ -68,13 +108,20 @@ export function SupervisorsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h1>Supervisor Directory</h1>
           <p className="text-muted-foreground" style={{ fontSize: "0.85rem" }}>
             {department ? `${department} · ` : ""}Academic supervisor pool and workload distribution
           </p>
         </div>
+        <button
+          onClick={openAddModal}
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-xl hover:opacity-90 flex items-center gap-2"
+          style={{ fontSize: "0.85rem" }}
+        >
+          <Plus className="w-4 h-4" /> Add Supervisor
+        </button>
       </div>
 
       {/* Summary Stats */}
@@ -200,6 +247,82 @@ export function SupervisorsPage() {
           </div>
         </div>
       </div>
+
+      {/* Add Supervisor Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowAddModal(false)}>
+          <div className="bg-card border border-border rounded-xl w-full max-w-lg flex flex-col max-h-[85vh]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-5 border-b border-border shrink-0">
+              <div>
+                <h3>Add Supervisor to Department</h3>
+                {department && (
+                  <p className="text-muted-foreground mt-0.5" style={{ fontSize: "0.75rem" }}>{department}</p>
+                )}
+              </div>
+              <button onClick={() => setShowAddModal(false)} className="p-1 rounded-md hover:bg-accent"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="p-4 border-b border-border shrink-0">
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by name or email…"
+                  className="w-full pl-9 pr-3 py-2 border border-border rounded-lg bg-background"
+                  style={{ fontSize: "0.85rem" }}
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div className="overflow-y-auto flex-1 p-3 space-y-2">
+              {loadingAll ? (
+                <div className="py-12 flex justify-center"><Loader2 className="w-7 h-7 animate-spin text-primary" /></div>
+              ) : filteredAll.length === 0 ? (
+                <p className="text-muted-foreground text-center py-10" style={{ fontSize: "0.85rem" }}>
+                  {search ? "No supervisors match your search." : "No academic supervisors found in the system."}
+                </p>
+              ) : (
+                filteredAll.map((u: any) => {
+                  const uid = String(u.id);
+                  const alreadyIn = currentIds.has(uid);
+                  const busy = assigningId === uid;
+                  const supDept = u.academic_supervisor?.department?.name ?? u.department?.name ?? u.department ?? "";
+                  return (
+                    <div key={uid} className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-accent/40">
+                      <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0" style={{ fontSize: "0.75rem" }}>
+                        {getNameInitials(u.name ?? "")}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p style={{ fontSize: "0.85rem" }} className="truncate">{u.name ?? "—"}</p>
+                        <p className="text-muted-foreground truncate" style={{ fontSize: "0.72rem" }}>{u.email ?? ""}</p>
+                        {supDept && (
+                          <p className="text-muted-foreground" style={{ fontSize: "0.7rem" }}>Currently: {supDept}</p>
+                        )}
+                      </div>
+                      {alreadyIn ? (
+                        <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 shrink-0" style={{ fontSize: "0.72rem" }}>
+                          <CheckCircle2 className="w-3.5 h-3.5 inline mr-1" />In dept
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleAssign(uid)}
+                          disabled={busy}
+                          className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:opacity-50 flex items-center gap-1 shrink-0"
+                          style={{ fontSize: "0.78rem" }}
+                        >
+                          {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                          Add
+                        </button>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* View Students Modal */}
       {viewStudents && (
