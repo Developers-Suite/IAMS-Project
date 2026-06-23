@@ -81,7 +81,10 @@ export function TermWindowsList({
             const levelNames = (term.eligibleLevels ?? []).map((l: any) =>
               typeof l === "string" ? l : (l.name ?? l.code ?? String(l))
             );
-            const isEligible = levelNames.length === 0 || levelNames.includes(userLevel);
+            const normalizedUserLevel = userLevel
+              ? (String(userLevel).startsWith("L") ? String(userLevel) : `L${userLevel}`)
+              : "";
+            const isEligible = levelNames.length === 0 || !normalizedUserLevel || levelNames.includes(normalizedUserLevel);
 
             return (
               <div
@@ -151,7 +154,10 @@ export function TermWindowsList({
         const depts = (term.departments ?? []).map((d: any) =>
           typeof d === "string" ? d : (d.name ?? String(d))
         );
-        const isEligible = levelNames.length === 0 || levelNames.includes(userLevel);
+        const normalizedUserLevel = userLevel
+          ? (String(userLevel).startsWith("L") ? String(userLevel) : `L${userLevel}`)
+          : "";
+        const isEligible = levelNames.length === 0 || !normalizedUserLevel || levelNames.includes(normalizedUserLevel);
 
         const statusColorMap: Record<string, { text: string; icon: string }> = {
           active: { text: "text-emerald-700 dark:text-emerald-400", icon: "✓" },

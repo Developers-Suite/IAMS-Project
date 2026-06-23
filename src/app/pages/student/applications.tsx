@@ -199,10 +199,12 @@ export function StudentApplicationsPage() {
         ? (userRes.data?.user ?? userRes.data?.data?.user ?? userRes.data?.data ?? userRes.data)
         : null;
       if (!p && !u) return;
+      const rawLevel = p?.level ?? "";
+      const level = rawLevel ? (String(rawLevel).startsWith("L") ? String(rawLevel) : `L${rawLevel}`) : "";
       setFetchedProfile({
         studentId: p?.student_id ?? "",
         department: p?.department?.name ?? "",
-        level: p?.level ?? "",
+        level,
       });
       setForm((prev) => ({
         ...prev,
