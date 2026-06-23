@@ -58,10 +58,6 @@ export function getApiAuthToken(): string | null {
 
 export function setCurrentUser(user: { id: string; role: string; department_id?: number; student_id?: string } | null): void {
   currentUser = user;
-  try {
-    if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
-    else localStorage.removeItem(USER_KEY);
-  } catch {}
 }
 
 export function getCurrentUser(): { id: string; role: string; department_id?: number; student_id?: string } | null {
@@ -267,6 +263,7 @@ async function requestApi<T>(
       if (response.status === 401) {
         clearApiAuthToken();
         setCurrentUser(null);
+        try { localStorage.removeItem(USER_KEY); } catch {}
         if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
           window.location.href = "/login?expired=true";
         }
