@@ -10,13 +10,6 @@ function escapeHtml(s: string): string {
 }
 
 export function exportLogbookToPDF(companyName: string, entries: any[]) {
-  // Create a printable HTML
-  const printWindow = window.open("", "", "width=800,height=600");
-  if (!printWindow) {
-    toast.error("Could not open print window");
-    return;
-  }
-
   const html = `
     <!DOCTYPE html>
     <html>
@@ -40,7 +33,7 @@ export function exportLogbookToPDF(companyName: string, entries: any[]) {
           @media print { body { margin: 0; } }
         </style>
       </head>
-      <body>
+      <body onload="window.print()">
         <div class="header">
           <img src="/logo%201.png" alt="" />
           <h1>${escapeHtml(companyName)}</h1>
@@ -70,10 +63,13 @@ export function exportLogbookToPDF(companyName: string, entries: any[]) {
     </html>
   `;
 
-  if (printWindow.document) {
-    printWindow.document.open();
-    printWindow.document.write(html);
-    printWindow.document.close();
-    setTimeout(() => printWindow.print(), 250);
+  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const win = window.open(url, "_blank");
+  if (!win) {
+    toast.error("Could not open print window. Please allow popups for this site.");
+    URL.revokeObjectURL(url);
+    return;
   }
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
 }

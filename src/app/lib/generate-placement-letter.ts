@@ -277,11 +277,13 @@ export function openPlacementLetter(data: PlacementLetterData): void {
 </html>
 `;
 
-  const win = window.open("", "_blank");
+  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const win = window.open(url, "_blank");
   if (!win) {
-    console.error("Failed to open new window for placement letter");
+    console.error("Popup blocked — could not open placement letter");
+    URL.revokeObjectURL(url);
     return;
   }
-  win.document.write(html);
-  win.document.close();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
 }

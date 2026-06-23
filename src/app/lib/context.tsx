@@ -32,10 +32,16 @@ function nameFromEmail(email: string): string {
   return local.split(/[._-]+/).map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(" ");
 }
 
+function isGenericName(name: unknown): boolean {
+  if (!name) return true;
+  const s = String(name).trim().toLowerCase();
+  return s === "" || s === "user" || s === "null" || s === "undefined";
+}
+
 function normalizeApiUser(u: any): AuthUser {
   return {
     id: String(u.id),
-    name: u.name || (u.email ? nameFromEmail(u.email) : undefined),
+    name: isGenericName(u.name) && u.email ? nameFromEmail(u.email) : (u.name || undefined),
     email: u.email,
     role: normalizeRole(u.role),
     department: typeof u.department === "string" ? u.department : (u.department?.name ?? undefined),
@@ -49,7 +55,13 @@ function normalizeApiUser(u: any): AuthUser {
 function loadUser(): AuthUser | null {
   try {
     const stored = localStorage.getItem(USER_KEY);
-    return stored ? JSON.parse(stored) : null;
+    if (!stored) return null;
+    const u: AuthUser = JSON.parse(stored);
+    // Apply email-name fallback immediately so the UI never flashes "User"
+    if (isGenericName(u.name) && u.email) {
+      return { ...u, name: nameFromEmail(u.email) };
+    }
+    return u;
   } catch { return null; }
 }
 
@@ -89,8 +101,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     backfilledRef.current = user.id;
 
     const backfill = async () => {
-      // If user is missing name or email, refetch from API
-      if (!user.name || !user.email) {
+      // If user is missing name/email or has a generic placeholder name, refetch from API
+      if (isGenericName(user.name) || !user.email) {
         try {
           const res = await apiClient.me();
           if (res?.success && res?.data) {

@@ -272,14 +272,14 @@ export async function downloadCompanyAcceptanceFormPDF(data: CompanyAcceptanceFo
 </html>
   `;
 
-  // Open clean browser target layout context
-  const win = window.open("", "_blank");
+  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const win = window.open(url, "_blank");
   if (!win) {
-    console.error("Failed to open new window for company acceptance form");
+    console.error("Popup blocked — could not open company acceptance form");
+    URL.revokeObjectURL(url);
     return false;
   }
-
-  win.document.write(html);
-  win.document.close();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
   return true;
 }
