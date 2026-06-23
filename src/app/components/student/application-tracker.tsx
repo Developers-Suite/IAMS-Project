@@ -24,6 +24,7 @@ function getStatusHistory(app: any) {
   const supervisorName = app.academic_supervisor?.name ?? app.supervisorAssigned ?? "Academic Supervisor";
   const companyStatus = app.company?.approval_status ?? app.companyStatus;
   const internshipStartDate = getInternshipStartDate(app);
+  const s = (app.status ?? "").toLowerCase();
 
   history.push({
     status: "Submitted",
@@ -47,8 +48,6 @@ function getStatusHistory(app: any) {
       actor: "DLO",
     });
   }
-  // Match real backend status values (all lowercase)
-  const s = (app.status ?? "").toLowerCase();
   if (["approved", "company_accepted", "active", "completed"].includes(s)) {
     history.push({
       status: "Approved",
