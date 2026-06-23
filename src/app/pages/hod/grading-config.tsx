@@ -58,7 +58,7 @@ export function HODGradingConfigPage() {
         <div>
           <h1 className="text-2xl text-[#1a1a2e]">Grading Configuration</h1>
           <p className="text-sm text-gray-600 mt-1">
-            Read-only view of {department}'s grading configuration. Configuration is managed by the DLO.
+            {department} grading structure — managed by the DLO.
           </p>
         </div>
         <StatusBadge status={config?.status ?? "draft"} />
@@ -103,8 +103,8 @@ function StatusBadge({ status }: { status: string }) {
     active: "bg-emerald-100 text-emerald-800",
   };
   const label: Record<string, string> = {
-    draft: "Draft (not yet submitted)",
-    pending_approval: "Pending Your Approval",
+    draft: "Draft",
+    pending_approval: "Pending DLO Approval",
     active: "Active & Locked",
   };
   return <Badge className={map[status]}>{label[status]}</Badge>;

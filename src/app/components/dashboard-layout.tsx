@@ -100,7 +100,7 @@ const academicNav: NavItem[] = [
 const hodNav: NavItem[] = [
   { to: "/hod", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/hod/students", icon: GraduationCap, label: "Department Students" },
-  { to: "/hod/approvals", icon: ClipboardCheck, label: "Grade Approvals" },
+  { to: "/hod/approvals", icon: ClipboardCheck, label: "Grades" },
   { to: "/hod/reports", icon: BarChart3, label: "Analytics & Reports" },
   { to: "/hod/communications", icon: MessageSquarePlus, label: "Communications" },
   { to: "/hod/help", icon: LifeBuoy, label: "Help & Support" },

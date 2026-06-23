@@ -58,9 +58,9 @@ export function HODApprovalsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1>Grade Overview</h1>
+        <h1>Grades</h1>
         <p className="text-muted-foreground" style={{ fontSize: "0.85rem" }}>
-          Read-only view of final grades for your department. Grade approval is handled by the DLO.
+          Final grades for your department. Grade approval is handled by the DLO.
         </p>
       </div>
 
