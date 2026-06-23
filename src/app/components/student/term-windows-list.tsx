@@ -34,7 +34,7 @@ export function TermWindowsList({
   availableTerms,
   onSelectTerm,
   onViewChange,
-  userLevel = "L300",
+  userLevel = "",
   isBlocked = false,
 }: TermWindowsListProps) {
   const [selectedDetail, setSelectedDetail] = useState<string | null>(null);
@@ -56,7 +56,7 @@ export function TermWindowsList({
             const today = new Date().toISOString().split("T")[0];
             const appDeadline = term.applicationEnd ?? ""; // This is the actual deadline
             const internshipEnd = term.internshipEnd ?? "";
-            const isOpen = appDeadline && today <= appDeadline;
+            const isOpen = !appDeadline || today <= appDeadline;
             const internshipEnded = internshipEnd && today > internshipEnd;
             const isClosed = !!appDeadline && !isOpen && !internshipEnded;
             const daysLeft = isOpen && appDeadline

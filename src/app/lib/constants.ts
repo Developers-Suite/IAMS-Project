@@ -239,6 +239,7 @@ export const API_ENDPOINTS = {
   // Companies
   COMPANIES: "/api/v1/companies",
   COMPANIES_PENDING: "/api/v1/companies/pending",
+  COMPANIES_BULK_APPROVE: "/api/v1/companies/bulk-approve",
   COMPANY_APPROVE: "/api/v1/companies/:id/approve",
   COMPANY_REJECT: "/api/v1/companies/:id/reject",
   COMPANY_DEACTIVATE: "/api/v1/companies/:id/deactivate",

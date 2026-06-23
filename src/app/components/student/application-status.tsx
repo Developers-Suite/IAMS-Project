@@ -36,6 +36,11 @@ export function ApplicationStatus({ status, createdAt, internshipStartDate }: Ap
             </p>
           )}
         </div>
+        {status === "pending_company_approval" && (
+          <p className="text-amber-700 dark:text-amber-400" style={{ fontSize: "0.8rem" }}>
+            Your application is on hold until the DLO/CLO verifies the selected company. No action needed from you.
+          </p>
+        )}
         {(status === "submitted" || status === "under_review" || status === "Pending") && (
           <p className="text-amber-700 dark:text-amber-400" style={{ fontSize: "0.8rem" }}>
             Your application is awaiting departmental review by the DLO.

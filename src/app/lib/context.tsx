@@ -27,10 +27,15 @@ function normalizeRole(role: string): ExtendedRole {
   return role as ExtendedRole;
 }
 
+function nameFromEmail(email: string): string {
+  const local = email.split("@")[0];
+  return local.split(/[._-]+/).map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(" ");
+}
+
 function normalizeApiUser(u: any): AuthUser {
   return {
     id: String(u.id),
-    name: u.name,
+    name: u.name || (u.email ? nameFromEmail(u.email) : undefined),
     email: u.email,
     role: normalizeRole(u.role),
     department: typeof u.department === "string" ? u.department : (u.department?.name ?? undefined),

@@ -171,6 +171,11 @@ export function StudentProfileSetup() {
       setActiveTab("personal");
       return;
     }
+    if (phone.trim() === emergencyPhone.trim()) {
+      toast.error("Emergency contact phone must be different from your personal phone number.");
+      setActiveTab("personal");
+      return;
+    }
     if (!studentId.trim() || !department || !level || !program.trim()) {
       toast.error("Please fill in all academic information fields");
       setActiveTab("academic");
@@ -359,7 +364,13 @@ export function StudentProfileSetup() {
               <label className="text-xs font-medium">Emergency Contact Phone *</label>
               <input type="tel" value={emergencyPhone} onChange={(e) => setEmergencyPhone(e.target.value)}
                 placeholder="+233 50 000 0000"
-                className="w-full mt-1 px-3 py-2 border border-border rounded-lg bg-background text-sm" />
+                className={`w-full mt-1 px-3 py-2 border rounded-lg bg-background text-sm ${phone.trim() && emergencyPhone.trim() && phone.trim() === emergencyPhone.trim() ? "border-red-400" : "border-border"}`} />
+              {phone.trim() && emergencyPhone.trim() && phone.trim() === emergencyPhone.trim() && (
+                <p className="text-red-600 mt-1 flex items-center gap-1 text-xs">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  Emergency contact phone must differ from your personal phone number.
+                </p>
+              )}
             </div>
             <div>
               <label className="text-xs font-medium">Relationship</label>

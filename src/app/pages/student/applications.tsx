@@ -185,7 +185,7 @@ export function StudentApplicationsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const [fetchedProfile, setFetchedProfile] = useState<{ studentId?: string; department?: string } | null>(null);
+  const [fetchedProfile, setFetchedProfile] = useState<{ studentId?: string; department?: string; level?: string } | null>(null);
 
   // Pre-fill contact details and profile info from the student's saved profile
   useEffect(() => {
@@ -202,6 +202,7 @@ export function StudentApplicationsPage() {
       setFetchedProfile({
         studentId: p?.student_id ?? "",
         department: p?.department?.name ?? "",
+        level: p?.level ?? "",
       });
       setForm((prev) => ({
         ...prev,
@@ -571,6 +572,7 @@ export function StudentApplicationsPage() {
             onSelectTerm={handleSelectTerm}
             onViewChange={setView}
             isBlocked={hasPendingApplication}
+            userLevel={fetchedProfile?.level || ""}
           />
         </div>
       )}

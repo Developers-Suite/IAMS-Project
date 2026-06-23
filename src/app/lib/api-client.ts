@@ -605,6 +605,13 @@ export const apiClient = {
     );
   },
 
+  async bulkApproveCompanies(ids: string[]): Promise<ApiResponse<{ approved_count: number } | null>> {
+    return requestApi<{ approved_count: number } | null>(
+      API_ENDPOINTS.COMPANIES_BULK_APPROVE,
+      { method: "POST", body: JSON.stringify({ ids: ids.map(Number) }) }
+    );
+  },
+
   async rejectCompany(id: string, rejectionReason: string): Promise<ApiResponse<CompanyResponse | null>> {
     return requestApi<CompanyResponse | null>(
       replacePathParams(API_ENDPOINTS.COMPANY_REJECT, { id }),

@@ -31,6 +31,14 @@ function getStatusHistory(app: any) {
     description: "Application submitted by student",
     actor: "Student",
   });
+  if (s === "pending_company_approval") {
+    history.push({
+      status: "Awaiting Company Approval",
+      timestamp: createdAt ? `${createdAt.split("T")[0]}T09:30:00` : "—",
+      description: "Application is on hold until the selected company is verified by the DLO/CLO.",
+      actor: "DLO/CLO",
+    });
+  }
   if (companyStatus === "Approved" || companyStatus === "approved") {
     history.push({
       status: "Company Verified",
