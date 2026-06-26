@@ -5,7 +5,7 @@ import { useAppContext } from "../../lib/context";
 import { SkeletonStatCards, SkeletonCardGrid } from "../../components/skeleton";
 import {
   Users as UsersIcon, UserCheck, UserX, GraduationCap,
-  Search, ShieldCheck, Building2,
+  Search, ShieldCheck, Building2, Pencil, X, Loader2,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -83,6 +83,10 @@ export function CLOUsersPage() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
 
+  const [editTarget, setEditTarget] = useState<UserRow | null>(null);
+  const [editForm, setEditForm] = useState({ name: "", email: "", phone: "", role: "", departmentId: "" });
+  const [saving, setSaving] = useState(false);
+
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -146,6 +150,45 @@ export function CLOUsersPage() {
       toast.error(res.message ?? "Failed to deactivate user.");
     }
     setBusyId(null);
+  };
+
+  const openEdit = (target: UserRow) => {
+    setEditTarget(target);
+    setEditForm({
+      name: target.name,
+      email: target.email,
+      phone: target.phone ?? "",
+      role: target.role,
+      departmentId: target.departmentId ?? "",
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editTarget) return;
+    setSaving(true);
+    const payload: Record<string, any> = {
+      name: editForm.name,
+      email: editForm.email,
+      phone: editForm.phone || null,
+      role: editForm.role,
+    };
+    if (editForm.departmentId) payload.department_id = editForm.departmentId;
+    const res = await apiClient.updateUser(editTarget.id, payload);
+    if (res.success) {
+      const dept = departments.find((d) => d.id === editForm.departmentId);
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === editTarget.id
+            ? { ...u, name: editForm.name, email: editForm.email, phone: editForm.phone, role: editForm.role, departmentId: editForm.departmentId || u.departmentId, departmentName: dept?.name ?? u.departmentName }
+            : u
+        )
+      );
+      toast.success(`${editForm.name} updated.`);
+      setEditTarget(null);
+    } else {
+      toast.error(res.message ?? "Failed to update user.");
+    }
+    setSaving(false);
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -268,7 +311,14 @@ export function CLOUsersPage() {
                 </div>
 
                 {!isSelf && (
-                  <div className="shrink-0">
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => openEdit(u)}
+                      className="px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:bg-accent flex items-center gap-1.5 transition-colors"
+                      style={{ fontSize: "0.8rem" }}
+                    >
+                      <Pencil className="w-3.5 h-3.5" /> Edit
+                    </button>
                     {u.status === "active" ? (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
@@ -310,6 +360,7 @@ export function CLOUsersPage() {
                     )}
                   </div>
                 )}
+
               </div>
             );
           })}
@@ -322,6 +373,96 @@ export function CLOUsersPage() {
               No users match your filters.
             </div>
           )}
+        </div>
+      )}
+
+      {/* Edit User Modal */}
+      {editTarget && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setEditTarget(null)}>
+          <div className="bg-card border border-border rounded-2xl w-full max-w-md shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-5 border-b border-border">
+              <h3 style={{ fontSize: "1rem", fontWeight: 600 }}>Edit User</h3>
+              <button onClick={() => setEditTarget(null)} className="p-1 rounded-md hover:bg-accent"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="block text-muted-foreground mb-1" style={{ fontSize: "0.78rem" }}>Full Name</label>
+                <input
+                  type="text"
+                  value={editForm.name}
+                  onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background"
+                  style={{ fontSize: "0.85rem" }}
+                />
+              </div>
+              <div>
+                <label className="block text-muted-foreground mb-1" style={{ fontSize: "0.78rem" }}>Email</label>
+                <input
+                  type="email"
+                  value={editForm.email}
+                  onChange={(e) => setEditForm((f) => ({ ...f, email: e.target.value }))}
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background"
+                  style={{ fontSize: "0.85rem" }}
+                />
+              </div>
+              <div>
+                <label className="block text-muted-foreground mb-1" style={{ fontSize: "0.78rem" }}>Phone</label>
+                <input
+                  type="text"
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))}
+                  placeholder="Optional"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background"
+                  style={{ fontSize: "0.85rem" }}
+                />
+              </div>
+              <div>
+                <label className="block text-muted-foreground mb-1" style={{ fontSize: "0.78rem" }}>Role</label>
+                <select
+                  value={editForm.role}
+                  onChange={(e) => setEditForm((f) => ({ ...f, role: e.target.value }))}
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background"
+                  style={{ fontSize: "0.85rem" }}
+                >
+                  {Object.entries(ROLE_LABELS).map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-muted-foreground mb-1" style={{ fontSize: "0.78rem" }}>Department</label>
+                <select
+                  value={editForm.departmentId}
+                  onChange={(e) => setEditForm((f) => ({ ...f, departmentId: e.target.value }))}
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background"
+                  style={{ fontSize: "0.85rem" }}
+                >
+                  <option value="">— No department —</option>
+                  {departments.map((d) => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 p-5 border-t border-border">
+              <button
+                onClick={() => setEditTarget(null)}
+                className="px-4 py-2 rounded-lg border border-border hover:bg-accent"
+                style={{ fontSize: "0.85rem" }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                disabled={saving || !editForm.name.trim() || !editForm.email.trim()}
+                className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
+                style={{ fontSize: "0.85rem" }}
+              >
+                {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Save Changes
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
