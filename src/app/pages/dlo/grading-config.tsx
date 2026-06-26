@@ -12,7 +12,10 @@ import type { TermResponse } from "../../types/api";
 
 export function DLOGradingConfigPage() {
   const { user } = useAppContext();
-  const department = user?.department ?? "Computer Science";
+  // Prefer the department name from the user object (populated after backend fix).
+  // Fall back to resolving by department_id from the departments list.
+  const [department, setDepartment] = useState<string>(user?.department ?? "");
+  const departmentId = user?.department_id;
 
   const [terms, setTerms] = useState<TermResponse[]>([]);
   const [selectedTermId, setSelectedTermId] = useState<string | number | undefined>(undefined);
@@ -24,8 +27,24 @@ export function DLOGradingConfigPage() {
   const [pendingInput, setPendingInput] = useState<any>(null);
   const [isActivating, setIsActivating] = useState(false);
 
+  // Resolve department name from departments list if not already set via user context
+  useEffect(() => {
+    if (user?.department) {
+      setDepartment(user.department);
+      return;
+    }
+    if (!departmentId) return;
+    apiClient.getDepartments().then((res) => {
+      if (res.success) {
+        const found = res.data.find((d: any) => String(d.id) === String(departmentId));
+        if (found) setDepartment(found.name ?? "");
+      }
+    });
+  }, [user?.department, departmentId]);
+
   // Load terms eligible for this department
   useEffect(() => {
+    if (!department && !departmentId) return;
     setTermsLoading(true);
     apiClient.getTerms().then((res) => {
       if (res.success && res.data.length > 0) {
@@ -34,7 +53,7 @@ export function DLOGradingConfigPage() {
             typeof d === "string" ? d : d.name ?? String(d)
           );
           // Empty departments means unrestricted (all departments)
-          return depts.length === 0 || depts.includes(department);
+          return depts.length === 0 || !department || depts.includes(department);
         });
         const sorted = [...eligible].sort((a, b) => {
           const order: Record<string, number> = { active: 0, upcoming: 1, completed: 2, archived: 3 };
@@ -51,17 +70,19 @@ export function DLOGradingConfigPage() {
         setLoading(false);
       }
     }).finally(() => setTermsLoading(false));
-  }, [department]);
+  }, [department, departmentId]);
 
   const fetchConfig = async (termId: string | number) => {
     setLoading(true);
     setPendingInput(null);
-    const res = await apiClient.getGradingConfigs({ department, term_id: termId });
+    // Use numeric department_id for exact matching; fall back to name if not available
+    const filter = departmentId ? { department_id: departmentId, term_id: termId } : { department, term_id: termId };
+    const res = await apiClient.getGradingConfigs(filter);
     if (res.success && res.data.length > 0) {
       setConfig(res.data[0]);
     } else {
       setConfig({
-        departmentId: department,
+        departmentId: departmentId ?? department,
         structure: DEFAULT_STRUCTURE,
         structureWeights: DEFAULT_STRUCTURE_WEIGHTS,
         sectionWeights: DEFAULT_SECTION_WEIGHTS,
@@ -72,8 +93,8 @@ export function DLOGradingConfigPage() {
   };
 
   useEffect(() => {
-    if (selectedTermId !== undefined) fetchConfig(selectedTermId);
-  }, [selectedTermId, department]);
+    if (selectedTermId !== undefined && (department || departmentId)) fetchConfig(selectedTermId);
+  }, [selectedTermId, department, departmentId]);
 
   const selectedTerm = terms.find((t) => String(t.id) === String(selectedTermId));
   const isLocked = config?.status === "active";
@@ -83,9 +104,9 @@ export function DLOGradingConfigPage() {
     setPendingInput(input);
     setIsActivating(true);
 
-    // Step 1: save/update the config
+    // Step 1: save/update the config (use numeric department_id for reliable matching)
     const saveRes = await apiClient.saveGradingConfig({
-      department_id: department,
+      department_id: departmentId ?? department,
       academic_term_id: selectedTermId,
       ...input,
     });

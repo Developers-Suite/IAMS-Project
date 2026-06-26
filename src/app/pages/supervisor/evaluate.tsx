@@ -160,7 +160,12 @@ export function EvaluatePage() {
     }
     let cancelled = false;
     const termId = app.academic_term_id ?? app.term?.id;
-    apiClient.getGradingConfigs({ department: getDepartmentName(app), ...(termId ? { term_id: termId } : {}) }).then((res) => {
+    const deptId = app?.student?.department?.id;
+    const filter = {
+      ...(deptId ? { department_id: deptId } : { department: getDepartmentName(app) }),
+      ...(termId ? { term_id: termId } : {}),
+    };
+    apiClient.getGradingConfigs(filter).then((res) => {
       if (cancelled) return;
       const active = res.success ? res.data.find((c: any) => c.status === "active") : undefined;
       setSectionWeights(active?.sectionWeights ?? null);
