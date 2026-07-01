@@ -37,7 +37,7 @@ export function AttendancePage({ viewRole }: Props) {
   const [studentFilter, setStudentFilter] = useState("");
   const [selectedRecord, setSelectedRecord] = useState<any | null>(null);
 
-  const canVerify = viewRole === "supervisor" || viewRole === "clo" || viewRole === "dlo";
+  const canVerify = viewRole === "supervisor" || viewRole === "dlo";
 
   const fetchData = useCallback(async () => {
     setLoading(true);
