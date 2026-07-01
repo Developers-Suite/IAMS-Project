@@ -4,7 +4,6 @@ import { apiClient } from "../../lib/api-client";
 import { openPlacementLetter } from "../../lib/generate-placement-letter";
 import { downloadCompanyAcceptanceFormPDF } from "../../lib/generate-company-acceptance-form";
 import { openInsuranceLetter } from "../../lib/generate-insurance-letter";
-import { openManualLogbookSheet } from "../../lib/generate-manual-logbook";
 import { exportLogbookToPDF } from "../../lib/logbook-export";
 import { getInternshipStartDate, getInternshipEndDate, formatDisplayDate, resolveDepartmentName } from "../../lib/application-helpers";
 import { CompanyAcceptanceModal } from "../../components/student/company-acceptance-modal";
@@ -584,7 +583,7 @@ export function DocumentsPage() {
                       } else if (doc.id === "insurance-letter") {
                         handleDownloadInsuranceLetter();
                       } else if (doc.id === "logbook-form") {
-                        openManualLogbookSheet();
+                        window.open("/logbook.pdf", "_blank");
                       } else if (doc.id === "logbook-export") {
                         handleDownloadLogbookPDF();
                       } else if (doc.id === "final-report" && finalReportUrl) {
