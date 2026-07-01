@@ -147,30 +147,44 @@ export function StudentDashboard() {
   })();
 
   const myInternship = (() => {
-    return internships.find((i: any) => String(i.student_id ?? i.student?.id) === String(user?.id) || String(i.student?.student_id) === String(user?.studentId) || String(i.id) === String(activeInternship?.id));
+    if (Array.isArray(internships) && internships.length > 0) {
+      const sorted = [...internships].sort((a, b) => (b.created_at ?? "") > (a.created_at ?? "") ? 1 : -1);
+      return sorted[0];
+    }
+    return null;
   })();
 
-  const supervisorName =
-    activeInternship?.academic_supervisor?.user?.name ??
-    activeInternship?.academic_supervisor?.name ??
-    activeInternship?.academicSupervisor?.user?.name ??
-    activeInternship?.academicSupervisor?.name ??
-    activeInternship?.academic_supervisor_name ??
-    activeInternship?.supervisorAssigned ??
-    myInternship?.academic_supervisor?.user?.name ??
-    myInternship?.academic_supervisor?.name ??
-    myInternship?.academicSupervisor?.user?.name ??
-    myInternship?.academicSupervisor?.name ??
-    myInternship?.academic_supervisor_name ??
-    activeApp?.academic_supervisor?.user?.name ??
-    activeApp?.academic_supervisor?.name ??
-    activeApp?.supervisorAssigned ??
-    activeApp?.internship?.academic_supervisor?.user?.name ??
-    activeApp?.internship?.academic_supervisor?.name ??
-    pendingApplication?.academic_supervisor?.user?.name ??
-    pendingApplication?.academic_supervisor?.name ??
-    pendingApplication?.supervisorAssigned ??
-    null;
+  const supervisorName = (() => {
+    const rawVal =
+      activeInternship?.academic_supervisor?.user?.name ??
+      activeInternship?.academic_supervisor?.name ??
+      (typeof activeInternship?.academic_supervisor === "string" ? activeInternship.academic_supervisor : null) ??
+      activeInternship?.academicSupervisor?.user?.name ??
+      activeInternship?.academicSupervisor?.name ??
+      (typeof activeInternship?.academicSupervisor === "string" ? activeInternship.academicSupervisor : null) ??
+      activeInternship?.academic_supervisor_name ??
+      activeInternship?.supervisorAssigned ??
+      myInternship?.academic_supervisor?.user?.name ??
+      myInternship?.academic_supervisor?.name ??
+      (typeof myInternship?.academic_supervisor === "string" ? myInternship.academic_supervisor : null) ??
+      myInternship?.academicSupervisor?.user?.name ??
+      myInternship?.academicSupervisor?.name ??
+      (typeof myInternship?.academicSupervisor === "string" ? myInternship.academicSupervisor : null) ??
+      myInternship?.academic_supervisor_name ??
+      activeApp?.academic_supervisor?.user?.name ??
+      activeApp?.academic_supervisor?.name ??
+      (typeof activeApp?.academic_supervisor === "string" ? activeApp.academic_supervisor : null) ??
+      activeApp?.supervisorAssigned ??
+      activeApp?.internship?.academic_supervisor?.user?.name ??
+      activeApp?.internship?.academic_supervisor?.name ??
+      (typeof activeApp?.internship?.academic_supervisor === "string" ? activeApp.internship.academic_supervisor : null) ??
+      pendingApplication?.academic_supervisor?.user?.name ??
+      pendingApplication?.academic_supervisor?.name ??
+      (typeof pendingApplication?.academic_supervisor === "string" ? pendingApplication.academic_supervisor : null) ??
+      pendingApplication?.supervisorAssigned ??
+      null;
+    return rawVal && String(rawVal).trim().toLowerCase() !== "null" ? String(rawVal) : null;
+  })();
 
   // Supervisor data from company acceptance upload (pendingApplication or activeInternship)
   const supervisorData = pendingApplication?.industry_supervisor_name || pendingApplication?.supervisor || activeInternship?.industry_supervisor?.user?.name || activeInternship?.supervisor_name;
