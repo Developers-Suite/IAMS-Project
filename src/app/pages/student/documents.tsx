@@ -187,12 +187,14 @@ export function DocumentsPage() {
   const handleDownloadInsuranceLetter = () => {
     if (!myApp) return;
     const companyName = typeof myApp.company?.name === "string" ? myApp.company.name : (typeof myApp.companyName === "string" ? myApp.companyName : "Company");
+    const companyAddress = typeof myApp.company?.address === "string" ? myApp.company.address : (typeof myApp.companyAddress === "string" ? myApp.companyAddress : "—");
     openInsuranceLetter({
       studentName: myApp.student?.user?.name ?? user?.name ?? "Student",
       studentId: myApp.student?.student_id ?? user?.studentId ?? "—",
       department: resolveDepartmentName(myApp, user?.department ?? "—"),
       level: myApp.student?.level ?? myApp.level ?? "—",
       companyName,
+      companyAddress,
       startDate: formatDisplayDate(getInternshipStartDate(myApp, terms)),
       endDate: formatDisplayDate(getInternshipEndDate(myApp, terms)),
     });
