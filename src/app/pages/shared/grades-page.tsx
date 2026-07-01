@@ -170,22 +170,27 @@ export function GradesPage({ viewRole }: Props) {
         </div>
         <button
           onClick={() => {
-            exportToCSV(
-              gradeApps.map(g => ({
-                "Student Name": g.studentName,
-                "Index Number": g.studentId,
-                Company: g.companyName,
-                Department: g.department,
-                "Industry Supervisor Grade (weekly logbook + evaluation)": g.industrialScore !== null ? `${Number(g.industrialScore).toFixed(1)}%` : "—",
-                "Academic Supervisor (site visitation)": g.siteVisitScore !== null ? `${Number(g.siteVisitScore).toFixed(1)}%` : "—",
-                "DLO Report Score": g.reportScore !== null ? `${Number(g.reportScore).toFixed(1)}%` : "—",
-                "DLO Presentation Score": g.presentationScore !== null ? `${Number(g.presentationScore).toFixed(1)}%` : "—",
-                "Final Score": g.finalPercent !== null ? `${Number(g.finalPercent).toFixed(1)}%` : "Pending",
-                "Letter Grade": g.letterGrade ?? "—",
-                Status: g.gradeStatus,
-              })),
-              "grades_export"
-            );
+            try {
+              exportToCSV(
+                gradeApps.map(g => ({
+                  "Student Name": g.studentName,
+                  "Index Number": g.studentId,
+                  Company: g.companyName,
+                  Department: g.department,
+                  "Industry Supervisor Grade (weekly logbook + evaluation)": g.industrialScore !== null && g.industrialScore !== undefined ? `${Number(g.industrialScore).toFixed(1)}%` : "—",
+                  "Academic Supervisor (site visitation)": g.siteVisitScore !== null && g.siteVisitScore !== undefined ? `${Number(g.siteVisitScore).toFixed(1)}%` : "—",
+                  "DLO Report Score": g.reportScore !== null && g.reportScore !== undefined ? `${Number(g.reportScore).toFixed(1)}%` : "—",
+                  "DLO Presentation Score": g.presentationScore !== null && g.presentationScore !== undefined ? `${Number(g.presentationScore).toFixed(1)}%` : "—",
+                  "Final Score": g.finalPercent !== null && g.finalPercent !== undefined ? `${Number(g.finalPercent).toFixed(1)}%` : "Pending",
+                  "Letter Grade": g.letterGrade ?? "—",
+                  Status: g.gradeStatus,
+                })),
+                "grades_export"
+              );
+            } catch (err: any) {
+              console.error("Export error:", err);
+              toast.error(`Export failed: ${err.message || String(err)}`);
+            }
           }}
           className="px-4 py-2 bg-card border border-border rounded-lg hover:bg-accent flex items-center gap-2"
           style={{ fontSize: "0.85rem" }}

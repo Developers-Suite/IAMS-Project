@@ -1,7 +1,4 @@
-/**
- * Generate and open a print-ready placement letter for a student
- * Uses browser print dialog so user can save as PDF or print
- */
+import { showPrintFallback } from "./print-fallback";
 
 export interface PlacementLetterData {
   studentName: string;
@@ -275,13 +272,18 @@ export function openPlacementLetter(data: PlacementLetterData): void {
 </html>
 `;
 
-  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const win = window.open(url, "_blank");
-  if (!win) {
-    console.error("Popup blocked — could not open placement letter");
-    URL.revokeObjectURL(url);
-    return;
+  try {
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url, "_blank");
+    if (!win) {
+      showPrintFallback(html, "Placement Letter");
+      URL.revokeObjectURL(url);
+      return;
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+  } catch (err) {
+    console.warn("Failed to open placement letter window, displaying in-app modal instead", err);
+    showPrintFallback(html, "Placement Letter");
   }
-  setTimeout(() => URL.revokeObjectURL(url), 30000);
 }

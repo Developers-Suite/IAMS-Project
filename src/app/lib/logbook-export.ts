@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { showPrintFallback } from "./print-fallback";
 
 function escapeHtml(s: string): string {
   return s
@@ -63,13 +64,18 @@ export function exportLogbookToPDF(companyName: string, entries: any[]) {
     </html>
   `;
 
-  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const win = window.open(url, "_blank");
-  if (!win) {
-    toast.error("Could not open print window. Please allow popups for this site.");
-    URL.revokeObjectURL(url);
-    return;
+  try {
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url, "_blank");
+    if (!win) {
+      showPrintFallback(html, `${companyName} - Logbook Entries`);
+      URL.revokeObjectURL(url);
+      return;
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+  } catch (err) {
+    console.warn("Failed to open print popup, displaying in-app modal instead", err);
+    showPrintFallback(html, `${companyName} - Logbook Entries`);
   }
-  setTimeout(() => URL.revokeObjectURL(url), 30000);
 }

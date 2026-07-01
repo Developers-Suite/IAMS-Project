@@ -1,3 +1,5 @@
+import { showPrintFallback } from "./print-fallback";
+
 export interface InsuranceLetterData {
   studentName: string;
   studentId: string;
@@ -267,10 +269,17 @@ export function openInsuranceLetter(data: InsuranceLetterData): void {
 </html>
   `;
 
-  const printWindow = window.open("", "_blank");
-  if (printWindow) {
-    printWindow.document.open();
-    printWindow.document.write(html);
-    printWindow.document.close();
+  try {
+    const printWindow = window.open("", "_blank");
+    if (printWindow) {
+      printWindow.document.open();
+      printWindow.document.write(html);
+      printWindow.document.close();
+    } else {
+      showPrintFallback(html, "Indemnity Form");
+    }
+  } catch (err) {
+    console.warn("Failed to open Indemnity Form window, displaying in-app modal instead", err);
+    showPrintFallback(html, "Indemnity Form");
   }
 }
