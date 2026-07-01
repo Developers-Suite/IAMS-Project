@@ -119,7 +119,7 @@ export function openInsuranceLetter(data: InsuranceLetterData): void {
       <button class="print-button" onclick="window.print()">Print / Save as PDF</button>
     </div>
     <div class="letterhead" style="text-align: center; margin-bottom: 0.3in; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px;">
-      <img src="/HTULH.png" alt="HTU Letterhead" style="max-width: 100%; height: auto; max-height: 100px; object-fit: contain;" />
+      <img src="${window.location.origin}/HTULH.png" alt="HTU Letterhead" style="max-width: 100%; height: auto; max-height: 100px; object-fit: contain;" />
     </div>
     <div class="date" style="text-align: right; margin-bottom: 0.2in;">Date: ${dateStr}</div>
     <div class="body" style="font-size: 11pt;">

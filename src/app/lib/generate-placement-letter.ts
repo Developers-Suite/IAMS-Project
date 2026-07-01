@@ -224,7 +224,7 @@ export function openPlacementLetter(data: PlacementLetterData): void {
     </div>
 
     <div class="letterhead" style="text-align: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 20px;">
-      <img src="/HTULH.png" alt="Ho Technical University Letterhead" style="max-width: 100%; height: auto; max-height: 100px; object-fit: contain;" />
+      <img src="${window.location.origin}/HTULH.png" alt="Ho Technical University Letterhead" style="max-width: 100%; height: auto; max-height: 100px; object-fit: contain;" />
     </div>
 
     <div class="date">Date: ${dateStr}</div>

@@ -240,7 +240,7 @@ export function DocumentsPage() {
     const letterheadHtml = t.has_letterhead || t.hasLetterhead
       ? `
       <div class="letterhead" style="text-align: center; margin-bottom: 0.3in; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px;">
-        <img src="/HTULH.png" alt="HTU Letterhead" style="max-width: 100%; height: auto; max-height: 100px; object-fit: contain;" />
+        <img src="${window.location.origin}/HTULH.png" alt="HTU Letterhead" style="max-width: 100%; height: auto; max-height: 100px; object-fit: contain;" />
       </div>
       `
       : "";

@@ -123,7 +123,7 @@ export function openManualLogbookSheet(): void {
     </div>
     
     <div style="text-align: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 8px;">
-      <img src="/HTULH.png" alt="HTU Letterhead" style="max-width: 100%; height: auto; max-height: 90px; object-fit: contain;" />
+      <img src="${window.location.origin}/HTULH.png" alt="HTU Letterhead" style="max-width: 100%; height: auto; max-height: 90px; object-fit: contain;" />
     </div>
 
     <h2 style="text-align: center; margin-top: 15px; font-size: 16px; text-transform: uppercase; color: #1e3a8a; margin-bottom: 15px;">
