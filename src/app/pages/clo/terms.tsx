@@ -42,6 +42,18 @@ function toDateStr(iso?: string | null): string {
   return iso.slice(0, 10); // "2027-04-01T00:00:00.000000Z" → "2027-04-01"
 }
 
+function formatDisplayDate(dateStr?: string | null): string {
+  if (!dateStr) return "—";
+  const parts = dateStr.split("T")[0].split("-");
+  if (parts.length === 3) {
+    if (parts[0].length === 4) {
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    return dateStr;
+  }
+  return dateStr;
+}
+
 const TERM_TYPE_MAP: Record<string, "Vacation" | "Semestrial"> = {
   short_term: "Vacation",
   regular: "Semestrial",
@@ -390,8 +402,8 @@ export function TermsPage() {
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
-                  ["App Deadline", t.applicationEnd || t.applicationStart || "—"],
-                  ["Internship", `${t.internshipStart || "—"} → ${t.internshipEnd || "—"}`],
+                  ["App Deadline", formatDisplayDate(t.applicationEnd || t.applicationStart)],
+                  ["Internship", t.internshipStart ? `${formatDisplayDate(t.internshipStart)} → ${formatDisplayDate(t.internshipEnd)}` : "—"],
                   ["Levels", t.eligibleLevels.join(", ") || "—"],
                   ["Departments", t.departments.length === deptOptions.length && deptOptions.length > 0
                     ? "All" : `${t.departments.length} dept${t.departments.length !== 1 ? "s" : ""}`],
@@ -424,8 +436,8 @@ export function TermsPage() {
               <div className="space-y-1.5">
                 {([
                   ["Type", t.type],
-                  ["App Deadline", t.applicationEnd || t.applicationStart || "—"],
-                  ["Internship", t.internshipStart ? `${t.internshipStart} → ${t.internshipEnd}` : "—"],
+                  ["App Deadline", formatDisplayDate(t.applicationEnd || t.applicationStart)],
+                  ["Internship", t.internshipStart ? `${formatDisplayDate(t.internshipStart)} → ${formatDisplayDate(t.internshipEnd)}` : "—"],
                   ["Levels", t.eligibleLevels.join(", ") || "—"],
                   ["Departments", t.departments.length === deptOptions.length && deptOptions.length > 0
                     ? "All" : `${t.departments.length} of ${deptOptions.length}`],
@@ -744,8 +756,8 @@ export function TermsPage() {
               {[
                 ["Type", selectedTerm.type],
                 ["Eligible Levels", selectedTerm.eligibleLevels.join(", ") || "—"],
-                ["Application Deadline", selectedTerm.applicationEnd || selectedTerm.applicationStart || "—"],
-                ["Internship Period", `${selectedTerm.internshipStart || "—"} → ${selectedTerm.internshipEnd || "—"}`],
+                ["Application Deadline", formatDisplayDate(selectedTerm.applicationEnd || selectedTerm.applicationStart)],
+                ["Internship Period", selectedTerm.internshipStart ? `${formatDisplayDate(selectedTerm.internshipStart)} → ${formatDisplayDate(selectedTerm.internshipEnd)}` : "—"],
               ].map(([label, value]) => (
                 <div key={label} className="bg-muted/30 rounded-xl p-3">
                   <p className="text-muted-foreground" style={{ fontSize: "0.7rem" }}>{label}</p>

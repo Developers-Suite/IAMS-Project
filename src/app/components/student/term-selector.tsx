@@ -1,6 +1,18 @@
 import type { TermResponse as Term } from "../../types/api";
 import { CheckCircle2, AlertCircle, AlertTriangle, Sparkles } from "lucide-react";
 
+function formatDisplayDate(dateStr?: string | null): string {
+  if (!dateStr || dateStr === "—") return "—";
+  const parts = dateStr.split("T")[0].split("-");
+  if (parts.length === 3) {
+    if (parts[0].length === 4) {
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    return dateStr;
+  }
+  return dateStr;
+}
+
 interface TermSelectorProps {
   availableTerms: Term[];
   selectedTermId: string;
@@ -95,10 +107,10 @@ export function TermSelector({
                     </div>
                     <div className="flex items-center gap-4 mt-1">
                       <span className="text-muted-foreground" style={{ fontSize: "0.75rem" }}>
-                        Apply: {appStart || "—"} → {appEnd || "—"}
+                        Apply: {formatDisplayDate(appStart)} → {formatDisplayDate(appEnd)}
                       </span>
                       <span className="text-muted-foreground" style={{ fontSize: "0.75rem" }}>
-                        Internship: {intStart} → {intEnd}
+                        Internship: {formatDisplayDate(intStart)} → {formatDisplayDate(intEnd)}
                       </span>
                     </div>
                   </div>

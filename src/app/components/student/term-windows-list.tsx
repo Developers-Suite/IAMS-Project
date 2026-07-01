@@ -4,9 +4,12 @@ import { useState } from "react";
 // Format date as "10 Jan, 2026"
 function formatDate(dateStr: string): string {
   if (!dateStr) return "";
-  const date = new Date(dateStr + "T00:00:00Z");
-  const options: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" };
-  return date.toLocaleDateString("en-GB", options);
+  const date = new Date(dateStr.includes("T") ? dateStr : dateStr + "T00:00:00Z");
+  if (isNaN(date.getTime())) return dateStr;
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const year = date.getUTCFullYear();
+  return `${day}-${month}-${year}`;
 }
 
 interface Term {
