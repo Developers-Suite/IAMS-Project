@@ -5,10 +5,11 @@ Date.prototype.toLocaleDateString = function (
   locales?: Intl.LocalesArgument,
   options?: Intl.DateTimeFormatOptions
 ): string {
+  const activeLocales = locales || "en-GB";
   if (
-    locales === "en-GB" ||
-    (Array.isArray(locales) && locales.includes("en-GB")) ||
-    (typeof locales === "string" && locales.startsWith("en-GB"))
+    activeLocales === "en-GB" ||
+    (Array.isArray(activeLocales) && activeLocales.includes("en-GB")) ||
+    (typeof activeLocales === "string" && activeLocales.startsWith("en-GB"))
   ) {
     if (!options) {
       const day = String(this.getDate()).padStart(2, "0");
@@ -16,10 +17,10 @@ Date.prototype.toLocaleDateString = function (
       const year = this.getFullYear();
       return `${day}-${month}-${year}`;
     }
-    const result = originalToLocaleDateString.call(this, locales, options);
+    const result = originalToLocaleDateString.call(this, activeLocales, options);
     return result.replace(/\//g, "-");
   }
-  return originalToLocaleDateString.call(this, locales, options);
+  return originalToLocaleDateString.call(this, activeLocales, options);
 };
 
 // Override Date.prototype.toLocaleString globally to format en-GB datetimes with hyphens
@@ -28,15 +29,16 @@ Date.prototype.toLocaleString = function (
   locales?: Intl.LocalesArgument,
   options?: Intl.DateTimeFormatOptions
 ): string {
+  const activeLocales = locales || "en-GB";
   if (
-    locales === "en-GB" ||
-    (Array.isArray(locales) && locales.includes("en-GB")) ||
-    (typeof locales === "string" && locales.startsWith("en-GB"))
+    activeLocales === "en-GB" ||
+    (Array.isArray(activeLocales) && activeLocales.includes("en-GB")) ||
+    (typeof activeLocales === "string" && activeLocales.startsWith("en-GB"))
   ) {
-    const result = originalToLocaleString.call(this, locales, options);
+    const result = originalToLocaleString.call(this, activeLocales, options);
     return result.replace(/\//g, "-");
   }
-  return originalToLocaleString.call(this, locales, options);
+  return originalToLocaleString.call(this, activeLocales, options);
 };
 
 import { createRoot } from "react-dom/client";

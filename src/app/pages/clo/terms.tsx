@@ -12,6 +12,7 @@ import {
   Clock, FileText, TrendingUp, GraduationCap, Layers, EyeOff, Send
 } from "lucide-react";
 import { toast } from "sonner";
+import { DatePicker } from "../../components/ui/date-picker";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -550,33 +551,18 @@ export function TermsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">
                   <label className="block mb-1 text-muted-foreground" style={{ fontSize: "0.75rem" }}>Application Deadline</label>
-                  <input
-                    type="date"
-                    value={form.applicationEnd}
-                    onChange={(e) => setForm({ ...form, applicationEnd: e.target.value, applicationStart: e.target.value })}
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-background"
-                    style={{ fontSize: "0.85rem" }}
-                  />
+                  <DatePicker value={form.applicationEnd}
+                    onChange={(val) => setForm({ ...form, applicationEnd: val, applicationStart: val })} />
                 </div>
                 <div>
                   <label className="block mb-1 text-muted-foreground" style={{ fontSize: "0.75rem" }}>Internship Starts</label>
-                  <input
-                    type="date"
-                    value={form.internshipStart}
-                    onChange={(e) => setForm({ ...form, internshipStart: e.target.value })}
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-background"
-                    style={{ fontSize: "0.85rem" }}
-                  />
+                  <DatePicker value={form.internshipStart}
+                    onChange={(val) => setForm({ ...form, internshipStart: val })} />
                 </div>
                 <div>
                   <label className="block mb-1 text-muted-foreground" style={{ fontSize: "0.75rem" }}>Internship Ends</label>
-                  <input
-                    type="date"
-                    value={form.internshipEnd}
-                    onChange={(e) => setForm({ ...form, internshipEnd: e.target.value })}
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-background"
-                    style={{ fontSize: "0.85rem" }}
-                  />
+                  <DatePicker value={form.internshipEnd}
+                    onChange={(val) => setForm({ ...form, internshipEnd: val })} />
                 </div>
               </div>
             </section>
