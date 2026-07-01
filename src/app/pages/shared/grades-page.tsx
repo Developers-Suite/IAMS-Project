@@ -34,7 +34,11 @@ function normalizeGrade(g: any) {
     internshipId: String(g.internship_id ?? g.internship?.id ?? g.id),
     studentName, studentId, companyName, department: dept, supervisorAssigned: supervisor,
     gradeStatus, backendStatus,
-    finalPercent: g.total_score ?? null,
+    industrialScore: g.industrial_assessment_score ?? g.industrialScore ?? null,
+    siteVisitScore: g.site_visitation_score ?? g.siteVisitScore ?? null,
+    reportScore: g.report_score ?? g.reportScore ?? null,
+    presentationScore: g.presentation_score ?? g.presentationScore ?? null,
+    finalPercent: g.total_score ?? g.finalPercent ?? null,
     letterGrade: g.letter_grade ?? null,
     gpa: g.gpa ?? null,
   };
@@ -168,11 +172,15 @@ export function GradesPage({ viewRole }: Props) {
           onClick={() => {
             exportToCSV(
               gradeApps.map(g => ({
-                Student: g.studentName,
-                ID: g.studentId,
+                "Student Name": g.studentName,
+                "Index Number": g.studentId,
                 Company: g.companyName,
                 Department: g.department,
-                "Final %": g.finalPercent ?? "Pending",
+                "Industry Supervisor Grade (weekly logbook + evaluation)": g.industrialScore !== null ? `${Number(g.industrialScore).toFixed(1)}%` : "—",
+                "Academic Supervisor (site visitation)": g.siteVisitScore !== null ? `${Number(g.siteVisitScore).toFixed(1)}%` : "—",
+                "DLO Report Score": g.reportScore !== null ? `${Number(g.reportScore).toFixed(1)}%` : "—",
+                "DLO Presentation Score": g.presentationScore !== null ? `${Number(g.presentationScore).toFixed(1)}%` : "—",
+                "Final Score": g.finalPercent !== null ? `${Number(g.finalPercent).toFixed(1)}%` : "Pending",
                 "Letter Grade": g.letterGrade ?? "—",
                 Status: g.gradeStatus,
               })),
@@ -339,7 +347,19 @@ export function GradesPage({ viewRole }: Props) {
                   <th className="text-left px-4 py-3" style={{ fontSize: "0.75rem" }}>Company</th>
                   {viewRole === "clo" && <th className="text-left px-4 py-3" style={{ fontSize: "0.75rem" }}>Department</th>}
                   <th className="text-left px-4 py-3" style={{ fontSize: "0.75rem" }}>Supervisor</th>
-                  <th className="text-left px-4 py-3" style={{ fontSize: "0.75rem" }}>Final Score</th>
+                  <th className="text-center px-4 py-3" style={{ fontSize: "0.75rem" }}>
+                    Industry Supervisor Grade<br/>
+                    <span className="text-muted-foreground font-normal" style={{ fontSize: "0.65rem" }}>(weekly logbook + evaluation)</span>
+                  </th>
+                  <th className="text-center px-4 py-3" style={{ fontSize: "0.75rem" }}>
+                    Academic Supervisor<br/>
+                    <span className="text-muted-foreground font-normal" style={{ fontSize: "0.65rem" }}>(site visitation)</span>
+                  </th>
+                  <th className="text-center px-4 py-3" style={{ fontSize: "0.75rem" }}>
+                    DLO<br/>
+                    <span className="text-muted-foreground font-normal" style={{ fontSize: "0.65rem" }}>(report + presentation)</span>
+                  </th>
+                  <th className="text-center px-4 py-3" style={{ fontSize: "0.75rem" }}>Final Score</th>
                   <th className="text-left px-4 py-3" style={{ fontSize: "0.75rem" }}>Status</th>
                   <th className="text-left px-4 py-3" style={{ fontSize: "0.75rem" }}>Actions</th>
                 </tr>
@@ -360,8 +380,31 @@ export function GradesPage({ viewRole }: Props) {
                       <td className="px-4 py-3" style={{ fontSize: "0.85rem" }}>{g.companyName}</td>
                       {viewRole === "clo" && <td className="px-4 py-3" style={{ fontSize: "0.8rem" }}>{g.department.split(" ")[0]}</td>}
                       <td className="px-4 py-3" style={{ fontSize: "0.85rem" }}>{g.supervisorAssigned || "—"}</td>
-                      <td className="px-4 py-3">
-                        <span className={`px-3 py-1 rounded-lg ${g.finalPercent !== null ? "bg-blue-50 text-blue-700" : "bg-secondary text-muted-foreground"}`} style={{ fontSize: "0.85rem" }}>
+                      <td className="px-4 py-3 text-center" style={{ fontSize: "0.85rem" }}>
+                        {g.industrialScore !== null
+                          ? <span className="font-medium">{Number(g.industrialScore).toFixed(1)}%</span>
+                          : <span className="text-muted-foreground text-xs">—</span>}
+                      </td>
+                      <td className="px-4 py-3 text-center" style={{ fontSize: "0.85rem" }}>
+                        {g.siteVisitScore !== null
+                          ? <span className="font-medium">{Number(g.siteVisitScore).toFixed(1)}%</span>
+                          : <span className="text-muted-foreground text-xs">—</span>}
+                      </td>
+                      <td className="px-4 py-3 text-center" style={{ fontSize: "0.85rem" }}>
+                        <div className="inline-flex items-center gap-1 font-medium" style={{ fontSize: "0.8rem" }}>
+                          {g.reportScore !== null || g.presentationScore !== null ? (
+                            <>
+                              <span>Report: {g.reportScore !== null ? `${Number(g.reportScore).toFixed(1)}%` : "—"}</span>
+                              <span className="text-muted-foreground">|</span>
+                              <span>Pres: {g.presentationScore !== null ? `${Number(g.presentationScore).toFixed(1)}%` : "—"}</span>
+                            </>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">—</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`px-3 py-1 rounded-lg ${g.finalPercent !== null ? "bg-blue-50 text-blue-700 font-semibold" : "bg-secondary text-muted-foreground"}`} style={{ fontSize: "0.85rem" }}>
                           {g.finalPercent !== null ? `${Number(g.finalPercent).toFixed(1)}%` : "—"}
                           {g.letterGrade ? ` (${g.letterGrade})` : ""}
                         </span>
@@ -390,7 +433,7 @@ export function GradesPage({ viewRole }: Props) {
                 ))}
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={viewRole === "clo" ? 7 : 6} className="px-4 py-8 text-center text-muted-foreground" style={{ fontSize: "0.85rem" }}>
+                    <td colSpan={viewRole === "clo" ? 10 : 9} className="px-4 py-8 text-center text-muted-foreground" style={{ fontSize: "0.85rem" }}>
                       No grades found for the current filter.
                     </td>
                   </tr>
