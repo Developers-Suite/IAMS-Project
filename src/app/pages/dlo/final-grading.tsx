@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { SkeletonTable } from "../../components/skeleton";
 import { StatusBadge } from "../../components/status-badge";
 import { useAppContext } from "../../lib/context";
-import { AlertTriangle, GraduationCap, RefreshCw, CheckCircle2, Send } from "lucide-react";
+import { AlertTriangle, GraduationCap, RefreshCw, CheckCircle2, Send, Pen } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "../../lib/api-client";
 
@@ -30,6 +30,58 @@ export function DLOFinalGradingPage() {
   const [compiling, setCompiling] = useState<string | null>(null);
   const [approving, setApproving] = useState<string | null>(null);
   const [publishing, setPublishing] = useState<string | null>(null);
+
+  const [selectedForEdit, setSelectedForEdit] = useState<Row | null>(null);
+  const [editIndustrial, setEditIndustrial] = useState("");
+  const [editSiteVisit, setEditSiteVisit] = useState("");
+  const [editReport, setEditReport] = useState("");
+  const [editPresentation, setEditPresentation] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  const handleOpenEdit = (r: Row) => {
+    setSelectedForEdit(r);
+    setEditIndustrial(r.industrialScore !== null ? String(r.industrialScore) : "");
+    setEditSiteVisit(r.siteVisitScore !== null ? String(r.siteVisitScore) : "");
+    setEditReport(r.reportScore !== null ? String(r.reportScore) : "");
+    setEditPresentation(r.presentationScore !== null ? String(r.presentationScore) : "");
+  };
+
+  const handleSaveEdit = async () => {
+    if (!selectedForEdit) return;
+    setSavingEdit(true);
+    try {
+      let currentGradeId = selectedForEdit.gradeId;
+      if (!currentGradeId) {
+        const compileRes = await apiClient.compileGrade(selectedForEdit.internshipId);
+        if (compileRes.success && compileRes.data) {
+          currentGradeId = String(compileRes.data.id || compileRes.data.grade?.id || "");
+        }
+      }
+
+      const payload: Record<string, any> = {
+        industrial_assessment_score: editIndustrial === "" ? null : Number(editIndustrial),
+        site_visitation_score: editSiteVisit === "" ? null : Number(editSiteVisit),
+        report_score: editReport === "" ? null : Number(editReport),
+        presentation_score: editPresentation === "" ? null : Number(editPresentation),
+      };
+
+      const targetId = currentGradeId || selectedForEdit.internshipId;
+      const res = await apiClient.updateGrade(targetId, payload);
+
+      if (res.success) {
+        toast.success("Grades updated successfully!");
+        setSelectedForEdit(null);
+        load();
+      } else {
+        toast.error(res.message ?? "Failed to update grades.");
+      }
+    } catch (error) {
+      console.error("Error saving grades:", error);
+      toast.error("An error occurred while saving grades.");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -140,14 +192,22 @@ export function DLOFinalGradingPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
-                  <th className="text-left px-4 py-2.5" style={{ fontSize: "0.75rem" }}>Student</th>
-                  <th className="text-center px-4 py-2.5" style={{ fontSize: "0.75rem" }}>Industrial</th>
-                  <th className="text-center px-4 py-2.5" style={{ fontSize: "0.75rem" }}>Site Visit</th>
-                  <th className="text-center px-4 py-2.5" style={{ fontSize: "0.75rem" }}>Report</th>
-                  <th className="text-center px-4 py-2.5" style={{ fontSize: "0.75rem" }}>Present.</th>
-                  <th className="text-center px-4 py-2.5" style={{ fontSize: "0.75rem" }}>Final</th>
-                  <th className="text-left px-4 py-2.5" style={{ fontSize: "0.75rem" }}>Status</th>
-                  <th className="text-right px-4 py-2.5" style={{ fontSize: "0.75rem" }}></th>
+                  <th className="text-left px-4 py-3.5" style={{ fontSize: "0.75rem" }}>Student</th>
+                  <th className="text-center px-4 py-3.5" style={{ fontSize: "0.75rem" }}>
+                    Industry Supervisor Grade<br/>
+                    <span className="text-muted-foreground font-normal" style={{ fontSize: "0.65rem" }}>(weekly logbook + evaluation)</span>
+                  </th>
+                  <th className="text-center px-4 py-3.5" style={{ fontSize: "0.75rem" }}>
+                    Academic Supervisor<br/>
+                    <span className="text-muted-foreground font-normal" style={{ fontSize: "0.65rem" }}>(site visitation)</span>
+                  </th>
+                  <th className="text-center px-4 py-3.5" style={{ fontSize: "0.75rem" }}>
+                    DLO<br/>
+                    <span className="text-muted-foreground font-normal" style={{ fontSize: "0.65rem" }}>(report + presentation)</span>
+                  </th>
+                  <th className="text-center px-4 py-3.5" style={{ fontSize: "0.75rem" }}>Final Score</th>
+                  <th className="text-left px-4 py-3.5" style={{ fontSize: "0.75rem" }}>Status</th>
+                  <th className="text-right px-4 py-3.5" style={{ fontSize: "0.75rem" }}></th>
                 </tr>
               </thead>
               <tbody>
@@ -155,37 +215,50 @@ export function DLOFinalGradingPage() {
                   <tr key={r.internshipId} className="border-b border-border last:border-0 hover:bg-muted/20">
                     <td className="px-4 py-3" style={{ fontSize: "0.85rem" }}>
                       <div>
-                        <p>{r.studentName}</p>
+                        <p className="font-medium">{r.studentName}</p>
                         <p className="text-muted-foreground" style={{ fontSize: "0.7rem" }}>{r.studentId}</p>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-center" style={{ fontSize: "0.85rem" }}>
                       {r.industrialScore !== null
-                        ? <span className="font-medium">{Number(r.industrialScore).toFixed(1)}</span>
+                        ? <span className="font-medium">{Number(r.industrialScore).toFixed(1)}%</span>
                         : <span className="text-muted-foreground text-xs">—</span>}
                     </td>
                     <td className="px-4 py-3 text-center" style={{ fontSize: "0.85rem" }}>
                       {r.siteVisitScore !== null
-                        ? <span className="font-medium">{Number(r.siteVisitScore).toFixed(1)}</span>
+                        ? <span className="font-medium">{Number(r.siteVisitScore).toFixed(1)}%</span>
                         : <span className="text-muted-foreground text-xs">—</span>}
                     </td>
                     <td className="px-4 py-3 text-center" style={{ fontSize: "0.85rem" }}>
-                      {r.reportScore !== null
-                        ? <span className="font-medium">{Number(r.reportScore).toFixed(1)}</span>
-                        : <span className="text-muted-foreground text-xs">—</span>}
-                    </td>
-                    <td className="px-4 py-3 text-center" style={{ fontSize: "0.85rem" }}>
-                      {r.presentationScore !== null
-                        ? <span className="font-medium">{Number(r.presentationScore).toFixed(1)}</span>
-                        : <span className="text-muted-foreground text-xs">—</span>}
+                      <div className="inline-flex items-center gap-1.5 font-medium" style={{ fontSize: "0.8rem" }}>
+                        {r.reportScore !== null || r.presentationScore !== null ? (
+                          <>
+                            <span>Report: {r.reportScore !== null ? `${Number(r.reportScore).toFixed(1)}%` : "—"}</span>
+                            <span className="text-muted-foreground">|</span>
+                            <span>Pres: {r.presentationScore !== null ? `${Number(r.presentationScore).toFixed(1)}%` : "—"}</span>
+                          </>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-center" style={{ fontSize: "0.85rem" }}>
                       {r.finalPercent !== null
-                        ? <span className="font-medium">{Number(r.finalPercent).toFixed(1)}%{r.letterGrade ? ` (${r.letterGrade})` : ""}</span>
+                        ? <span className="font-semibold text-primary">{Number(r.finalPercent).toFixed(1)}%{r.letterGrade ? ` (${r.letterGrade})` : ""}</span>
                         : <span className="text-muted-foreground text-xs">—</span>}
                     </td>
                     <td className="px-4 py-3"><StatusBadge status={displayStatus(r.gradeStatus)} /></td>
                     <td className="px-4 py-3 text-right space-x-2">
+                      {r.gradeStatus !== "published" && (
+                        <button
+                          onClick={() => handleOpenEdit(r)}
+                          className="px-2 py-1.5 border border-border rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+                          title="Input / Override Component Grades"
+                          style={{ fontSize: "0.8rem" }}
+                        >
+                          <Pen className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                       {r.gradeStatus === "draft" || !r.gradeStatus ? (
                         <button onClick={() => handleCompile(r.internshipId)} disabled={compiling === r.internshipId}
                           className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-1.5" style={{ fontSize: "0.8rem" }}>
@@ -220,6 +293,102 @@ export function DLOFinalGradingPage() {
           </div>
         )}
       </div>
+
+      {selectedForEdit && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-xl w-full max-w-md shadow-2xl p-6 space-y-4">
+            <div>
+              <h3 className="text-lg font-bold">Input / Override Grades</h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                For student: <strong className="text-foreground">{selectedForEdit.studentName}</strong> ({selectedForEdit.studentId})
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground mb-1 block">
+                  Industry Supervisor Grade (weekly logbook + evaluation)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  value={editIndustrial}
+                  onChange={(e) => setEditIndustrial(e.target.value)}
+                  placeholder="Not graded yet (Enter 0-100)"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground mb-1 block">
+                  Academic Supervisor Grade (site visitation)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  value={editSiteVisit}
+                  onChange={(e) => setEditSiteVisit(e.target.value)}
+                  placeholder="Not graded yet (Enter 0-100)"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground mb-1 block">
+                  DLO Grade (report)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  value={editReport}
+                  onChange={(e) => setEditReport(e.target.value)}
+                  placeholder="Not graded yet (Enter 0-100)"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground mb-1 block">
+                  DLO Grade (presentation)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  value={editPresentation}
+                  onChange={(e) => setEditPresentation(e.target.value)}
+                  placeholder="Not graded yet (Enter 0-100)"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                onClick={() => setSelectedForEdit(null)}
+                disabled={savingEdit}
+                className="px-4 py-2 border border-border rounded-lg hover:bg-accent text-sm font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                disabled={savingEdit}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 text-sm font-semibold transition-opacity flex items-center gap-1.5"
+              >
+                {savingEdit ? "Saving..." : "Save Scores"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
