@@ -17,9 +17,37 @@ export interface DatePickerProps {
 
 export function DatePicker({ value, onChange, placeholder = "Pick a date", className, disabled }: DatePickerProps) {
   const selectedDate = React.useMemo(() => {
-    if (!value) return undefined
-    const parsed = parseISO(value)
-    return isValid(parsed) ? parsed : undefined
+    const strVal = String(value || "");
+    if (!strVal) return undefined;
+    
+    // Try standard ISO parsing (YYYY-MM-DD)
+    const parsed = parseISO(strVal);
+    if (isValid(parsed)) return parsed;
+    
+    // Try manual parsing of DD-MM-YYYY or DD/MM/YYYY
+    const parts = strVal.split(/[-/]/);
+    if (parts.length === 3) {
+      const p0 = parseInt(parts[0], 10);
+      const p1 = parseInt(parts[1], 10);
+      const p2 = parseInt(parts[2], 10);
+      if (!isNaN(p0) && !isNaN(p1) && !isNaN(p2)) {
+        if (parts[0].length === 4) {
+          // YYYY-MM-DD
+          const d = new Date(p0, p1 - 1, p2);
+          if (isValid(d)) return d;
+        } else if (parts[2].length === 4) {
+          // DD-MM-YYYY
+          const d = new Date(p2, p1 - 1, p0);
+          if (isValid(d)) return d;
+        }
+      }
+    }
+    
+    // Fallback to native Date parser
+    const nativeParsed = new Date(strVal);
+    if (isValid(nativeParsed)) return nativeParsed;
+    
+    return undefined;
   }, [value])
 
   const handleSelect = (date: Date | undefined) => {
