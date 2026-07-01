@@ -1,5 +1,45 @@
 
-  import { createRoot } from "react-dom/client";
+// Override Date.prototype.toLocaleDateString globally to format en-GB dates as dd-mm-yyyy instead of dd/mm/yyyy
+const originalToLocaleDateString = Date.prototype.toLocaleDateString;
+Date.prototype.toLocaleDateString = function (
+  locales?: Intl.LocalesArgument,
+  options?: Intl.DateTimeFormatOptions
+): string {
+  if (
+    locales === "en-GB" ||
+    (Array.isArray(locales) && locales.includes("en-GB")) ||
+    (typeof locales === "string" && locales.startsWith("en-GB"))
+  ) {
+    if (!options) {
+      const day = String(this.getDate()).padStart(2, "0");
+      const month = String(this.getMonth() + 1).padStart(2, "0");
+      const year = this.getFullYear();
+      return `${day}-${month}-${year}`;
+    }
+    const result = originalToLocaleDateString.call(this, locales, options);
+    return result.replace(/\//g, "-");
+  }
+  return originalToLocaleDateString.call(this, locales, options);
+};
+
+// Override Date.prototype.toLocaleString globally to format en-GB datetimes with hyphens
+const originalToLocaleString = Date.prototype.toLocaleString;
+Date.prototype.toLocaleString = function (
+  locales?: Intl.LocalesArgument,
+  options?: Intl.DateTimeFormatOptions
+): string {
+  if (
+    locales === "en-GB" ||
+    (Array.isArray(locales) && locales.includes("en-GB")) ||
+    (typeof locales === "string" && locales.startsWith("en-GB"))
+  ) {
+    const result = originalToLocaleString.call(this, locales, options);
+    return result.replace(/\//g, "-");
+  }
+  return originalToLocaleString.call(this, locales, options);
+};
+
+import { createRoot } from "react-dom/client";
   import App from "./app/App.tsx";
   import "./styles/index.css";
   import { registerServiceWorker } from "./app/lib/pwa-utils";

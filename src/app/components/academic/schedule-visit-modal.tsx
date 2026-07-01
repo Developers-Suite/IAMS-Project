@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { X, Calendar, Loader2 } from "lucide-react";
+import { DatePicker } from "../ui/date-picker";
 
 interface ScheduleVisitModalProps {
   isOpen: boolean;
@@ -62,13 +63,10 @@ export function ScheduleVisitModal({
               </select>
             </div>
             <div>
-              <label style={{ fontSize: "0.8rem" }}>Visit Date *</label>
-              <input
-                type="date"
+              <label style={{ fontSize: "0.8rem" }} className="block mb-1">Visit Date *</label>
+              <DatePicker
                 value={newVisit.date}
-                onChange={(e) => setNewVisit({ ...newVisit, date: e.target.value })}
-                className="w-full mt-1 px-3 py-2 border border-border rounded-lg bg-background"
-                style={{ fontSize: "0.85rem" }}
+                onChange={(val) => setNewVisit({ ...newVisit, date: val })}
               />
             </div>
             <div>

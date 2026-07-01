@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { X, Calendar, Loader2 } from "lucide-react";
+import { DatePicker } from "../ui/date-picker";
 
 interface RescheduleVisitModalProps {
   isOpen: boolean;
@@ -50,13 +51,10 @@ export function RescheduleVisitModal({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label style={{ fontSize: "0.8rem" }}>New Date *</label>
-              <input
-                type="date"
+              <label style={{ fontSize: "0.8rem" }} className="block mb-1">New Date *</label>
+              <DatePicker
                 value={rescheduleForm.date}
-                onChange={(e) => setRescheduleForm({ ...rescheduleForm, date: e.target.value })}
-                className="w-full mt-1 px-3 py-2 border border-border rounded-lg bg-background"
-                style={{ fontSize: "0.85rem" }}
+                onChange={(val) => setRescheduleForm({ ...rescheduleForm, date: val })}
               />
             </div>
             <div>

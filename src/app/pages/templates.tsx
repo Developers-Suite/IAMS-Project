@@ -49,6 +49,17 @@ const BUILT_IN_TEMPLATES: Template[] = [
     isBuiltIn: true,
   },
   {
+    id: "insurance-letter", name: "Insurance Letter",
+    desc: "Official letter confirming student insurance cover during industrial attachment",
+    category: "placement", hasLetterhead: true, hasSignature: true,
+    lastModified: "2026-07-01", version: "1.0", status: "Active",
+    placeholders: ["[Student Name]", "[Student ID]", "[Department]", "[Start Date]", "[End Date]"],
+    visibleTo: ["CLO", "DLO", "Student"],
+    body: "To Whom It May Concern,\n\nRE: GROUP PERSONAL ACCIDENT INSURANCE COVER FOR [Student Name] (ID: [Student ID])\n\nWe write to confirm that [Student Name], a student of the Department of [Department], Ho Technical University, is covered under the University's Group Personal Accident Insurance policy during the period of their industrial attachment from [Start Date] to [End Date] at [Company Name].\n\nThis insurance covers any accidental injury that may occur during the discharge of their duties at your organization.\n\nThank you for your partnership in mentoring our student.",
+    versionHistory: [{ version: "1.0", date: "2026-07-01", changes: "Initial insurance cover letter template", author: "System" }],
+    isBuiltIn: true,
+  },
+  {
     id: "acceptance-form", name: "Company Acceptance Form",
     desc: "PDF form for company signature, supervisor designation, and workplace details",
     category: "placement", hasLetterhead: false, hasSignature: false,
@@ -59,63 +70,13 @@ const BUILT_IN_TEMPLATES: Template[] = [
     isBuiltIn: true,
   },
   {
-    id: "midterm-evaluation", name: "Mid-Term Evaluation Form",
-    desc: "Digital evaluation form for industry supervisors to assess student progress at midpoint",
-    category: "evaluation", hasLetterhead: false, hasSignature: false,
-    lastModified: "2026-03-15", version: "2.0", status: "Active",
-    placeholders: ["[Student Name]", "[Company Name]", "[Evaluation Period]", "[Supervisor Name]"],
-    visibleTo: ["Academic Supervisor", "Industry Supervisor", "DLO"],
-    versionHistory: [{ version: "2.0", date: "2026-03-15", changes: "Revised scoring rubric", author: "System" }],
-    isBuiltIn: true,
-  },
-  {
-    id: "final-evaluation", name: "Final Evaluation Form",
-    desc: "Comprehensive final assessment with rating scales, competency evaluation, and supervisor recommendations",
-    category: "evaluation", hasLetterhead: false, hasSignature: false,
-    lastModified: "2026-03-15", version: "2.3", status: "Active",
-    placeholders: ["[Student Name]", "[Company Name]", "[Overall Grade]", "[Supervisor Name]", "[Completion Date]"],
-    visibleTo: ["Academic Supervisor", "Industry Supervisor", "DLO"],
-    versionHistory: [{ version: "2.3", date: "2026-03-15", changes: "Added competency grid", author: "System" }],
-    isBuiltIn: true,
-  },
-  {
     id: "logbook-template", name: "Logbook Template",
     desc: "Daily logbook entry template with structured fields for activities, skills, and challenges",
     category: "admin", hasLetterhead: false, hasSignature: false,
     lastModified: "2026-02-20", version: "1.5", status: "Active",
     placeholders: ["[Student Name]", "[Date]", "[Company Name]", "[Activities]", "[Skills Learned]", "[Challenges]"],
-    visibleTo: ["CLO", "DLO"],
+    visibleTo: ["CLO", "DLO", "Student"],
     versionHistory: [{ version: "1.5", date: "2026-02-20", changes: "Added challenges section", author: "System" }],
-    isBuiltIn: true,
-  },
-  {
-    id: "completion-certificate", name: "Completion Certificate",
-    desc: "Certificate of successful completion of the industrial attachment program",
-    category: "placement", hasLetterhead: true, hasSignature: true,
-    lastModified: "2026-01-10", version: "1.0", status: "Draft",
-    placeholders: ["[Student Name]", "[Student ID]", "[Company Name]", "[Start Date]", "[End Date]", "[Grade]", "[Department]"],
-    visibleTo: ["CLO", "DLO", "Student"],
-    versionHistory: [{ version: "1.0", date: "2026-01-10", changes: "Initial version", author: "System" }],
-    isBuiltIn: true,
-  },
-  {
-    id: "site-visit-report", name: "Site Visit Report",
-    desc: "Academic supervisor site visit report template with observation and recommendation fields",
-    category: "evaluation", hasLetterhead: false, hasSignature: true,
-    lastModified: "2026-03-20", version: "1.2", status: "Active",
-    placeholders: ["[Student Name]", "[Company Name]", "[Visit Date]", "[Supervisor Name]", "[Observations]"],
-    visibleTo: ["Academic Supervisor", "Industry Supervisor", "DLO"],
-    versionHistory: [{ version: "1.2", date: "2026-03-20", changes: "Added recommendations field", author: "System" }],
-    isBuiltIn: true,
-  },
-  {
-    id: "introduction-letter", name: "Introduction Letter",
-    desc: "Letter of introduction for students to present at their placement company",
-    category: "placement", hasLetterhead: true, hasSignature: true,
-    lastModified: "2026-04-01", version: "2.0", status: "Active",
-    placeholders: ["[Student Name]", "[Student ID]", "[Company Name]", "[Department]", "[Level]", "[Contact Person]"],
-    visibleTo: ["CLO", "DLO", "Student"],
-    versionHistory: [{ version: "2.0", date: "2026-04-01", changes: "New university branding applied", author: "System" }],
     isBuiltIn: true,
   },
 ];
@@ -661,10 +622,10 @@ h1{color:#1e3a5f;font-size:1.2rem;margin-bottom:1rem}.placeholder{color:#0b5ed7;
               {/* Letterhead / Signature */}
               {selected.hasLetterhead && (
                 <div className="pt-3 border-t border-border space-y-2">
-                  <div className="border-2 border-dashed border-border rounded-lg p-4 text-center hover:border-primary/40 transition-colors cursor-pointer">
-                    <Upload className="w-5 h-5 mx-auto text-muted-foreground mb-1" />
-                    <p style={{ fontSize: "0.75rem" }} className="text-muted-foreground">Upload letterhead</p>
-                    <p style={{ fontSize: "0.65rem" }} className="text-muted-foreground mt-0.5">Current: HTU crest letterhead</p>
+                  <div className="border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20 dark:border-emerald-800 rounded-lg p-3 text-center">
+                    <CheckCircle2 className="w-5 h-5 mx-auto text-emerald-600 dark:text-emerald-400 mb-1" />
+                    <p style={{ fontSize: "0.8rem" }} className="font-semibold text-emerald-800 dark:text-emerald-300">Official HTU Letterhead Applied</p>
+                    <p style={{ fontSize: "0.7rem" }} className="text-emerald-600 dark:text-emerald-400 mt-0.5">The official university letterhead (HTULH.png) is pre-configured and automatically embedded. No upload required.</p>
                   </div>
                   {selected.hasSignature && (
                     <>
@@ -886,10 +847,7 @@ h1{color:#1e3a5f;font-size:1.2rem;margin-bottom:1rem}.placeholder{color:#0b5ed7;
               <div className="p-8">
                 {tpl.hasLetterhead && (
                   <div className="border-b-2 border-blue-800 pb-4 mb-6 text-center">
-                    <img src="/logo%201.png" alt="" className="h-14 mx-auto mb-2 object-contain" />
-                    <p className="text-blue-900" style={{ fontSize: "1.1rem" }}>HO TECHNICAL UNIVERSITY</p>
-                    <p className="text-gray-600" style={{ fontSize: "0.8rem" }}>P.O. Box HP 217, Ho, Volta Region, Ghana</p>
-                    <p className="text-gray-500" style={{ fontSize: "0.75rem" }}>Tel: +233 362 194 410 · Email: liaison@htu.edu.gh</p>
+                    <img src="/HTULH.png" alt="HTU Letterhead" className="max-h-20 mx-auto object-contain" />
                   </div>
                 )}
                 <div className="text-right mb-6">

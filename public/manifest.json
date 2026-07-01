@@ -1,6 +1,6 @@
 {
   "name": "HTU Industrial Attachment Management System",
-  "short_name": "IAMS",
+  "short_name": "HTU IAMS",
   "description": "Industrial Attachment Management System for Ho Technical University - Track applications, logbooks, attendance, and assessments",
   "start_url": "/",
   "scope": "/",

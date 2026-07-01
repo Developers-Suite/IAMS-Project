@@ -203,10 +203,8 @@ export async function downloadCompanyAcceptanceFormPDF(data: CompanyAcceptanceFo
       <button class="print-button" onclick="window.print()">Print / Save as PDF</button>
     </div>
 
-    <div class="letterhead">
-      <img class="letterhead-logo" src="/logo%201.png" alt="" />
-      <div class="letterhead-title">${displayValue(data.universityName, "Ho Technical University")}</div>
-      <div class="letterhead-subtitle">Department of Industrial Attachment & Mentoring</div>
+    <div class="letterhead" style="text-align: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 20px;">
+      <img src="/HTULH.png" alt="Ho Technical University Letterhead" style="max-width: 100%; height: auto; max-height: 100px; object-fit: contain;" />
     </div>
 
     <div class="meta">

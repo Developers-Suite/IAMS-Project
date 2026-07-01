@@ -9,6 +9,7 @@ import {
   Edit2, Trash2, ZoomIn
 } from "lucide-react";
 import { toast } from "sonner";
+import { DatePicker } from "../../components/ui/date-picker";
 import { isActiveInternshipStatus, isCheckedInAttendanceRecord } from "../../hooks/use-student-check-in";
 
 export function LogbookPage() {
@@ -543,9 +544,8 @@ export function LogbookPage() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground">Date</label>
-                <input type="date" value={form.entry_date} onChange={(e) => setForm({ ...form, entry_date: e.target.value })}
-                  className="w-full mt-1 px-3 py-2 border border-border rounded-lg bg-card text-sm" />
+                <label className="text-xs font-semibold text-muted-foreground block mb-1">Date</label>
+                <DatePicker value={form.entry_date} onChange={(val) => setForm({ ...form, entry_date: val })} />
               </div>
 
               <div>

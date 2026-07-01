@@ -10,6 +10,7 @@ import { DLOGradingConfigPage } from "./dlo/grading-config";
 import { HODGradingConfigPage } from "./hod/grading-config";
 import { NotificationPreferences } from "../components/notification-preferences";
 import { toast } from "sonner";
+import { DatePicker } from "../components/ui/date-picker";
 import type { ExtendedRole } from "../services/auth-service";
 import { getSettings, updateSettings, subscribeSettings } from "../lib/settings-store";
 import { exportToCSV } from "../lib/csv-export";
@@ -347,8 +348,8 @@ export function SettingsPage() {
               )}
               {role === "dlo" && (
                 <div>
-                  <label style={{ fontSize: "0.8rem" }}>Department Application Deadline</label>
-                  <input type="date" value={deptDeadline} onChange={(e) => setDeptDeadline(e.target.value)} className="w-full mt-1 px-3 py-2 border border-border rounded-lg bg-background" style={{ fontSize: "0.85rem" }} />
+                  <label style={{ fontSize: "0.8rem" }} className="block mb-1">Department Application Deadline</label>
+                  <DatePicker value={deptDeadline} onChange={setDeptDeadline} />
                 </div>
               )}
             </div>

@@ -4,6 +4,7 @@ import { apiClient } from "../../lib/api-client";
 import { fmtDate } from "../../lib/date-utils";
 import { CheckCircle2, XCircle, AlertTriangle, Clock, Search, X, Navigation, Shield, MapPin } from "lucide-react";
 import { toast } from "sonner";
+import { DatePicker } from "../../components/ui/date-picker";
 import type { ExtendedRole } from "../../services/auth-service";
 import { Card, CardContent } from "../../components/ui/card";
 import { StatCard } from "../../components/stat-card";
@@ -309,22 +310,16 @@ export function AttendancePage({ viewRole }: Props) {
             </div>
             <div>
               <label className="text-muted-foreground block mb-1" style={{ fontSize: "0.75rem" }}>From</label>
-              <input
-                type="date"
+              <DatePicker
                 value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                className="w-full px-3 py-2.5 border border-border rounded-lg bg-background"
-                style={{ fontSize: "0.85rem" }}
+                onChange={setDateFrom}
               />
             </div>
             <div>
               <label className="text-muted-foreground block mb-1" style={{ fontSize: "0.75rem" }}>To</label>
-              <input
-                type="date"
+              <DatePicker
                 value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                className="w-full px-3 py-2.5 border border-border rounded-lg bg-background"
-                style={{ fontSize: "0.85rem" }}
+                onChange={setDateTo}
               />
             </div>
           </div>

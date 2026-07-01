@@ -3,6 +3,7 @@ import { X, Upload, AlertCircle, CheckCircle2, Loader2, Download } from "lucide-
 import { apiClient } from "../../lib/api-client";
 import { downloadCompanyAcceptanceFormPDF } from "../../lib/generate-company-acceptance-form";
 import { toast } from "sonner";
+import { DatePicker } from "../ui/date-picker";
 
 interface Props {
   isOpen: boolean;
@@ -265,24 +266,18 @@ export function CompanyAcceptanceModal({
                 <label style={{ fontSize: "0.8rem" }} className="block text-muted-foreground font-medium mb-1">
                   Start Date *
                 </label>
-                <input
-                  type="date"
+                <DatePicker
                   value={confirmedStartDate}
-                  onChange={(e) => setConfirmedStartDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-background"
-                  style={{ fontSize: "0.85rem" }}
+                  onChange={setConfirmedStartDate}
                 />
               </div>
               <div>
                 <label style={{ fontSize: "0.8rem" }} className="block text-muted-foreground font-medium mb-1">
                   End Date *
                 </label>
-                <input
-                  type="date"
+                <DatePicker
                   value={confirmedEndDate}
-                  onChange={(e) => setConfirmedEndDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-background"
-                  style={{ fontSize: "0.85rem" }}
+                  onChange={setConfirmedEndDate}
                 />
               </div>
             </div>

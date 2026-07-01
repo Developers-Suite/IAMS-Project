@@ -39,11 +39,12 @@ function findMatchingTerm(app: any, terms?: any[]): any | undefined {
   return terms.find((t) => String(t.id) === String(termId));
 }
 
+import { fmtDate } from "./date-utils";
+
 export function formatDisplayDate(value: string | undefined): string | undefined {
   if (!value) return undefined;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("en-GB");
+  const res = fmtDate(value);
+  return res === "—" ? undefined : res;
 }
 
 // department may come back as a plain string, or as a {name} / {department_name} object — never render the raw object

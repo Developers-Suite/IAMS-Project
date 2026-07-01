@@ -4,6 +4,7 @@ import { Shield, Search, Filter, Download, ChevronLeft, ChevronRight, Calendar, 
 import { exportToCSV } from "../../lib/csv-export";
 import { toast } from "sonner";
 import { apiClient } from "../../lib/api-client";
+import { DatePicker } from "../../components/ui/date-picker";
 
 const actionColors: Record<string, string> = {
   // Auth
@@ -380,27 +381,19 @@ export function AuditLogsPage() {
 
           {/* Date range */}
           <div className="flex items-center gap-2">
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-              <input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => { setDateFrom(e.target.value); setPage(0); }}
-                className="pl-9 pr-3 py-2 border border-border rounded-lg bg-background"
-                style={{ fontSize: "0.85rem" }}
-              />
-            </div>
+            <DatePicker
+              value={dateFrom}
+              onChange={(val) => { setDateFrom(val); setPage(0); }}
+              placeholder="From"
+              className="w-[140px]"
+            />
             <span className="text-muted-foreground" style={{ fontSize: "0.8rem" }}>to</span>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-              <input
-                type="date"
-                value={dateTo}
-                onChange={(e) => { setDateTo(e.target.value); setPage(0); }}
-                className="pl-9 pr-3 py-2 border border-border rounded-lg bg-background"
-                style={{ fontSize: "0.85rem" }}
-              />
-            </div>
+            <DatePicker
+              value={dateTo}
+              onChange={(val) => { setDateTo(val); setPage(0); }}
+              placeholder="To"
+              className="w-[140px]"
+            />
           </div>
         </div>
 

@@ -3,6 +3,8 @@ import { useAppContext } from "../../lib/context";
 import { apiClient } from "../../lib/api-client";
 import { openPlacementLetter } from "../../lib/generate-placement-letter";
 import { downloadCompanyAcceptanceFormPDF } from "../../lib/generate-company-acceptance-form";
+import { openInsuranceLetter } from "../../lib/generate-insurance-letter";
+import { openManualLogbookSheet } from "../../lib/generate-manual-logbook";
 import { exportLogbookToPDF } from "../../lib/logbook-export";
 import { getInternshipStartDate, getInternshipEndDate, formatDisplayDate, resolveDepartmentName } from "../../lib/application-helpers";
 import { CompanyAcceptanceModal } from "../../components/student/company-acceptance-modal";
@@ -10,7 +12,7 @@ import { DocumentUploadModal } from "../../components/student/document-upload-mo
 import { InviteSupervisorModal } from "../../components/student/invite-supervisor-modal";
 import {
   Upload, FileText, Download, CheckCircle2, Clock, X, Eye,
-  File, AlertTriangle, Send
+  File, AlertTriangle, Send, Shield
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -20,6 +22,7 @@ export function DocumentsPage() {
   const [internshipId, setInternshipId] = useState<string | null>(null);
   const [currentCompanyName, setCurrentCompanyName] = useState<string>("Company");
   const [terms, setTerms] = useState<any[]>([]);
+  const [customTemplates, setCustomTemplates] = useState<any[]>([]);
 
   // Modals state
   const [isAcceptanceOpen, setIsAcceptanceOpen] = useState(false);
@@ -48,6 +51,24 @@ export function DocumentsPage() {
   const fetchApplicationData = () => {
     apiClient.getTerms().then((res) => {
       if (res.success) setTerms(res.data);
+    });
+
+    apiClient.getTemplates().then((res) => {
+      if (res.success) {
+        const filtered = res.data.filter((t: any) => {
+          const isBuiltInCore = ["placement-letter", "acceptance-form", "insurance-letter", "logbook-template"].includes(t.slug ?? t.id);
+          let isForStudent = false;
+          try {
+            const parsed = t.visible_to ? JSON.parse(t.visible_to) : t.visibleTo;
+            isForStudent = Array.isArray(parsed) ? parsed.includes("Student") : false;
+          } catch {
+            isForStudent = t.visibleTo?.includes("Student") || false;
+          }
+          const isActive = t.status === "Active";
+          return !isBuiltInCore && isForStudent && isActive;
+        });
+        setCustomTemplates(filtered);
+      }
     });
 
     apiClient.getApplications().then((res) => {
@@ -164,6 +185,142 @@ export function DocumentsPage() {
     }
   };
 
+  const handleDownloadInsuranceLetter = () => {
+    if (!myApp) return;
+    const companyName = typeof myApp.company?.name === "string" ? myApp.company.name : (typeof myApp.companyName === "string" ? myApp.companyName : "Company");
+    openInsuranceLetter({
+      studentName: myApp.student?.user?.name ?? user?.name ?? "Student",
+      studentId: myApp.student?.student_id ?? user?.studentId ?? "—",
+      department: resolveDepartmentName(myApp, user?.department ?? "—"),
+      level: myApp.student?.level ?? myApp.level ?? "—",
+      companyName,
+      startDate: formatDisplayDate(getInternshipStartDate(myApp, terms)),
+      endDate: formatDisplayDate(getInternshipEndDate(myApp, terms)),
+    });
+  };
+
+  const handleDownloadCustomDocument = (doc: any) => {
+    const t = doc.rawTemplate;
+    const bodyTemplate = t.body || "";
+    
+    const studentName = myApp?.student?.user?.name ?? user?.name ?? "Student";
+    const studentId = myApp?.student?.student_id ?? user?.studentId ?? "—";
+    const department = resolveDepartmentName(myApp, user?.department ?? "—");
+    const level = myApp?.student?.level ?? myApp?.level ?? "—";
+    const companyName = typeof myApp?.company?.name === "string" ? myApp.company.name : (typeof myApp?.companyName === "string" ? myApp.companyName : "Company");
+    const companyAddress = typeof myApp?.company?.address === "string" ? myApp.company.address : "—";
+    const supervisorName = typeof myApp?.academic_supervisor?.user?.name === "string" ? myApp.academic_supervisor.user.name : (typeof myApp?.supervisorAssigned === "string" ? myApp.supervisorAssigned : "—");
+    const startDate = formatDisplayDate(getInternshipStartDate(myApp, terms)) ?? "—";
+    const endDate = formatDisplayDate(getInternshipEndDate(myApp, terms)) ?? "—";
+    
+    const filledBody = bodyTemplate
+      .split("[Student Name]").join(studentName)
+      .split("[Student ID]").join(studentId)
+      .split("[Department]").join(department)
+      .split("[Level]").join(level)
+      .split("[Company Name]").join(companyName)
+      .split("[Company Address]").join(companyAddress)
+      .split("[Start Date]").join(startDate)
+      .split("[End Date]").join(endDate)
+      .split("[Supervisor Name]").join(supervisorName);
+
+    const renderedParagraphs = filledBody
+      .split("\n")
+      .filter((line: string) => line.trim().length > 0)
+      .map((line: string) => `<p style="margin-bottom: 0.15in; text-align: justify;">${line}</p>`)
+      .join("\n");
+
+    const today = new Date();
+    const dateStr = today.toLocaleDateString("en-GB", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    const letterheadHtml = t.has_letterhead || t.hasLetterhead
+      ? `
+      <div class="letterhead" style="text-align: center; margin-bottom: 0.3in; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px;">
+        <img src="/HTULH.png" alt="HTU Letterhead" style="max-width: 100%; height: auto; max-height: 100px; object-fit: contain;" />
+      </div>
+      `
+      : "";
+
+    const signatureHtml = (t.has_signature || t.hasSignature) && t.signature_url
+      ? `
+      <div class="signature-section" style="margin-top: 0.4in; page-break-inside: avoid;">
+        <p style="margin-bottom: 0.05in;">Yours faithfully,</p>
+        <img src="${t.signature_url}" alt="Signature" style="max-height: 60px; object-fit: contain; display: block; margin-bottom: 0.05in;" />
+        <p style="font-weight: bold; border-top: 1px solid #ccc; display: inline-block; padding-top: 2px;">Industrial Attachment Coordinator</p>
+      </div>
+      `
+      : "";
+
+    const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>${t.name}</title>
+  <style>
+    body {
+      font-family: 'Garamond', 'Georgia', serif;
+      line-height: 1.6;
+      color: #333;
+      padding: 0.5in;
+      background: white;
+    }
+    @media print {
+      body {
+        margin: 1in;
+        padding: 0;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+    .container {
+      max-width: 8.5in;
+      margin: 0 auto;
+    }
+    .print-button {
+      background: #1e3a8a;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      margin-bottom: 0.3in;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="no-print" style="text-align: center;">
+      <button class="print-button" onclick="window.print()">Print / Save as PDF</button>
+    </div>
+    ${letterheadHtml}
+    <div class="date" style="text-align: right; margin-bottom: 0.2in;">Date: ${dateStr}</div>
+    <div class="body" style="font-size: 11pt;">
+      ${renderedParagraphs}
+    </div>
+    ${signatureHtml}
+  </div>
+</body>
+</html>
+    `;
+
+    const printWindow = window.open("", "_blank");
+    if (printWindow) {
+      printWindow.document.open();
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+    } else {
+      toast.error("Popup blocker prevented opening print window.");
+    }
+  };
+
   const handleFinalReportSuccess = async (fileUrl: string) => {
     if (!internshipId) {
       toast.error("No active internship found to attach the report to.");
@@ -193,7 +350,7 @@ export function DocumentsPage() {
     }
   };
 
-  const documents = [
+  const coreDocuments = [
     {
       id: "placement-letter",
       name: "Placement Letter",
@@ -202,6 +359,15 @@ export function DocumentsPage() {
       canDownload: !!isApproved,
       canUpload: false,
       icon: FileText,
+    },
+    {
+      id: "insurance-letter",
+      name: "Insurance Letter",
+      desc: "Official letter confirming student Group Personal Accident Insurance cover during industrial attachment",
+      status: isApproved ? "Available" : "Pending",
+      canDownload: !!isApproved,
+      canUpload: false,
+      icon: Shield,
     },
     {
       id: "acceptance-form",
@@ -217,6 +383,15 @@ export function DocumentsPage() {
       canDownload: !!myApp,
       canUpload: needsAcceptance,
       icon: File,
+    },
+    {
+      id: "logbook-form",
+      name: "Logbook Form (Manual)",
+      desc: "Printable blank weekly logbook sheet to document activities manually if your industrial supervisor cannot use the digital portal.",
+      status: "Available",
+      canDownload: true,
+      canUpload: false,
+      icon: FileText,
     },
     {
       id: "final-report",
@@ -238,6 +413,20 @@ export function DocumentsPage() {
       canUpload: false,
       icon: FileText,
     },
+  ];
+
+  const documents = [
+    ...coreDocuments,
+    ...customTemplates.map((t) => ({
+      id: `custom-${t.slug ?? t.id}`,
+      name: t.name,
+      desc: t.desc || "Additional document template",
+      status: isApproved ? "Available" : "Pending",
+      canDownload: !!isApproved,
+      canUpload: false,
+      icon: FileText,
+      rawTemplate: t,
+    })),
   ];
 
   const sendSupervisorInvite = async (name: string, email: string, phone?: string, title?: string) => {
@@ -390,10 +579,16 @@ export function DocumentsPage() {
                   onClick={() => {
                       if (doc.id === "placement-letter") {
                         handleDownloadPlacementLetter();
+                      } else if (doc.id === "insurance-letter") {
+                        handleDownloadInsuranceLetter();
+                      } else if (doc.id === "logbook-form") {
+                        openManualLogbookSheet();
                       } else if (doc.id === "logbook-export") {
                         handleDownloadLogbookPDF();
                       } else if (doc.id === "final-report" && finalReportUrl) {
                         window.open(finalReportUrl, "_blank");
+                      } else if (doc.id.startsWith("custom-")) {
+                        handleDownloadCustomDocument(doc);
                       }
                     }}
                   className="px-2.5 py-1.5 border border-primary text-primary hover:bg-primary/5 rounded text-xs font-medium flex items-center justify-center gap-1 transition-colors"
