@@ -80,7 +80,7 @@ export function openInsuranceLetter(data: InsuranceLetterData): void {
       box-sizing: border-box;
     }
     body {
-      font-family: 'Garamond', 'Georgia', serif;
+      font-family: 'Times New Roman', Times, Georgia, serif;
       line-height: 1.6;
       color: #333;
       background: white;

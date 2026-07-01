@@ -65,7 +65,7 @@ export async function downloadCompanyAcceptanceFormPDF(data: CompanyAcceptanceFo
       box-sizing: border-box;
     }
     body {
-      font-family: 'Garamond', 'Georgia', serif;
+      font-family: Arial, Helvetica, sans-serif;
       line-height: 1.5;
       color: #222;
       background: white;

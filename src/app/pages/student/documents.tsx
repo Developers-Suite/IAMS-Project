@@ -263,7 +263,7 @@ export function DocumentsPage() {
   <title>${t.name}</title>
   <style>
     body {
-      font-family: 'Garamond', 'Georgia', serif;
+      font-family: 'Times New Roman', Times, Georgia, serif;
       line-height: 1.6;
       color: #333;
       padding: 0.5in;
