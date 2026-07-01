@@ -80,7 +80,7 @@ export function AttendancePage({ viewRole }: Props) {
     : records;
 
   const pendingVerification = records.filter((r) =>
-    !r.verified_by && (viewRole !== "supervisor" || r.check_in_type === "manual")
+    !r.verified_by && r.check_in_type === "manual"
   );
   const presentCount = records.filter((r) => r.status === "present").length;
   const lateCount = records.filter((r) => r.status === "late").length;
@@ -410,7 +410,7 @@ export function AttendancePage({ viewRole }: Props) {
                 )}
               </div>
             </div>
-            {canVerify && !selectedRecord.verified_by && (viewRole !== "supervisor" || selectedRecord.check_in_type === "manual") && (
+            {canVerify && !selectedRecord.verified_by && selectedRecord.check_in_type === "manual" && (
               <div className="px-6 py-4 border-t border-border bg-secondary/20 flex justify-end gap-2">
                 <button
                   onClick={() => handleVerify(String(selectedRecord.id), "present")}
