@@ -273,7 +273,9 @@ async function requestApi<T>(
         success: false,
         data: (body && typeof body === "object" && "data" in body ? (body as any).data : null),
         message: (body && typeof body === "object" && "message" in body ? String((body as any).message) : undefined) ?? `Error ${response.status}`,
-      };
+        error_code: body && typeof body === "object" && "error_code" in body ? String((body as any).error_code) : undefined,
+        code: body && typeof body === "object" && "code" in body ? String((body as any).code) : undefined,
+      } as any;
     }
 
     if (body && typeof body === "object" && "success" in body) return body as ApiResponse<T>;

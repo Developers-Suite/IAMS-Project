@@ -118,7 +118,10 @@ export function CheckInModal({
           setLocationDetails(todayRecord.notes || "");
           setLat(todayRecord.gps_check_in_lat || null);
           setLng(todayRecord.gps_check_in_lng || null);
-        } else if (internship?.gps_latitude == null) {
+        } else if (
+          internship?.gps_latitude == null ||
+          Number(internship.gps_latitude) === 0
+        ) {
           // No anchor stored yet — show 3 warnings before GPS capture
           setWarningStep(1);
         }

@@ -15,27 +15,29 @@ export function StudentDashboard() {
   const [pendingApplication, setPendingApplication] = useState<any>(null);
   const [attendanceData, setAttendanceData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTermName, setActiveTermName] = useState<string>("N/A");
   const [refreshing, setRefreshing] = useState(false);
   const prevStatusRef = useRef<string | null>(null);
-
+ 
   const refreshDashboard = async () => {
     setRefreshing(true);
     try {
-      const [dashRes, appsRes, internshipRes] = await Promise.all([
+      const [dashRes, appsRes, internshipRes, termsRes] = await Promise.all([
         apiClient.getDashboard("student"),
         apiClient.getApplications(),
         apiClient.getInternships(),
+        apiClient.getTerms(),
       ]);
       if (dashRes.success) {
         setDashboard(dashRes.data);
-
+ 
         // Fetch real attendance data for active internship (within internship period only)
         const activeInternship = dashRes.data?.active_internship;
         if (activeInternship?.id) {
           const filters: any = { per_page: 100 };
           if (activeInternship.start_date) filters.from_date = activeInternship.start_date;
           if (activeInternship.end_date) filters.to_date = activeInternship.end_date;
-
+ 
           const attRes = await apiClient.getInternshipAttendance(String(activeInternship.id), filters);
           if (attRes.success) {
             const records = Array.isArray(attRes.data) ? attRes.data : [];
@@ -52,20 +54,20 @@ export function StudentDashboard() {
           const data: any = appsRes.data;   
           return Array.isArray(data) ? data : data.applications ?? [];
         })();
-
+ 
         type DashboardApp = {
           status?: string | null;
           [key: string]: any;
         };
-
+ 
         const pending = apps.find(
           (app: DashboardApp) =>
             app && ["submitted", "under_review", "approved", "rejected"].includes(
               (app.status ?? "").toLowerCase()
             )
         );
-
-
+ 
+ 
         // Detect status change and notify student
         const currentStatus = pending?.status?.toLowerCase() ?? null;
         if (prevStatusRef.current && prevStatusRef.current !== currentStatus) {
@@ -86,6 +88,31 @@ export function StudentDashboard() {
         }
         prevStatusRef.current = currentStatus;
         setPendingApplication(pending || null);
+ 
+        // Resolve active term name
+        const activeInternship = dashRes.success ? dashRes.data?.active_internship : null;
+        let resolvedTermName = "N/A";
+        if (activeInternship?.term?.name) {
+          resolvedTermName = activeInternship.term.name;
+        } else if (activeInternship?.termName) {
+          resolvedTermName = activeInternship.termName;
+        } else if (pending?.term?.name) {
+          resolvedTermName = pending.term.name;
+        } else if (pending?.termName) {
+          resolvedTermName = pending.termName;
+        } else if (termsRes.success && Array.isArray(termsRes.data)) {
+          const tId = activeInternship?.term_id ?? activeInternship?.term?.id ?? pending?.term_id ?? pending?.academic_term_id;
+          const matched = termsRes.data.find((t: any) => String(t.id) === String(tId));
+          if (matched?.name) {
+            resolvedTermName = matched.name;
+          } else {
+            const activeSystemTerm = termsRes.data.find((t: any) => String(t.status).toLowerCase() === "active");
+            if (activeSystemTerm?.name) {
+              resolvedTermName = activeSystemTerm.name;
+            }
+          }
+        }
+        setActiveTermName(resolvedTermName);
       }
       // internshipRes is fetched to update dashboard with approved internship data
     } finally {
@@ -278,10 +305,7 @@ export function StudentDashboard() {
                   <Calendar className="w-4 h-4 text-orange-600" />
                 </div>
                 <h3 className="font-bold text-sm">
-                  {activeInternship?.term?.name ??
-                   activeInternship?.term_id ??
-                   activeInternship?.termName ??
-                   "N/A"}
+                  {activeTermName}
                 </h3>
                 <p className="text-muted-foreground text-xs">
                   {activeInternship?.term?.year ? `Year ${activeInternship.term.year}` :
