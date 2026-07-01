@@ -13,6 +13,8 @@ export function StudentDashboard() {
   const [dashboard, setDashboard] = useState<any>(null);
   const [visitations, setVisitations] = useState<any[]>([]);
   const [pendingApplication, setPendingApplication] = useState<any>(null);
+  const [applications, setApplications] = useState<any[]>([]);
+  const [internships, setInternships] = useState<any[]>([]);
   const [attendanceData, setAttendanceData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTermName, setActiveTermName] = useState<string>("N/A");
@@ -49,11 +51,11 @@ export function StudentDashboard() {
         }
       }
       if (appsRes.success && appsRes.data) {
-        
         const apps = (() => {
           const data: any = appsRes.data;   
           return Array.isArray(data) ? data : data.applications ?? [];
         })();
+        setApplications(apps);
  
         type DashboardApp = {
           status?: string | null;
@@ -114,7 +116,9 @@ export function StudentDashboard() {
         }
         setActiveTermName(resolvedTermName);
       }
-      // internshipRes is fetched to update dashboard with approved internship data
+      if (internshipRes.success && internshipRes.data) {
+        setInternships(Array.isArray(internshipRes.data) ? internshipRes.data : []);
+      }
     } finally {
       setRefreshing(false);
       setLoading(false);
@@ -138,7 +142,35 @@ export function StudentDashboard() {
 
   const companyName = activeInternship?.company?.name ?? "N/A";
   const appStatus = activeInternship?.status ?? "none";
-  const supervisorName = activeInternship?.academic_supervisor?.user?.name ?? activeInternship?.academicSupervisor?.user?.name ?? null;
+  const activeApp = (() => {
+    return applications.find((app: any) => (app.status ?? "").toLowerCase() === "approved" || (app.status ?? "").toLowerCase() === "completed" || app.internship);
+  })();
+
+  const myInternship = (() => {
+    return internships.find((i: any) => String(i.student_id ?? i.student?.id) === String(user?.id) || String(i.student?.student_id) === String(user?.studentId) || String(i.id) === String(activeInternship?.id));
+  })();
+
+  const supervisorName =
+    activeInternship?.academic_supervisor?.user?.name ??
+    activeInternship?.academic_supervisor?.name ??
+    activeInternship?.academicSupervisor?.user?.name ??
+    activeInternship?.academicSupervisor?.name ??
+    activeInternship?.academic_supervisor_name ??
+    activeInternship?.supervisorAssigned ??
+    myInternship?.academic_supervisor?.user?.name ??
+    myInternship?.academic_supervisor?.name ??
+    myInternship?.academicSupervisor?.user?.name ??
+    myInternship?.academicSupervisor?.name ??
+    myInternship?.academic_supervisor_name ??
+    activeApp?.academic_supervisor?.user?.name ??
+    activeApp?.academic_supervisor?.name ??
+    activeApp?.supervisorAssigned ??
+    activeApp?.internship?.academic_supervisor?.user?.name ??
+    activeApp?.internship?.academic_supervisor?.name ??
+    pendingApplication?.academic_supervisor?.user?.name ??
+    pendingApplication?.academic_supervisor?.name ??
+    pendingApplication?.supervisorAssigned ??
+    null;
 
   // Supervisor data from company acceptance upload (pendingApplication or activeInternship)
   const supervisorData = pendingApplication?.industry_supervisor_name || pendingApplication?.supervisor || activeInternship?.industry_supervisor?.user?.name || activeInternship?.supervisor_name;
