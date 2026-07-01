@@ -266,8 +266,8 @@ export function openPlacementLetter(data: PlacementLetterData): void {
       ${override?.signatureUrl && isSafeUrl(override.signatureUrl)
         ? `<img class="signature-image" src="${override.signatureUrl}" alt="" />`
         : `<div class="signature-line"></div>`}
-      <div class="signature-title">${data.dloName || "The Departmental Liaison Officer"}</div>
-      <div class="signature-subtitle">Department of Industrial Attachment & Mentoring</div>
+      <div class="signature-title">${data.dloName || "Industrial Liaison Officer"}</div>
+      <div class="signature-subtitle">Industrial Liaison Office</div>
       <div class="signature-subtitle">${data.universityName || "Ho Technical University"}</div>
     </div>
   </div>
