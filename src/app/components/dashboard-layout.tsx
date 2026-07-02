@@ -269,11 +269,11 @@ export function DashboardLayout() {
           flex flex-col shrink-0
         `}
       >
-        {/* Sidebar inner container with glassmorphism */}
+        {/* Sidebar inner container with glassmorphism — dark blue */}
         <div
-          className="flex flex-col flex-1 m-3 rounded-2xl overflow-hidden backdrop-blur-md border border-white/20 dark:border-white/10 bg-white/40 dark:bg-slate-900/40"
+          className="flex flex-col flex-1 m-3 rounded-2xl overflow-hidden backdrop-blur-md border border-white/10 bg-[#1e3a8a]/90"
           style={{
-            boxShadow: "0 8px 32px rgba(31, 38, 135, 0.15), 0 2px 8px rgba(31, 38, 135, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.2)"
+            boxShadow: "0 8px 32px rgba(10, 30, 100, 0.35), 0 2px 8px rgba(10, 30, 100, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.08)"
           }}
         >
           {/* Logo */}
@@ -286,7 +286,7 @@ export function DashboardLayout() {
               </div>
             )}
             {isMobile && sidebarOpen && (
-              <button onClick={() => setSidebarOpen(false)} className="ml-auto p-1.5 rounded-lg hover:bg-white/80 dark:hover:bg-white/10 text-muted-foreground transition-colors duration-200">
+              <button onClick={() => setSidebarOpen(false)} className="ml-auto p-1.5 rounded-lg hover:bg-white/10 text-white/70 hover:text-white transition-colors duration-200">
                 <X className="w-4 h-4" />
               </button>
             )}
@@ -295,7 +295,7 @@ export function DashboardLayout() {
           {/* Menu label */}
           <nav className="flex-1 overflow-y-auto px-3 pb-3">
             {(sidebarOpen || isMobile) && (
-              <p className="px-3 pt-2 pb-2 text-muted-foreground uppercase tracking-widest" style={{ fontSize: "0.65rem", fontWeight: 500 }}>
+              <p className="px-3 pt-2 pb-2 text-white/50 uppercase tracking-widest" style={{ fontSize: "0.65rem", fontWeight: 500 }}>
                 Menu
               </p>
             )}
@@ -311,17 +311,14 @@ export function DashboardLayout() {
                     to={item.to}
                     end={item.to === `/${user.role}`}
                     onClick={handleNavClick}
-                    className={({ isActive }) => `group relative flex items-center ${sidebarOpen || isMobile ? "gap-3 px-6" : "justify-center px-0"} -mx-3 py-3 transition-all duration-200 ${isActive
-                        ? "text-primary font-medium"
-                        : "text-sidebar-foreground hover:text-foreground"
+                    className={({ isActive }) => `group relative flex items-center ${sidebarOpen || isMobile ? "gap-3 px-3" : "justify-center px-0"} py-2.5 rounded-xl transition-all duration-200 ${isActive
+                        ? "bg-white text-blue-900 font-medium"
+                        : "text-white/80 hover:text-white hover:bg-white/10"
                       }`}
                   >
                   {({ isActive }) => (
                     <>
-                      {isActive && (
-                        <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-primary" />
-                      )}
-                      <item.icon className={`w-[18px] h-[18px] shrink-0 transition-colors duration-200 ${isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`} />
+                      <item.icon className={`w-[18px] h-[18px] shrink-0 transition-colors duration-200 ${isActive ? "text-blue-700" : "text-white/60 group-hover:text-white"}`} />
                       {(sidebarOpen || isMobile) && (
                         <span className="truncate flex-1 flex items-center gap-2" style={{ fontSize: "0.85rem" }}>
                           {item.label}
