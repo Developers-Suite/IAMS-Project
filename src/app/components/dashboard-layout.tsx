@@ -271,9 +271,9 @@ export function DashboardLayout() {
       >
         {/* Sidebar inner container with glassmorphism */}
         <div
-          className="flex flex-col flex-1 m-3 rounded-2xl overflow-hidden backdrop-blur-md border border-white/20 dark:border-white/10 bg-white/40 dark:bg-slate-900/40"
+          className="flex flex-col flex-1 m-3 rounded-2xl overflow-hidden backdrop-blur-md border border-primary/30 bg-primary text-white"
           style={{
-            boxShadow: "0 8px 32px rgba(31, 38, 135, 0.15), 0 2px 8px rgba(31, 38, 135, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.2)"
+            boxShadow: "0 8px 32px rgba(11, 94, 215, 0.25), 0 2px 8px rgba(11, 94, 215, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.12)"
           }}
         >
           {/* Logo */}
@@ -281,12 +281,12 @@ export function DashboardLayout() {
             {(sidebarOpen || isMobile) ? (
               <img src="/logo%202.png" alt="HTU IAMS" className="h-8 w-auto object-contain shrink-0" />
             ) : (
-              <div className="w-8 h-8 rounded-xl overflow-hidden shrink-0 shadow-lg shadow-primary/20 bg-white">
+              <div className="w-8 h-8 rounded-xl overflow-hidden shrink-0 shadow-lg shadow-black/10 bg-white">
                 <img src="/logo%202.png" alt="HTU IAMS" className="w-full h-full object-cover object-left" />
               </div>
             )}
             {isMobile && sidebarOpen && (
-              <button onClick={() => setSidebarOpen(false)} className="ml-auto p-1.5 rounded-lg hover:bg-white/80 dark:hover:bg-white/10 text-muted-foreground transition-colors duration-200">
+              <button onClick={() => setSidebarOpen(false)} className="ml-auto p-1.5 rounded-lg hover:bg-white/15 text-white/80 transition-colors duration-200">
                 <X className="w-4 h-4" />
               </button>
             )}
@@ -295,7 +295,7 @@ export function DashboardLayout() {
           {/* Menu label */}
           <nav className="flex-1 overflow-y-auto px-3 pb-3">
             {(sidebarOpen || isMobile) && (
-              <p className="px-3 pt-2 pb-2 text-muted-foreground uppercase tracking-widest" style={{ fontSize: "0.65rem", fontWeight: 500 }}>
+              <p className="px-3 pt-2 pb-2 text-white/70 uppercase tracking-widest" style={{ fontSize: "0.65rem", fontWeight: 500 }}>
                 Menu
               </p>
             )}
@@ -312,28 +312,28 @@ export function DashboardLayout() {
                     end={item.to === `/${user.role}`}
                     onClick={handleNavClick}
                     className={({ isActive }) => `group relative flex items-center ${sidebarOpen || isMobile ? "gap-3 px-6" : "justify-center px-0"} -mx-3 py-3 transition-all duration-200 ${isActive
-                        ? "text-primary font-medium"
-                        : "text-sidebar-foreground hover:text-foreground"
+                        ? "text-white font-medium"
+                        : "text-white/80 hover:text-white"
                       }`}
                   >
                   {({ isActive }) => (
                     <>
                       {isActive && (
-                        <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-primary" />
+                        <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-white" />
                       )}
-                      <item.icon className={`w-[18px] h-[18px] shrink-0 transition-colors duration-200 ${isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`} />
+                      <item.icon className={`w-[18px] h-[18px] shrink-0 transition-colors duration-200 ${isActive ? "text-white" : "text-white/80 group-hover:text-white"}`} />
                       {(sidebarOpen || isMobile) && (
                         <span className="truncate flex-1 flex items-center gap-2" style={{ fontSize: "0.85rem" }}>
                           {item.label}
                           {item.badgeKey && navBadges[item.badgeKey] > 0 && (
-                            <span className="ml-auto inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-amber-500 text-white text-[10px] leading-none">
+                            <span className="ml-auto inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-white/20 text-white text-[10px] leading-none">
                               {navBadges[item.badgeKey]}
                             </span>
                           )}
                         </span>
                       )}
                       {!sidebarOpen && !isMobile && item.badgeKey && navBadges[item.badgeKey] > 0 && (
-                        <span className="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-amber-500" />
+                        <span className="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-white" />
                       )}
                     </>
                   )}

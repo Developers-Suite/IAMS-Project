@@ -440,17 +440,16 @@ export function AttendancePage({ viewRole }: Props) {
                 <th className="text-left px-4 py-3 text-muted-foreground" style={{ fontSize: "0.75rem" }}>Student</th>
                 <th className="text-left px-4 py-3 text-muted-foreground" style={{ fontSize: "0.75rem" }}>Date</th>
                 <th className="text-left px-4 py-3 text-muted-foreground" style={{ fontSize: "0.75rem" }}>Check-In</th>
-                <th className="text-left px-4 py-3 text-muted-foreground" style={{ fontSize: "0.75rem" }}>Check-Out</th>
                 <th className="text-left px-4 py-3 text-muted-foreground" style={{ fontSize: "0.75rem" }}>Status</th>
                 <th className="text-left px-4 py-3 text-muted-foreground" style={{ fontSize: "0.75rem" }}>Verified</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <SkeletonTableRows rows={6} cols={6} />
+                <SkeletonTableRows rows={6} cols={5} />
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
+                  <td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">
                     No attendance records found.
                   </td>
                 </tr>
@@ -466,9 +465,6 @@ export function AttendancePage({ viewRole }: Props) {
                       <span className="flex items-center gap-1" style={{ fontSize: "0.85rem" }}>
                         <Clock className="w-3 h-3 text-muted-foreground" /> {r.check_in_time ?? "—"}
                       </span>
-                    </td>
-                    <td className="px-4 py-4" style={{ fontSize: "0.85rem" }}>
-                      {r.check_out_time ?? <span className="text-muted-foreground italic" style={{ fontSize: "0.75rem" }}>Pending</span>}
                     </td>
                     <td className="px-4 py-4">
                       <span className={`px-2 py-0.5 rounded capitalize border ${STATUS_COLORS[r.status] ?? "bg-gray-100 text-gray-600 border-gray-200"}`} style={{ fontSize: "0.7rem" }}>
