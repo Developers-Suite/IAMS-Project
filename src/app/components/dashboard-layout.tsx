@@ -271,17 +271,21 @@ export function DashboardLayout() {
       >
         {/* Sidebar inner container with glassmorphism — dark blue */}
         <div
-          className="flex flex-col flex-1 m-3 rounded-2xl overflow-hidden backdrop-blur-md border border-white/10 bg-[#1e3a8a]/90"
+          className="flex flex-col flex-1 m-3 rounded-2xl overflow-hidden backdrop-blur-md border text-white"
           style={{
+            backgroundColor: "#1e3a8a",
+            borderColor: "rgba(255, 255, 255, 0.1)",
             boxShadow: "0 8px 32px rgba(10, 30, 100, 0.35), 0 2px 8px rgba(10, 30, 100, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.08)"
           }}
         >
           {/* Logo */}
           <div className={`flex items-center ${sidebarOpen || isMobile ? "gap-3 px-5" : "justify-center px-0"} py-5 transition-all duration-300`}>
             {(sidebarOpen || isMobile) ? (
-              <img src="/logo%202.png" alt="HTU IAMS" className="h-8 w-auto object-contain shrink-0" />
+              <div className="rounded-xl overflow-hidden shrink-0 bg-white shadow-lg shadow-black/10 p-3">
+                <img src="/logo%202.png" alt="HTU IAMS" className="h-8 w-auto object-contain" />
+              </div>
             ) : (
-              <div className="w-8 h-8 rounded-xl overflow-hidden shrink-0 shadow-lg shadow-primary/20 bg-white">
+              <div className="w-8 h-8 rounded-xl overflow-hidden shrink-0 shadow-lg shadow-black/10 bg-white">
                 <img src="/logo%202.png" alt="HTU IAMS" className="w-full h-full object-cover object-left" />
               </div>
             )}
@@ -295,7 +299,7 @@ export function DashboardLayout() {
           {/* Menu label */}
           <nav className="flex-1 overflow-y-auto px-3 pb-3">
             {(sidebarOpen || isMobile) && (
-              <p className="px-3 pt-2 pb-2 text-white/50 uppercase tracking-widest" style={{ fontSize: "0.65rem", fontWeight: 500 }}>
+              <p className="px-3 pt-2 pb-2 text-white/60 uppercase tracking-widest" style={{ fontSize: "0.65rem", fontWeight: 500 }}>
                 Menu
               </p>
             )}
@@ -325,14 +329,14 @@ export function DashboardLayout() {
                         <span className="truncate flex-1 flex items-center gap-2" style={{ fontSize: "0.85rem" }}>
                           {item.label}
                           {item.badgeKey && navBadges[item.badgeKey] > 0 && (
-                            <span className="ml-auto inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-amber-500 text-white text-[10px] leading-none">
+                            <span className="ml-auto inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-[#DD1725] text-white text-[10px] leading-none">
                               {navBadges[item.badgeKey]}
                             </span>
                           )}
                         </span>
                       )}
                       {!sidebarOpen && !isMobile && item.badgeKey && navBadges[item.badgeKey] > 0 && (
-                        <span className="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-amber-500" />
+                        <span className="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-[#DD1725]" />
                       )}
                     </>
                   )}
