@@ -26,16 +26,20 @@ export function AcademicDashboard() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([
-      apiClient.getDashboard("academic-supervisor"),
-      apiClient.getNotifications({ per_page: 4 }),
-    ]).then(([dashRes, notifRes]) => {
-      if (cancelled) return;
-      if (dashRes.success)  setDashboard(dashRes.data);
-      if (notifRes.success) setNotifications(notifRes.data);
-      setLoading(false);
-    });
-    return () => { cancelled = true; };
+    const load = () => {
+      Promise.all([
+        apiClient.getDashboard("academic-supervisor"),
+        apiClient.getNotifications({ per_page: 4 }),
+      ]).then(([dashRes, notifRes]) => {
+        if (cancelled) return;
+        if (dashRes.success)  setDashboard(dashRes.data);
+        if (notifRes.success) setNotifications(notifRes.data);
+        setLoading(false);
+      });
+    };
+    load();
+    const interval = setInterval(load, 30_000);
+    return () => { cancelled = true; clearInterval(interval); };
   }, []);
 
   const internships: any[]    = dashboard?.assigned_internships ?? [];
