@@ -44,8 +44,15 @@ function normalizeApiUser(u: any): AuthUser {
     name: isGenericName(u.name) && u.email ? nameFromEmail(u.email) : (u.name || undefined),
     email: u.email,
     role: normalizeRole(u.role),
-    department: typeof u.department === "string" ? u.department : (u.department?.name ?? undefined),
-    department_id: u.department_id ?? u.departmentId ?? u.department?.id ?? undefined,
+    department: typeof u.department === "string" ? u.department
+      : (u.department?.name
+        ?? u.department_head?.department?.name
+        ?? u.academic_supervisor?.department?.name
+        ?? undefined),
+    department_id: u.department_id ?? u.departmentId ?? u.department?.id
+      ?? u.department_head?.department?.id ?? u.department_head?.department_id
+      ?? u.academic_supervisor?.department?.id ?? u.academic_supervisor?.department_id
+      ?? undefined,
     studentId: u.student_id ?? u.studentId ?? undefined,
     avatar: u.avatar ?? u.profile_photo ?? "",
     profileComplete: u.profile_complete ?? u.profileComplete ?? false,
