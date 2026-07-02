@@ -273,7 +273,7 @@ export function DashboardLayout() {
         <div
           className="flex flex-col flex-1 m-3 rounded-2xl overflow-hidden backdrop-blur-md border text-white"
           style={{
-            backgroundColor: "#003772",
+            backgroundColor: "#0b5ed7",
             borderColor: "rgba(0, 71, 173, 0.35)",
             boxShadow: "0 8px 32px rgba(0, 55, 114, 0.28), 0 2px 8px rgba(0, 55, 114, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.12)"
           }}
