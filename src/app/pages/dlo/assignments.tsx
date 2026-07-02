@@ -65,13 +65,13 @@ export function DLOAssignmentsPage() {
         studentId: i.student?.student_id ?? "—",
         companyName: i.company?.name ?? "—",
         region: i.company?.region ?? i.company?.city ?? "—",
-        currentSupervisorId: i.academic_supervisor?.user?.id ? String(i.academic_supervisor.user.id) : (i.academic_supervisor?.id ? String(i.academic_supervisor.id) : undefined),
+        currentSupervisorId: i.academic_supervisor?.id ? String(i.academic_supervisor.id) : undefined,
         currentSupervisorName: i.academic_supervisor?.user?.name ?? "—",
       })));
     }
     if (supsRes.success) {
       setSupervisors(supsRes.data.map((s: any) => ({
-        id: String(s.user?.id ?? s.userId ?? s.user_id ?? s.id),
+        id: String(s.id),
         name: s.user?.name ?? s.name ?? "—",
         currentLoad: s.current_students ?? 0,
         maxLoad: s.max_students ?? 0,

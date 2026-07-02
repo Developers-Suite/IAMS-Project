@@ -72,6 +72,33 @@ export function StudentsPage({ viewRole }: Props) {
 
   const fetchStudents = useCallback(async () => {
     setLoading(true);
+
+    // Academic supervisors can't access /users (CLO/DLO only).
+    // Load their assigned students directly from the dashboard instead.
+    if (viewRole === "academic") {
+      const dashRes = await apiClient.getDashboard("academic-supervisor");
+      if (dashRes.success) {
+        const internships: any[] = dashRes.data?.assigned_internships ?? [];
+        const rows = internships.map((i: any) => ({
+          id: String(i.student?.user?.id ?? i.id),
+          internshipId: String(i.id),
+          studentName: i.student?.user?.name ?? "—",
+          studentId: i.student?.student_id ?? "—",
+          studentUserId: String(i.student?.user?.id ?? ""),
+          companyName: i.company?.name ?? "—",
+          department: i.student?.department?.name ?? "—",
+          level: i.student?.level ?? "—",
+          supervisorAssigned: i.academic_supervisor?.user?.name ?? "",
+          status: i.status ?? "registered",
+          startDate: fmtDate(i.start_date ?? i.created_at),
+        }));
+        setEnrolledStudents(rows);
+        setTotalPages(Math.ceil(rows.length / itemsPerPage) || 1);
+      }
+      setLoading(false);
+      return;
+    }
+
     const [usersRes, internshipsRes] = await Promise.all([
       apiClient.getUsers({ role: "student", per_page: 200 }),
       apiClient.getInternships({ per_page: 200 }),
@@ -92,7 +119,7 @@ export function StudentsPage({ viewRole }: Props) {
       setTotalPages(Math.ceil(rows.length / itemsPerPage) || 1);
     }
     setLoading(false);
-  }, [itemsPerPage]);
+  }, [viewRole, itemsPerPage]);
 
   const fetchMissed = useCallback(async () => {
     const [r3, r7] = await Promise.all([
