@@ -281,7 +281,9 @@ export function DashboardLayout() {
           {/* Logo */}
           <div className={`flex items-center ${sidebarOpen || isMobile ? "gap-3 px-5" : "justify-center px-0"} py-5 transition-all duration-300`}>
             {(sidebarOpen || isMobile) ? (
-              <img src="/logo%202.png" alt="HTU IAMS" className="h-8 w-auto object-contain shrink-0" />
+              <div className="rounded-xl overflow-hidden shrink-0 bg-white shadow-lg shadow-black/10 p-1">
+                <img src="/logo%202.png" alt="HTU IAMS" className="h-8 w-auto object-contain" />
+              </div>
             ) : (
               <div className="w-8 h-8 rounded-xl overflow-hidden shrink-0 shadow-lg shadow-black/10 bg-white">
                 <img src="/logo%202.png" alt="HTU IAMS" className="w-full h-full object-cover object-left" />
