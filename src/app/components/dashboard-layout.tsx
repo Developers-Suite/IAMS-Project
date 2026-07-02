@@ -312,13 +312,15 @@ export function DashboardLayout() {
                     end={item.to === `/${user.role}`}
                     onClick={handleNavClick}
                     className={({ isActive }) => `group relative flex items-center ${sidebarOpen || isMobile ? "gap-3 px-3" : "justify-center px-0"} py-2.5 rounded-xl transition-all duration-200 ${isActive
-                        ? "bg-white text-blue-900 font-medium"
+                        ? "font-medium"
                         : "text-white/80 hover:text-white hover:bg-white/10"
                       }`}
+                    style={({ isActive }: { isActive: boolean }) => isActive ? { backgroundColor: "white", color: "#1e3a8a" } : {}}
                   >
                   {({ isActive }) => (
                     <>
-                      <item.icon className={`w-[18px] h-[18px] shrink-0 transition-colors duration-200 ${isActive ? "text-blue-700" : "text-white/60 group-hover:text-white"}`} />
+                      <item.icon className={`w-[18px] h-[18px] shrink-0 transition-colors duration-200 ${isActive ? "" : "text-white/60 group-hover:text-white"}`}
+                        style={isActive ? { color: "#1e3a8a" } : {}} />
                       {(sidebarOpen || isMobile) && (
                         <span className="truncate flex-1 flex items-center gap-2" style={{ fontSize: "0.85rem" }}>
                           {item.label}
