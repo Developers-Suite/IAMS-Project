@@ -271,9 +271,11 @@ export function DashboardLayout() {
       >
         {/* Sidebar inner container with glassmorphism */}
         <div
-          className="flex flex-col flex-1 m-3 rounded-2xl overflow-hidden backdrop-blur-md border border-primary/30 bg-primary text-white"
+          className="flex flex-col flex-1 m-3 rounded-2xl overflow-hidden backdrop-blur-md border text-white"
           style={{
-            boxShadow: "0 8px 32px rgba(11, 94, 215, 0.25), 0 2px 8px rgba(11, 94, 215, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.12)"
+            backgroundColor: "#000272",
+            borderColor: "rgba(0, 71, 173, 0.35)",
+            boxShadow: "0 8px 32px rgba(0, 55, 114, 0.28), 0 2px 8px rgba(0, 55, 114, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.12)"
           }}
         >
           {/* Logo */}
@@ -319,21 +321,21 @@ export function DashboardLayout() {
                   {({ isActive }) => (
                     <>
                       {isActive && (
-                        <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-white" />
+                        <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-[#0047AD]" />
                       )}
                       <item.icon className={`w-[18px] h-[18px] shrink-0 transition-colors duration-200 ${isActive ? "text-white" : "text-white/80 group-hover:text-white"}`} />
                       {(sidebarOpen || isMobile) && (
                         <span className="truncate flex-1 flex items-center gap-2" style={{ fontSize: "0.85rem" }}>
                           {item.label}
                           {item.badgeKey && navBadges[item.badgeKey] > 0 && (
-                            <span className="ml-auto inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-white/20 text-white text-[10px] leading-none">
+                            <span className="ml-auto inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-[#DD1725] text-white text-[10px] leading-none">
                               {navBadges[item.badgeKey]}
                             </span>
                           )}
                         </span>
                       )}
                       {!sidebarOpen && !isMobile && item.badgeKey && navBadges[item.badgeKey] > 0 && (
-                        <span className="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-white" />
+                        <span className="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-[#DD1725]" />
                       )}
                     </>
                   )}
