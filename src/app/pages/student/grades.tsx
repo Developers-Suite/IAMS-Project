@@ -96,7 +96,7 @@ export function StudentGradesPage() {
               <Clock className="w-10 h-10 text-blue-500 mx-auto" />
               <p className="font-semibold text-sm">Evaluation in Progress</p>
               <p className="text-muted-foreground text-xs">
-                Your supervisor and academic supervisor are currently evaluating your performance. Your grade will appear once all evaluations are complete and approved by your DLO.
+                Your workplace supervisor and university supervisor are currently evaluating your performance. Your grade will appear once all evaluations are complete and approved by your DLO.
               </p>
             </>
           ) : isCompleted ? (
@@ -159,21 +159,21 @@ export function StudentGradesPage() {
               score={siteVisitScore}
               max={30}
               weighted={grade?.site_visitation_weighted}
-              evaluator="Evaluated by your academic supervisor"
+              evaluator="Evaluated by your university supervisor"
             />
             <ComponentRow
               label="Report"
               score={reportScore}
               max={20}
               weighted={grade?.report_weighted}
-              evaluator="Evaluated by your academic supervisor"
+              evaluator="Evaluated by your university supervisor"
             />
             <ComponentRow
               label="Presentation"
               score={presentationScore}
               max={20}
               weighted={grade?.presentation_weighted}
-              evaluator="Evaluated by your academic supervisor"
+              evaluator="Evaluated by your university supervisor"
             />
             <div className="pt-2 mt-1 flex items-center justify-between border-t border-border">
               <span className="text-sm font-medium">Total</span>

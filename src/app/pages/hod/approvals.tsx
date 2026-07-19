@@ -139,7 +139,7 @@ export function HODApprovalsPage() {
                       {[
                         ["Student", g.studentName], ["Student ID", g.studentId],
                         ["Department", g.department], ["Company", g.companyName],
-                        ["Academic Supervisor", g.supervisor],
+                        ["University Supervisor", g.supervisor],
                         ["Final %", g.finalPercent !== null ? `${Number(g.finalPercent).toFixed(1)}%` : "—"],
                         ["GPA", g.gpa ?? "—"], ["Status", g.gradeStatus],
                       ].map(([l, v]) => (

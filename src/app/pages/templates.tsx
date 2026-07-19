@@ -137,7 +137,7 @@ export function Templates() {
 
   const defaultRoles = {
     placement: ["CLO", "DLO", "Student"],
-    evaluation: ["Academic Supervisor", "Industry Supervisor", "DLO"],
+    evaluation: ["University Supervisor", "Workplace Supervisor", "DLO"],
     admin: ["CLO", "DLO"],
   };
 
@@ -808,7 +808,7 @@ h1{color:#1e3a5f;font-size:1.2rem;margin-bottom:1rem}.placeholder{color:#0b5ed7;
                     <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">Smart defaults applied</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {["CLO", "DLO", "Academic Supervisor", "Industry Supervisor", "Student"].map((role) => {
+                    {["CLO", "DLO", "University Supervisor", "Workplace Supervisor", "Student"].map((role) => {
                       const isSelected = newTemplate.visibleTo?.includes(role);
                       return (
                         <button key={role} onClick={() => toggleRole(role)}
@@ -874,7 +874,7 @@ h1{color:#1e3a5f;font-size:1.2rem;margin-bottom:1rem}.placeholder{color:#0b5ed7;
                     {tpl.signatureUrl
                       ? <img src={tpl.signatureUrl} alt="Signature" className="h-12 mb-1 object-contain" />
                       : <div className="w-32 h-12 border-b-2 border-gray-400 mb-1" />}
-                    <p style={{ fontSize: "0.85rem" }}>Central Liaison Officer</p>
+                    <p style={{ fontSize: "0.85rem" }}>Industrial Liaison Officer</p>
                     <p className="text-gray-500" style={{ fontSize: "0.75rem" }}>Ho Technical University</p>
                   </div>
                 )}

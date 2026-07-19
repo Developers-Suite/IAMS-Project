@@ -102,7 +102,7 @@ export function TermWindowsList({
                     <div>
                       <h3 className="font-semibold text-foreground text-sm">{termName}</h3>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        {termType === "regular" ? "📚 Semestrial" : "🏖️ Vacation"}
+                        {termType === "regular" ? "📚 Semestral" : "🏖️ Vacation"}
                       </p>
                     </div>
                     <span className={`px-2 py-0.5 rounded text-xs font-semibold whitespace-nowrap ${statusStyle.text} bg-white dark:bg-background`}>
@@ -181,7 +181,7 @@ export function TermWindowsList({
                 <div>
                   <h2 className="text-2xl font-bold text-foreground">{term.name}</h2>
                   <p className="text-muted-foreground mt-1">
-                    {term.type === "regular" ? "📚 Semestrial Internship" : "🏖️ Vacation Internship"}
+                    {term.type === "regular" ? "📚 Semestral Internship" : "🏖️ Vacation Internship"}
                   </p>
                 </div>
                 <button

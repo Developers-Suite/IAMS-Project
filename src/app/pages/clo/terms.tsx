@@ -19,7 +19,7 @@ import { DatePicker } from "../../components/ui/date-picker";
 interface TermShape {
   id: string;
   name: string;
-  type: "Vacation" | "Semestrial";
+  type: "Vacation" | "Semestral";
   status: "Draft" | "Upcoming" | "Active" | "Completed" | "Archived";
   applicationStart: string;
   applicationEnd: string;
@@ -54,11 +54,11 @@ function formatDisplayDate(dateStr?: string | null): string {
   return dateStr;
 }
 
-const TERM_TYPE_MAP: Record<string, "Vacation" | "Semestrial"> = {
+const TERM_TYPE_MAP: Record<string, "Vacation" | "Semestral"> = {
   short_term: "Vacation",
-  regular: "Semestrial",
+  regular: "Semestral",
   vacation: "Vacation",
-  semestrial: "Semestrial",
+  semestrial: "Semestral",
 };
 
 const TERM_STATUS_MAP: Record<string, TermShape["status"]> = {
@@ -77,7 +77,7 @@ function normalizeTerm(t: any, index: number): TermShape {
   return {
     id: String(t.id ?? `term-${index}`),
     name: t.name ?? `Term ${index + 1}`,
-    type: TERM_TYPE_MAP[rawType] ?? "Semestrial",
+    type: TERM_TYPE_MAP[rawType] ?? "Semestral",
     status: TERM_STATUS_MAP[rawStatus] ?? (t.status as TermShape["status"]) ?? "Upcoming",
     // Real API uses application_deadline for both; show the same date for open/close
     applicationStart: appDeadline,
@@ -105,7 +105,7 @@ function buildDeptOptions(apiDepts: any[]): DeptOption[] {
 const LEVEL_OPTIONS = ["L100", "L200", "L300", "L400"];
 
 const emptyForm = {
-  name: "", type: "Semestrial" as "Semestrial" | "Vacation",
+  name: "", type: "Semestral" as "Semestral" | "Vacation",
   applicationStart: "", applicationEnd: "",
   internshipStart: "", internshipEnd: "",
   levels: ["L300"] as string[],
@@ -543,7 +543,7 @@ export function TermsPage() {
                   type="text"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="e.g., 2026 L300 Semestrial Internship"
+                  placeholder="e.g., 2026 L300 Semestral Internship"
                   className="w-full px-3 py-2 border border-border rounded-lg bg-background"
                   style={{ fontSize: "0.85rem" }}
                 />
@@ -552,11 +552,11 @@ export function TermsPage() {
                 <label className="block mb-1" style={{ fontSize: "0.8rem" }}>Type</label>
                 <select
                   value={form.type}
-                  onChange={(e) => setForm({ ...form, type: e.target.value as "Semestrial" | "Vacation" })}
+                  onChange={(e) => setForm({ ...form, type: e.target.value as "Semestral" | "Vacation" })}
                   className="w-full px-3 py-2 border border-border rounded-lg bg-background"
                   style={{ fontSize: "0.85rem" }}
                 >
-                  <option value="Semestrial">Semestrial</option>
+                  <option value="Semestral">Semestral</option>
                   <option value="Vacation">Vacation</option>
                 </select>
               </div>

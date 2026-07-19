@@ -87,7 +87,7 @@ export function SupervisorDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1>Industry Supervisor Portal</h1>
+        <h1>Workplace Supervisor Portal</h1>
         <p className="text-muted-foreground" style={{ fontSize: "0.85rem" }}>
           Welcome, {user?.name}. You have {totalStudents} intern{totalStudents !== 1 ? "s" : ""} assigned.
         </p>

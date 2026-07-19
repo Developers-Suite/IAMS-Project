@@ -397,7 +397,7 @@ export function ApplicationsPage({ viewRole }: Props) {
                         className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
                         style={{ fontSize: "0.85rem" }}
                       >
-                        <UserPlus className="w-4 h-4" /> Assign Academic Supervisor
+                        <UserPlus className="w-4 h-4" /> Assign University Supervisor
                       </button>
                       {showAssign === String(detail.id) && (
                         <>

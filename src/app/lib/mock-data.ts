@@ -26,7 +26,7 @@ export interface User {
 export interface Term {
   id: string;
   name: string;
-  type: "Vacation" | "Semestrial";
+  type: "Vacation" | "Semestral";
   status: "Upcoming" | "Active" | "Completed" | "Archived";
   applicationStart: string;
   applicationEnd: string;

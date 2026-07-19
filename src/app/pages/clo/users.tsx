@@ -39,8 +39,8 @@ const ROLE_LABELS: Record<string, string> = {
   clo: "CLO",
   dlo: "DLO",
   hod: "HOD",
-  academic_supervisor: "Academic Supervisor",
-  industry_supervisor: "Industry Supervisor",
+  academic_supervisor: "University Supervisor",
+  industry_supervisor: "Workplace Supervisor",
   student: "Student",
 };
 

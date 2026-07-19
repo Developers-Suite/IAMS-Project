@@ -59,7 +59,7 @@ export function AcademicDashboard() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1>Academic Supervisor Dashboard</h1>
+          <h1>University Supervisor Dashboard</h1>
           <p className="text-muted-foreground" style={{ fontSize: "0.85rem" }}>
             Welcome, {user?.name} · {user?.department}
           </p>

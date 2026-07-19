@@ -248,7 +248,7 @@ export async function downloadCompanyAcceptanceFormPDF(data: CompanyAcceptanceFo
     </p>
 
     <div class="section">
-      <div class="section-title">Industry Supervisor</div>
+      <div class="section-title">Workplace Supervisor</div>
       <div class="grid">
         <div class="field"><strong>Name:</strong> </div>
         <div class="field"><strong>Job Title:</strong> </div>
@@ -258,7 +258,7 @@ export async function downloadCompanyAcceptanceFormPDF(data: CompanyAcceptanceFo
     </div>
 
     <div class="signature-grid">
-      <div class="signature-line">Industry Supervisor Signature / Date</div>
+      <div class="signature-line">Workplace Supervisor Signature / Date</div>
       <div class="signature-line">Company Stamp</div>
     </div>
 

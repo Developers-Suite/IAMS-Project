@@ -141,7 +141,7 @@ export function DLODashboard() {
           </div>
           <div className="flex-1">
             <p style={{ fontSize: "0.85rem" }} className="text-amber-800">
-              {needSupervisor} internship(s) have no academic supervisor assigned
+              {needSupervisor} internship(s) have no university supervisor assigned
             </p>
             <p style={{ fontSize: "0.75rem" }} className="text-amber-600">Assign in the Supervisors page</p>
           </div>

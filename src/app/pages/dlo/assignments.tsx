@@ -155,7 +155,7 @@ export function DLOAssignmentsPage() {
         <div>
           <h1>Supervisor Assignments</h1>
           <p className="text-muted-foreground" style={{ fontSize: "0.85rem" }}>
-            Assign academic supervisors to internships awaiting placement.
+            Assign university supervisors to internships awaiting placement.
           </p>
         </div>
         <div className="flex gap-2">

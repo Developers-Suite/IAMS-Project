@@ -357,7 +357,7 @@ export function AcademicEvaluatePage() {
           <div className="space-y-6">
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 dark:bg-blue-950/20 dark:border-blue-800">
               <p className="text-blue-800 dark:text-blue-300" style={{ fontSize: "0.85rem" }}>
-                <strong>Your Role:</strong> As the Academic Supervisor, you grade three components:
+                <strong>Your Role:</strong> As the University Supervisor, you grade three components:
               </p>
               <ul className="text-blue-800 dark:text-blue-300 mt-2 space-y-1" style={{ fontSize: "0.85rem" }}>
                 <li>• <strong>Site Visitation</strong> (30%) — Use the <em>Site Visits</em> tab to record observations</li>

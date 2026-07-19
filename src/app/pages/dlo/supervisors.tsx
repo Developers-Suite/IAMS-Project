@@ -280,7 +280,7 @@ export function SupervisorsPage() {
                 <div className="py-12 flex justify-center"><Loader2 className="w-7 h-7 animate-spin text-primary" /></div>
               ) : filteredAll.length === 0 ? (
                 <p className="text-muted-foreground text-center py-10" style={{ fontSize: "0.85rem" }}>
-                  {search ? "No supervisors match your search." : "No academic supervisors found in the system."}
+                  {search ? "No supervisors match your search." : "No university supervisors found in the system."}
                 </p>
               ) : (
                 filteredAll.map((u: any) => {

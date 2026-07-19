@@ -541,7 +541,7 @@ export function StudentsPage({ viewRole }: Props) {
                   {[
                     ["Department", detail.department],
                     ["Company", detail.companyName !== "—" ? detail.companyName : "No internship yet"],
-                    ["Academic Supervisor", detail.supervisorAssigned || "Not assigned"],
+                    ["University Supervisor", detail.supervisorAssigned || "Not assigned"],
                     ["Started", detail.startDate !== "—" ? detail.startDate : "No internship yet"],
                   ].map(([l, v]) => (
                     <div key={l}>

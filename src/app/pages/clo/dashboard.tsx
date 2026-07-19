@@ -115,7 +115,7 @@ export function CLODashboard() {
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1>Central Liaison Dashboard</h1>
+          <h1>Industrial Liaison Dashboard</h1>
           <p className="text-muted-foreground" style={{ fontSize: "0.85rem" }}>
             {loading ? "Loading…" : activeTerm ? `Active Term: ${activeTerm.name}` : "No active term"} · System-wide overview
           </p>
@@ -167,7 +167,7 @@ export function CLODashboard() {
                 {activeTerm.status}
               </span>
               <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-xs capitalize">
-                {activeTerm.type === "short_term" ? "Vacation" : activeTerm.type === "regular" ? "Semestrial" : activeTerm.type}
+                {activeTerm.type === "short_term" ? "Vacation" : activeTerm.type === "regular" ? "Semestral" : activeTerm.type}
               </span>
             </div>
             {activeTerm.description && (

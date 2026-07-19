@@ -39,6 +39,7 @@ export function CompaniesPage({ viewRole }: Props) {
   const [companyNameQuery, setCompanyNameQuery] = useState("");
   const [companyForm, setCompanyForm] = useState({
     name: "", contactPerson: "", contactEmail: "", industry: "", phone: "", address: "", city: "", region: ghanaRegions[0], country: "Ghana",
+    description: "", company_type: "private", is_registered: "registered",
   });
   const [branches, setBranches] = useState<BranchResponse[]>([]);
   const [showBranchForm, setShowBranchForm] = useState(false);
@@ -143,6 +144,8 @@ export function CompaniesPage({ viewRole }: Props) {
       return;
     }
     await saveAction(async () => {
+      if (!companyForm.industry.trim()) { toast.error("Industry is required."); return { success: false }; }
+      if (!companyForm.description.trim()) { toast.error("Description is required."); return { success: false }; }
       const payload: Record<string, unknown> = {
         name: companyForm.name,
         email: companyForm.contactEmail,
@@ -152,7 +155,10 @@ export function CompaniesPage({ viewRole }: Props) {
         region: companyForm.region,
         country: companyForm.country,
         contact_person_name: companyForm.contactPerson,
-        industry: companyForm.industry || undefined,
+        industry: companyForm.industry,
+        description: companyForm.description,
+        company_type: companyForm.company_type,
+        is_registered: companyForm.is_registered === "registered",
       };
       const r = await apiClient.createCompany(payload);
       if (r.success) { closeAddCompany(); fetchCompanies(); }
@@ -162,7 +168,7 @@ export function CompaniesPage({ viewRole }: Props) {
 
   const closeAddCompany = () => {
     setShowAddCompany(false);
-    setCompanyForm({ name: "", contactPerson: "", contactEmail: "", industry: "", phone: "", address: "", city: "", region: ghanaRegions[0], country: "Ghana" });
+    setCompanyForm({ name: "", contactPerson: "", contactEmail: "", industry: "", phone: "", address: "", city: "", region: ghanaRegions[0], country: "Ghana", description: "", company_type: "private", is_registered: "registered" });
     setCompanyNameQuery(""); setCommittedNew(false);
   };
 
@@ -185,6 +191,10 @@ export function CompaniesPage({ viewRole }: Props) {
   const handleAddBranch = async () => {
     if (!selected || !branchForm.name.trim()) {
       toast.error("Branch name is required.");
+      return;
+    }
+    if (!branchForm.location.trim()) {
+      toast.error("Location is required.");
       return;
     }
     // Duplicate branch check
@@ -695,7 +705,7 @@ export function CompaniesPage({ viewRole }: Props) {
                       </select>
                       <input
                         type="text"
-                        placeholder="Location/Town"
+                        placeholder="Location/Town *"
                         value={branchForm.location ?? ""}
                         onChange={(e) => setBranchForm((prev) => ({ ...prev, location: e.target.value }))}
                         className="w-full px-3 py-2 border border-border rounded-lg bg-card text-sm"
@@ -851,7 +861,7 @@ export function CompaniesPage({ viewRole }: Props) {
                     ["Email *", "contactEmail", "info@company.com", "email"],
                     ["Phone *", "phone", "+233...", "tel"],
                     ["Contact Person", "contactPerson", "Full name", "text"],
-                    ["Industry", "industry", "e.g., Telecommunications", "text"],
+                    ["Industry *", "industry", "e.g., Telecommunications", "text"],
                     ["Address *", "address", "Street address", "text"],
                     ["City *", "city", "e.g., Accra", "text"],
                   ] as [string, keyof typeof companyForm, string, string][]).map(([label, field, placeholder, type]) => (
@@ -867,6 +877,29 @@ export function CompaniesPage({ viewRole }: Props) {
                       className="w-full mt-1 px-3 py-2 border border-border rounded-lg bg-background" style={{ fontSize: "0.85rem" }}>
                       {ghanaRegions.map((r) => <option key={r}>{r}</option>)}
                     </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.8rem" }}>Company Type</label>
+                    <select value={companyForm.company_type} onChange={(e) => setCompanyForm({ ...companyForm, company_type: e.target.value })}
+                      className="w-full mt-1 px-3 py-2 border border-border rounded-lg bg-background" style={{ fontSize: "0.85rem" }}>
+                      <option value="private">Private</option>
+                      <option value="public">Public</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.8rem" }}>Registration Status</label>
+                    <select value={companyForm.is_registered} onChange={(e) => setCompanyForm({ ...companyForm, is_registered: e.target.value })}
+                      className="w-full mt-1 px-3 py-2 border border-border rounded-lg bg-background" style={{ fontSize: "0.85rem" }}>
+                      <option value="registered">Registered</option>
+                      <option value="unregistered">Unregistered</option>
+                    </select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label style={{ fontSize: "0.8rem" }}>Description *</label>
+                    <textarea value={companyForm.description} onChange={(e) => setCompanyForm({ ...companyForm, description: e.target.value })}
+                      placeholder="Brief description of the company and what they do..."
+                      rows={3}
+                      className="w-full mt-1 px-3 py-2 border border-border rounded-lg bg-background resize-none" style={{ fontSize: "0.85rem" }} />
                   </div>
                 </div>
               </div>

@@ -64,7 +64,7 @@ export function IssuesPage({ viewRole }: Props) {
     fetchIssues();
   }, [fetchIssues]);
 
-  const roleLabel = viewRole === "clo" ? "CLO" : viewRole === "dlo" ? "DLO" : viewRole === "student" ? "Student" : viewRole === "academic" ? "Academic Supervisor" : viewRole === "supervisor" ? "Industry Supervisor" : "HOD";
+  const roleLabel = viewRole === "clo" ? "CLO" : viewRole === "dlo" ? "DLO" : viewRole === "student" ? "Student" : viewRole === "academic" ? "University Supervisor" : viewRole === "supervisor" ? "Workplace Supervisor" : "HOD";
 
   const visibleIssues = viewRole === "student"
     ? issues.filter((i) => i.raisedBy === user?.name)

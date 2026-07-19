@@ -194,11 +194,11 @@ export function DLOFinalGradingPage() {
                 <tr className="border-b border-border bg-muted/30">
                   <th className="text-left px-4 py-3.5" style={{ fontSize: "0.75rem" }}>Student</th>
                   <th className="text-center px-4 py-3.5" style={{ fontSize: "0.75rem" }}>
-                    Industry Supervisor Grade<br/>
+                    Workplace Supervisor Grade<br/>
                     <span className="text-muted-foreground font-normal" style={{ fontSize: "0.65rem" }}>(weekly logbook + evaluation)</span>
                   </th>
                   <th className="text-center px-4 py-3.5" style={{ fontSize: "0.75rem" }}>
-                    Academic Supervisor<br/>
+                    University Supervisor<br/>
                     <span className="text-muted-foreground font-normal" style={{ fontSize: "0.65rem" }}>(site visitation)</span>
                   </th>
                   <th className="text-center px-4 py-3.5" style={{ fontSize: "0.75rem" }}>
@@ -307,7 +307,7 @@ export function DLOFinalGradingPage() {
             <div className="space-y-3">
               <div>
                 <label className="text-xs font-semibold text-muted-foreground mb-1 block">
-                  Industry Supervisor Grade (weekly logbook + evaluation)
+                  Workplace Supervisor Grade (weekly logbook + evaluation)
                 </label>
                 <input
                   type="number"
@@ -323,7 +323,7 @@ export function DLOFinalGradingPage() {
 
               <div>
                 <label className="text-xs font-semibold text-muted-foreground mb-1 block">
-                  Academic Supervisor Grade (site visitation)
+                  University Supervisor Grade (site visitation)
                 </label>
                 <input
                   type="number"

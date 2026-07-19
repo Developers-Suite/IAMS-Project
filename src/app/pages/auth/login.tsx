@@ -46,8 +46,7 @@ export function LoginPage() {
                 Empowering<br />Tomorrow's<br />Professionals
               </h2>
               <p className="mt-3 text-white/70 leading-relaxed" style={{ fontSize: "0.9rem" }}>
-                Ho Technical University's industrial attachment portal — connecting students,
-                supervisors and departments in one place.
+                Ho Technical University's industrial attachment portal — connecting students with workplace supervisors and departments in one place.
               </p>
             </div>
 

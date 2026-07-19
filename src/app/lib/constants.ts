@@ -12,11 +12,11 @@ export const ROLES = {
 } as const;
 
 export const ROLE_LABELS: Record<string, string> = {
-  clo: "Central Liaison Officer",
+  clo: "Industrial Liaison Officer",
   dlo: "Departmental Liaison Officer",
   student: "Student",
-  supervisor: "Industry Supervisor",
-  academic: "Academic Supervisor",
+  supervisor: "Workplace Supervisor",
+  academic: "University Supervisor",
   hod: "Head of Department",
 };
 

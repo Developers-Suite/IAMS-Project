@@ -21,7 +21,7 @@ interface ApplicationTrackerProps {
 function getStatusHistory(app: any) {
   const history: { status: string; timestamp: string; description: string; actor: string }[] = [];
   const createdAt = app.created_at ?? app.dateApplied ?? "";
-  const supervisorName = app.academic_supervisor?.name ?? app.supervisorAssigned ?? "Academic Supervisor";
+  const supervisorName = app.academic_supervisor?.name ?? app.supervisorAssigned ?? "University Supervisor";
   const companyStatus = app.company?.approval_status ?? app.companyStatus;
   const internshipStartDate = getInternshipStartDate(app);
   const s = (app.status ?? "").toLowerCase();
@@ -72,7 +72,7 @@ function getStatusHistory(app: any) {
       actor: "System",
     });
   }
-  if (supervisorName && supervisorName !== "Academic Supervisor") {
+  if (supervisorName && supervisorName !== "University Supervisor") {
     history.push({
       status: "Supervisor Assigned",
       timestamp: "—",

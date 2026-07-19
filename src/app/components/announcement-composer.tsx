@@ -28,9 +28,9 @@ const TARGET_ROLE_MAP: Record<string, string> = {
   "DLOs":                                  "dlo",
   "HODs":                                  "hod",
   "HOD of my department":                  "hod",
-  "Academic Supervisors":                  "academic_supervisor",
-  "Academic Supervisors in my department": "academic_supervisor",
-  "Industry Supervisors":                  "industry_supervisor",
+  "University Supervisors":                  "academic_supervisor",
+  "University Supervisors in my department": "academic_supervisor",
+  "Workplace Supervisors":                  "industry_supervisor",
 };
 
 export function AnnouncementComposer({ viewRole, onClose, onSend, isSending = false }: Props) {
@@ -47,8 +47,8 @@ export function AnnouncementComposer({ viewRole, onClose, onSend, isSending = fa
   const [placementStatus, setPlacementStatus] = useState("");
 
   const baseTargetOptions = viewRole === "clo"
-    ? ["Everyone", "Students", "DLOs", "HODs", "Academic Supervisors", "Industry Supervisors"]
-    : ["Students in my department", "Academic Supervisors in my department", "Industry Supervisors", "HOD of my department"];
+    ? ["Everyone", "Students", "DLOs", "HODs", "University Supervisors", "Workplace Supervisors"]
+    : ["Students in my department", "University Supervisors in my department", "Workplace Supervisors", "HOD of my department"];
 
   const showStudentFilters = selectedTargets.some((t) => t.toLowerCase().includes("student"));
 
@@ -208,7 +208,7 @@ export function AnnouncementComposer({ viewRole, onClose, onSend, isSending = fa
                 <select value={termType} onChange={(e) => setTermType(e.target.value)}
                   className="w-full px-2.5 py-1.5 border border-border rounded-lg bg-background text-sm">
                   <option value="">All Terms</option>
-                  <option value="regular">Semestrial</option>
+                  <option value="regular">Semestral</option>
                   <option value="short_term">Vacation</option>
                 </select>
               </div>
@@ -228,7 +228,7 @@ export function AnnouncementComposer({ viewRole, onClose, onSend, isSending = fa
               <p className="text-xs text-primary mt-1">
                 Will send to: {[
                   studentLevel ? `L${studentLevel}` : null,
-                  termType ? (termType === "regular" ? "Semestrial term" : "Vacation term") : null,
+                  termType ? (termType === "regular" ? "Semestral term" : "Vacation term") : null,
                   placementStatus === "active" ? "active internship" : placementStatus === "pending" ? "pending application" : placementStatus === "none" ? "not placed" : null,
                 ].filter(Boolean).join(", ")} students
                 {viewRole === "dlo" ? " in your department" : ""}.

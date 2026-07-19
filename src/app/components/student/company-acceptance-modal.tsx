@@ -49,8 +49,7 @@ export function CompanyAcceptanceModal({
   const inFlightRef = useRef(false);
 
   const isValid = supervisorName.trim() && supervisorTitle.trim() && supervisorEmail.trim() &&
-    supervisorPhone.trim() && confirmedStartDate && confirmedEndDate && studentRole.trim() &&
-    placementDepartment.trim();
+    supervisorPhone.trim() && confirmedStartDate && confirmedEndDate && studentRole.trim();
 
   const handleDownloadForm = () => {
     const opened = downloadCompanyAcceptanceFormPDF({
@@ -120,7 +119,7 @@ export function CompanyAcceptanceModal({
         confirmed_end_date: confirmedEndDate,
         student_role: studentRole,
         placement_department: placementDepartment,
-        acceptance_notes: `Company accepted. Student role: ${studentRole} in ${placementDepartment}. Supervisor: ${supervisorName} (${supervisorTitle}).`,
+        acceptance_notes: `Company accepted. Student role: ${studentRole}${placementDepartment ? ` in ${placementDepartment}` : ""}. Supervisor: ${supervisorName} (${supervisorTitle}).`,
         acceptance_form_url: uploadedFileUrl ?? undefined,
       });
 
@@ -196,7 +195,7 @@ export function CompanyAcceptanceModal({
           {/* Section 1: Supervisor Details */}
           <div className="space-y-4">
             <h3 style={{ fontSize: "0.95rem" }} className="font-semibold">
-              Industry Supervisor Details
+              Workplace Supervisor Details
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -304,7 +303,7 @@ export function CompanyAcceptanceModal({
               </div>
               <div>
                 <label style={{ fontSize: "0.8rem" }} className="block text-muted-foreground font-medium mb-1">
-                  Department / Unit *
+                  Department / Unit
                 </label>
                 <input
                   type="text"

@@ -175,7 +175,7 @@ export function HelpPage() {
             <div className="space-y-2 text-sm text-muted-foreground">
               <p>You can only edit draft entries. Once submitted:</p>
               <ul className="list-disc list-inside space-y-1">
-                <li>Your academic supervisor can approve or reject it</li>
+                <li>Your university supervisor can approve or reject it</li>
                 <li>Rejected entries return to draft for revision</li>
                 <li>You can then resubmit after making changes</li>
               </ul>
@@ -320,7 +320,7 @@ export function HelpPage() {
               <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                 <li>View student check-in records</li>
                 <li>Identify attendance patterns or issues</li>
-                <li>Flag concerns with students or academic supervisors</li>
+                <li>Flag concerns with students or university supervisors</li>
               </ul>
             </div>
           ),
@@ -455,7 +455,7 @@ export function HelpPage() {
             <div className="space-y-2 text-sm">
               <p>Go to <strong>Supervisors</strong> to:</p>
               <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                <li>Add external industry supervisors</li>
+                <li>Add external workplace supervisors</li>
                 <li>Manage supervisor information</li>
                 <li>Track supervisor assignments</li>
               </ul>
@@ -469,8 +469,8 @@ export function HelpPage() {
               <p>Go to <strong>Assignments</strong> to:</p>
               <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                 <li>Match students with approved companies</li>
-                <li>Assign industry supervisors</li>
-                <li>Assign academic supervisors</li>
+                <li>Assign workplace supervisors</li>
+                <li>Assign university supervisors</li>
                 <li>View assignment history</li>
               </ul>
             </div>

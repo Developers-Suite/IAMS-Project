@@ -228,8 +228,8 @@ export interface CreateBranchRequest {
 
 export interface CreateTermRequest {
   name: string;
-  // UI values: "Vacation" | "Semestrial" — api-client maps to "short_term" | "regular"
-  type: "Vacation" | "Semestrial";
+  // UI values: "Vacation" | "Semestral" — api-client maps to "short_term" | "regular"
+  type: "Vacation" | "Semestral";
   applicationStart: string;
   applicationEnd: string; // sent as application_deadline
   internshipStart: string; // sent as start_date
@@ -246,7 +246,7 @@ export interface TermResponse {
   id: string | number;
   name: string;
   // Real API uses "short_term" | "regular"; legacy values also accepted
-  type: "short_term" | "regular" | "Vacation" | "Semestrial";
+  type: "short_term" | "regular" | "Vacation" | "Semestral";
   // Real API uses lowercase; capitalized forms also accepted
   status: "upcoming" | "active" | "completed" | "archived" | "Upcoming" | "Active" | "Completed" | "Archived";
   // Real API fields

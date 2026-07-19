@@ -27,7 +27,7 @@ export const userSchema = z.object({
 // --- Term Management ---
 export const termSchema = z.object({
   name: z.string().min(3, "Term name must be at least 3 characters"),
-  type: z.enum(["Vacation", "Semestrial"]),
+  type: z.enum(["Vacation", "Semestral"]),
   applicationStart: z.string().min(1, "Start date is required"),
   applicationEnd: z.string().min(1, "End date is required"),
   internshipStart: z.string().min(1, "Internship start date is required"),

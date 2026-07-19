@@ -238,7 +238,7 @@ export function SettingsPage() {
                 <p style={{ fontSize: "1rem" }}>{user?.name}</p>
                 <p className="text-muted-foreground" style={{ fontSize: "0.85rem" }}>{user?.email}</p>
                 <span className="px-2.5 py-0.5 bg-primary/10 text-primary rounded-full mt-1 inline-block" style={{ fontSize: "0.7rem" }}>
-                  {role === "clo" ? "Central Liaison Officer" : role === "dlo" ? "Departmental Liaison" : role === "student" ? "Student" : role === "supervisor" ? "Industry Supervisor" : role === "academic" ? "Academic Supervisor" : "Head of Department"}
+                  {role === "clo" ? "Industrial Liaison Officer" : role === "dlo" ? "Departmental Liaison" : role === "student" ? "Student" : role === "supervisor" ? "Workplace Supervisor" : role === "academic" ? "University Supervisor" : "Head of Department"}
                 </span>
               </div>
             </div>
@@ -385,11 +385,11 @@ export function SettingsPage() {
               <h3 className="flex items-center gap-2"><Shield className="w-5 h-5 text-primary" /> Roles & Permissions</h3>
               <div className="space-y-2">
                 {[
-                  { roleName: "Central Liaison Officer (CLO)", perms: ["Full system access", "Override DLO decisions", "Manage terms", "Manage users", "System configuration"], color: "bg-red-50 border-red-200 dark:bg-red-950/30 dark:border-red-800" },
+                  { roleName: "Industrial Liaison Officer (CLO)", perms: ["Full system access", "Override DLO decisions", "Manage terms", "Manage users", "System configuration"], color: "bg-red-50 border-red-200 dark:bg-red-950/30 dark:border-red-800" },
                   { roleName: "Departmental Liaison (DLO)", perms: ["View department data", "Approve companies", "Approve applications", "Assign supervisors", "Approve grades"], color: "bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-800" },
                   { roleName: "Head of Department (HOD)", perms: ["View department analytics", "Final grade approval", "Override DLO decisions"], color: "bg-purple-50 border-purple-200 dark:bg-purple-950/30 dark:border-purple-800" },
-                  { roleName: "Academic Supervisor", perms: ["View assigned students", "Access logbooks", "Submit evaluations", "Submit grades"], color: "bg-cyan-50 border-cyan-200 dark:bg-cyan-950/30 dark:border-cyan-800" },
-                  { roleName: "Industry Supervisor", perms: ["View student logbooks", "Approve check-ins", "Submit evaluations"], color: "bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-800" },
+                  { roleName: "University Supervisor", perms: ["View assigned students", "Access logbooks", "Submit evaluations", "Submit grades"], color: "bg-cyan-50 border-cyan-200 dark:bg-cyan-950/30 dark:border-cyan-800" },
+                  { roleName: "Workplace Supervisor", perms: ["View student logbooks", "Approve check-ins", "Submit evaluations"], color: "bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-800" },
                   { roleName: "Student", perms: ["Apply for attachment", "Submit logbook", "Upload documents", "View status", "Report issues"], color: "bg-emerald-50 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800" },
                 ].map((r) => (
                   <div key={r.roleName} className={`p-3 rounded-lg border ${r.color}`}>

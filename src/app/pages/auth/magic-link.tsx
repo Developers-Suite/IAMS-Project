@@ -62,7 +62,7 @@ export function MagicLinkPage() {
         <div className="text-center space-y-3">
           <img src="/logo%202.png" alt="HTU IAMS" className="h-12 w-auto object-contain mx-auto" />
           <p className="text-muted-foreground" style={{ fontSize: "0.85rem" }}>
-            Industry Supervisor Invitation
+            Workplace Supervisor Invitation
           </p>
         </div>
 
@@ -73,7 +73,7 @@ export function MagicLinkPage() {
               {/* Invitation context */}
               <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl space-y-1">
                 <p className="font-medium text-blue-900" style={{ fontSize: "0.85rem" }}>
-                  You've been invited as an Industry Supervisor
+                  You've been invited as an Workplace Supervisor
                 </p>
                 {(studentName || companyName) && (
                   <p className="text-blue-700" style={{ fontSize: "0.78rem" }}>

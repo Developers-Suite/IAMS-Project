@@ -148,11 +148,11 @@ function buildWeekRanges(startIso: string, endIso: string): Array<{ weekNumber: 
 
 function getRoleLabel(role: ExtendedRole): string {
   switch (role) {
-    case "clo": return "Central Liaison";
+    case "clo": return "Industrial Liaison";
     case "dlo": return "Dept. Liaison";
     case "student": return "Student";
-    case "supervisor": return "Industry Supervisor";
-    case "academic": return "Academic Supervisor";
+    case "supervisor": return "Workplace Supervisor";
+    case "academic": return "University Supervisor";
     case "hod": return "Head of Department";
     default: return "";
   }

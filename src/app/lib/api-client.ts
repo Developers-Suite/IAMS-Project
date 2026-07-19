@@ -692,7 +692,7 @@ export const apiClient = {
 
   async createTerm(data: CreateTermRequest): Promise<ApiResponse<TermResponse | null>> {
     // Map UI types → real API type values
-    const typeMap: Record<string, string> = { Vacation: "short_term", Semestrial: "regular" };
+    const typeMap: Record<string, string> = { Vacation: "short_term", Semestral: "regular" };
     const payload: Record<string, unknown> = {
       name: data.name,
       type: typeMap[data.type] ?? data.type,
@@ -712,7 +712,7 @@ export const apiClient = {
   },
 
   async updateTerm(id: string, data: UpdateTermRequest): Promise<ApiResponse<TermResponse | null>> {
-    const typeMap: Record<string, string> = { Vacation: "short_term", Semestrial: "regular" };
+    const typeMap: Record<string, string> = { Vacation: "short_term", Semestral: "regular" };
     const payload: Record<string, unknown> = {};
     if (data.name !== undefined) payload.name = data.name;
     if (data.type !== undefined) payload.type = typeMap[data.type] ?? data.type;
