@@ -31,6 +31,29 @@ export function SettingsPage() {
   const [emergencyPhone, setEmergencyPhone] = useState(user?.emergencyPhone || "");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
+  // General (CLO only)
+  const [uniName, setUniName] = useState(settings.uniName);
+  const [contactEmail, setContactEmail] = useState(settings.contactEmail);
+  const [contactPhone, setContactPhone] = useState(settings.contactPhone);
+  const [maxSupervisorLoad, setMaxSupervisorLoad] = useState(String(settings.maxSupervisorLoad));
+  const [inactivityThreshold, setInactivityThreshold] = useState(String(settings.inactivityThresholdDays));
+  const [autoFlagEnabled, setAutoFlagEnabled] = useState(settings.autoFlagEnabled);
+  const [allowSelfPlacement, setAllowSelfPlacement] = useState(settings.allowSelfPlacement);
+
+  // Notifications
+  const [emailNotifs, setEmailNotifs] = useState(settings.emailNotifs);
+  const [inAppNotifs, setInAppNotifs] = useState(settings.inAppNotifs);
+  const [notifNewApp, setNotifNewApp] = useState(settings.notifNewApp);
+  const [notifCompanyApproval, setNotifCompanyApproval] = useState(settings.notifCompanyApproval);
+  const [notifGradeSubmission, setNotifGradeSubmission] = useState(settings.notifGradeSubmission);
+  const [notifIssueEscalation, setNotifIssueEscalation] = useState(settings.notifIssueEscalation);
+  const [notifLogbookFlag, setNotifLogbookFlag] = useState(settings.notifLogbookFlag);
+  const [notifAnnouncements, setNotifAnnouncements] = useState(settings.notifAnnouncements);
+  const [digestFrequency, setDigestFrequency] = useState(settings.digestFrequency);
+
+  // DLO-specific
+  const [deptMaxLoad, setDeptMaxLoad] = useState(String(settings.deptMaxLoad));
+  const [deptDeadline, setDeptDeadline] = useState(settings.deptDeadline);
   // Auto-fill and sync profile/phone/emergency contact details
   useEffect(() => {
     if (user?.name) setProfileName(user.name);
