@@ -204,9 +204,35 @@ export function StudentProfileSetup() {
       const res = await apiClient.updateUser(String(user?.id || ""), data);
       if (res.success) {
         localStorage.setItem(`student_profile_complete_${user?.id}`, "true");
-        // Update user object to mark profile as complete
+
+        // Sync local cache for student profile
+        if (user?.id) {
+          const profileCacheKey = `student_profile_${user.id}`;
+          try {
+            const existingProfile = localStorage.getItem(profileCacheKey);
+            const parsed = existingProfile ? JSON.parse(existingProfile) : {};
+            localStorage.setItem(profileCacheKey, JSON.stringify({
+              ...parsed,
+              phone,
+              emergency_contact: emergencyContact,
+              emergency_contact_name: emergencyContact,
+              emergency_contact_phone: emergencyPhone,
+              emergencyContact,
+              emergencyPhone,
+              phone_number: phone,
+            }));
+          } catch {}
+        }
+
+        // Update user object to mark profile as complete and include phone/emergency contact
         if (user) {
-          setUser({ ...user, profileComplete: true });
+          setUser({
+            ...user,
+            profileComplete: true,
+            phone,
+            emergencyContact,
+            emergencyPhone,
+          });
         }
         clearDraft();
         toast.success("Profile saved!");

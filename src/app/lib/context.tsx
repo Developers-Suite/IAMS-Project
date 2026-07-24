@@ -44,6 +44,9 @@ function normalizeApiUser(u: any): AuthUser {
     name: isGenericName(u.name) && u.email ? nameFromEmail(u.email) : (u.name || undefined),
     email: u.email,
     role: normalizeRole(u.role),
+    phone: u.phone ?? u.student_profile?.phone ?? u.student_profile?.user?.phone ?? undefined,
+    emergencyContact: u.emergency_contact ?? u.emergency_contact_name ?? u.student_profile?.emergency_contact_name ?? u.student_profile?.emergency_contact ?? undefined,
+    emergencyPhone: u.emergency_phone ?? u.emergency_contact_phone ?? u.student_profile?.emergency_contact_phone ?? undefined,
     department: typeof u.department === "string" ? u.department
       : (u.department?.name
         ?? u.department_head?.department?.name
@@ -131,7 +134,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       // Students' studentId/department live on the `students` table, not `users` —
       // the /me response above won't carry them, so backfill from the student profile.
-      if (user.role === "student" && (!user.studentId || !user.department)) {
+      if (user.role === "student") {
         try {
           const res = await apiClient.getStudentProfile(user.id);
           if (res.success && res.data) {
@@ -141,8 +144,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
               user.department || p.department_name ||
               (typeof p.department === "string" ? p.department : p.department?.name) || undefined;
             const department_id = user.department_id ?? p.department_id ?? undefined;
-            if (studentId !== user.studentId || department !== user.department || department_id !== user.department_id) {
-              const merged: AuthUser = { ...user, studentId, department, department_id };
+            const phone = user.phone || p.phone || p.user?.phone || undefined;
+            const emergencyContact = user.emergencyContact || p.emergency_contact_name || p.emergency_contact || undefined;
+            const emergencyPhone = user.emergencyPhone || p.emergency_contact_phone || undefined;
+            if (
+              studentId !== user.studentId ||
+              department !== user.department ||
+              department_id !== user.department_id ||
+              phone !== user.phone ||
+              emergencyContact !== user.emergencyContact ||
+              emergencyPhone !== user.emergencyPhone
+            ) {
+              const merged: AuthUser = { ...user, studentId, department, department_id, phone, emergencyContact, emergencyPhone };
               setUserState(merged);
               saveUser(merged);
               setCurrentUser({

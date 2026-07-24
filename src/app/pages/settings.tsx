@@ -1,4 +1,4 @@
-import { useState, useSyncExternalStore } from "react";
+import { useState, useEffect, useSyncExternalStore } from "react";
 import { useAppContext } from "../lib/context";
 import { apiClient } from "../lib/api-client";
 import {
@@ -18,7 +18,7 @@ import { exportToCSV } from "../lib/csv-export";
 type SettingsTab = "general" | "notifications" | "system" | "profile" | "grading";
 
 export function SettingsPage() {
-  const { user } = useAppContext();
+  const { user, setUser } = useAppContext();
   const role = user?.role as ExtendedRole;
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
   const settings = useSyncExternalStore(subscribeSettings, getSettings, getSettings);
@@ -27,40 +27,115 @@ export function SettingsPage() {
   const [profileName, setProfileName] = useState(user?.name || "");
   const [profileEmail] = useState(user?.email || "");
   const [profilePhone, setProfilePhone] = useState(user?.phone || "");
-  const [emergencyContact, setEmergencyContact] = useState("");
-  const [emergencyPhone, setEmergencyPhone] = useState("");
+  const [emergencyContact, setEmergencyContact] = useState(user?.emergencyContact || "");
+  const [emergencyPhone, setEmergencyPhone] = useState(user?.emergencyPhone || "");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
-  // General (CLO only)
-  const [uniName, setUniName] = useState(settings.uniName);
-  const [contactEmail, setContactEmail] = useState(settings.contactEmail);
-  const [contactPhone, setContactPhone] = useState(settings.contactPhone);
-  const [maxSupervisorLoad, setMaxSupervisorLoad] = useState(String(settings.maxSupervisorLoad));
-  const [inactivityThreshold, setInactivityThreshold] = useState(String(settings.inactivityThresholdDays));
-  const [autoFlagEnabled, setAutoFlagEnabled] = useState(settings.autoFlagEnabled);
-  const [allowSelfPlacement, setAllowSelfPlacement] = useState(settings.allowSelfPlacement);
+  // Auto-fill and sync profile/phone/emergency contact details
+  useEffect(() => {
+    if (user?.name) setProfileName(user.name);
+    if (user?.phone) setProfilePhone(user.phone);
+    if (user?.emergencyContact) setEmergencyContact(user.emergencyContact);
+    if (user?.emergencyPhone) setEmergencyPhone(user.emergencyPhone);
 
-  // Notifications
-  const [emailNotifs, setEmailNotifs] = useState(settings.emailNotifs);
-  const [inAppNotifs, setInAppNotifs] = useState(settings.inAppNotifs);
-  const [notifNewApp, setNotifNewApp] = useState(settings.notifNewApp);
-  const [notifCompanyApproval, setNotifCompanyApproval] = useState(settings.notifCompanyApproval);
-  const [notifGradeSubmission, setNotifGradeSubmission] = useState(settings.notifGradeSubmission);
-  const [notifIssueEscalation, setNotifIssueEscalation] = useState(settings.notifIssueEscalation);
-  const [notifLogbookFlag, setNotifLogbookFlag] = useState(settings.notifLogbookFlag);
-  const [notifAnnouncements, setNotifAnnouncements] = useState(settings.notifAnnouncements);
-  const [digestFrequency, setDigestFrequency] = useState(settings.digestFrequency);
+    const loadProfileDetails = async () => {
+      if (!user?.id) return;
+      try {
+        // 1. Try saved draft from profile setup
+        const draftKey = `profile_setup_draft_${user.id}`;
+        const savedDraft = localStorage.getItem(draftKey);
+        if (savedDraft) {
+          const d = JSON.parse(savedDraft);
+          if (d.phone && !profilePhone) setProfilePhone(d.phone);
+          if (d.emergencyContact && !emergencyContact) setEmergencyContact(d.emergencyContact);
+          if (d.emergencyPhone && !emergencyPhone) setEmergencyPhone(d.emergencyPhone);
+        }
 
-  // DLO-specific
-  const [deptMaxLoad, setDeptMaxLoad] = useState(String(settings.deptMaxLoad));
-  const [deptDeadline, setDeptDeadline] = useState(settings.deptDeadline);
+        // 2. Try cached student profile
+        const profileCacheKey = `student_profile_${user.id}`;
+        const cachedProfile = localStorage.getItem(profileCacheKey);
+        if (cachedProfile) {
+          const c = JSON.parse(cachedProfile);
+          const cPhone = c.phone || c.user?.phone || c.phone_number;
+          const cEmgContact = c.emergencyContact || c.emergencyContactName || c.emergency_contact || c.emergency_contact_name;
+          const cEmgPhone = c.emergencyPhone || c.emergencyContactPhone || c.emergency_contact_phone;
+
+          if (cPhone) setProfilePhone((prev) => prev || cPhone);
+          if (cEmgContact) setEmergencyContact((prev) => prev || cEmgContact);
+          if (cEmgPhone) setEmergencyPhone((prev) => prev || cEmgPhone);
+        }
+
+        // 3. Fetch fresh profile from backend if user is a student
+        if (user.role === "student") {
+          const res = await apiClient.getStudentProfile(String(user.id));
+          if (res.success && res.data) {
+            const p = res.data;
+            const pPhone = p.phone || p.user?.phone;
+            const pEmgContact = p.emergency_contact || p.emergency_contact_name;
+            const pEmgPhone = p.emergency_contact_phone;
+
+            if (pPhone) setProfilePhone(pPhone);
+            if (pEmgContact) setEmergencyContact(pEmgContact);
+            if (pEmgPhone) setEmergencyPhone(pEmgPhone);
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to load profile details in settings:", err);
+      }
+    };
+
+    loadProfileDetails();
+  }, [user?.id, user?.phone, user?.emergencyContact, user?.emergencyPhone, user?.role, user?.name]);
 
   const handleSaveProfile = async () => {
     if (!user?.id) return;
     setIsSavingProfile(true);
     try {
-      const res = await apiClient.updateUser(user.id, { name: profileName });
+      const payload: Record<string, any> = {
+        name: profileName,
+        phone: profilePhone,
+        emergency_contact: emergencyContact,
+        emergency_phone: emergencyPhone,
+      };
+      const res = await apiClient.updateUser(user.id, payload);
       if (res.success) {
+        const updatedUser = {
+          ...user,
+          name: profileName,
+          phone: profilePhone,
+          emergencyContact: emergencyContact,
+          emergencyPhone: emergencyPhone,
+        };
+        setUser(updatedUser);
+
+        // Keep local draft & profile cache updated
+        const draftKey = `profile_setup_draft_${user.id}`;
+        const savedDraft = localStorage.getItem(draftKey);
+        if (savedDraft) {
+          try {
+            const d = JSON.parse(savedDraft);
+            d.fullName = profileName;
+            d.phone = profilePhone;
+            d.emergencyContact = emergencyContact;
+            d.emergencyPhone = emergencyPhone;
+            localStorage.setItem(draftKey, JSON.stringify(d));
+          } catch {}
+        }
+
+        const cacheKey = `student_profile_${user.id}`;
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          try {
+            const c = JSON.parse(cached);
+            c.name = profileName;
+            c.phone = profilePhone;
+            c.emergency_contact = emergencyContact;
+            c.emergency_contact_name = emergencyContact;
+            c.emergency_contact_phone = emergencyPhone;
+            localStorage.setItem(cacheKey, JSON.stringify(c));
+          } catch {}
+        }
+
         toast.success("Profile updated successfully.");
       } else {
         toast.error("Failed to update profile.");

@@ -7,6 +7,9 @@ export interface AuthUser {
   name: string;
   email: string;
   role: ExtendedRole;
+  phone?: string;
+  emergencyContact?: string;
+  emergencyPhone?: string;
   department?: string;
   department_id?: number;
   avatar?: string;
