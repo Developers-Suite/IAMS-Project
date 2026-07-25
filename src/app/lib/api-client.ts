@@ -130,19 +130,46 @@ function unwrapTerm(response: ApiResponse<unknown>): TermResponse | null {
   return response.success ? unwrapEntity<TermResponse>(response, "term") : null;
 }
 
-// Map the backend's snake_case grading-configuration shape to the camelCase
-// shape the CLO/HOD grading-config pages and GradingConfigForm expect.
 function normalizeGradingConfig(raw: any): any {
   if (!raw || typeof raw !== "object") return raw;
+  const structWeights = raw.structure_weights ?? raw.structureWeights ?? {
+    w1: Number(raw.industrial_assessment_weight ?? 40),
+    w2: Number(raw.site_visitation_weight ?? 30),
+    w3: Number(raw.report_weight ?? 20),
+    w4: Number(raw.presentation_weight ?? 10),
+  };
+  const rawSec = raw.section_weights ?? raw.sectionWeights ?? raw.section_weight_config;
+  let secWeights = DEFAULT_SECTION_WEIGHTS;
+  if (rawSec) {
+    if (typeof rawSec === "string") {
+      try { secWeights = JSON.parse(rawSec); } catch {}
+    } else if (typeof rawSec === "object") {
+      secWeights = {
+        a: rawSec.a ?? rawSec.A ?? 30,
+        b: rawSec.b ?? rawSec.B ?? 20,
+        c: rawSec.c ?? rawSec.C ?? 30,
+        d: rawSec.d ?? rawSec.D ?? 20,
+      };
+    }
+  }
+
+  const struct = raw.structure ?? (structWeights.w4 === 0 && structWeights.w3 > 0 ? "A" : structWeights.w3 === 0 && structWeights.w4 > 0 ? "B" : structWeights.w3 > 0 && structWeights.w4 > 0 ? "C" : "D");
+
   return {
     ...raw,
     id: raw.id != null ? String(raw.id) : raw.id,
-    departmentId: raw.department?.name ?? raw.department_id ?? raw.departmentId,
-    termId: raw.academic_term_id ?? raw.termId,
-    structure: raw.structure ?? DEFAULT_STRUCTURE,
-    structureWeights: raw.structure_weights ?? raw.structureWeights ?? DEFAULT_STRUCTURE_WEIGHTS,
-    sectionWeights: raw.section_weights ?? raw.sectionWeights ?? DEFAULT_SECTION_WEIGHTS,
-    status: raw.status ?? "draft",
+    departmentId: raw.department_id ?? raw.departmentId ?? (raw.department?.name ? raw.department?.id : raw.department),
+    department: typeof raw.department === "string" ? raw.department : (raw.department?.name ?? raw.department_name ?? ""),
+    termId: raw.academic_term_id ?? raw.termId ?? raw.term_id,
+    structure: struct,
+    structureWeights: structWeights,
+    sectionWeights: secWeights,
+    industrial_assessment_weight: raw.industrial_assessment_weight ?? structWeights.w1,
+    site_visitation_weight: raw.site_visitation_weight ?? structWeights.w2,
+    report_weight: raw.report_weight ?? structWeights.w3,
+    presentation_weight: raw.presentation_weight ?? structWeights.w4,
+    status: raw.status ?? (raw.is_active ? "active" : "draft"),
+    is_active: raw.status === "active" || raw.is_active || raw.is_default || false,
     createdBy: raw.submitter?.name ?? raw.createdBy ?? "N/A",
     updatedBy: raw.approver?.name ?? raw.submitter?.name ?? raw.updatedBy ?? "N/A",
     updatedAt: raw.updated_at ?? raw.updatedAt,
@@ -150,6 +177,38 @@ function normalizeGradingConfig(raw: any): any {
     submittedForApprovalAt: raw.submitted_at ?? raw.submittedForApprovalAt,
     approvedBy: raw.approver?.name ?? raw.approvedBy,
     approvedAt: raw.approved_at ?? raw.approvedAt,
+  };
+}
+
+function normalizeFinalGrade(raw: any): any {
+  if (!raw || typeof raw !== "object") return raw;
+  const ind = raw.industrial_assessment_score ?? raw.industrialScore ?? raw.industrial_score ?? null;
+  const visit = raw.site_visitation_score ?? raw.siteVisitScore ?? raw.site_visitation_score ?? null;
+  const rep = raw.report_score ?? raw.reportScore ?? null;
+  const pres = raw.presentation_score ?? raw.presentationScore ?? null;
+  const total = raw.total_score ?? raw.finalPercent ?? raw.totalScore ?? null;
+  const grade = raw.letter_grade ?? raw.letterGrade ?? null;
+
+  return {
+    ...raw,
+    id: raw.id != null ? String(raw.id) : raw.id,
+    internshipId: String(raw.internship_id ?? raw.internshipId ?? raw.internship?.id ?? ""),
+    internship_id: raw.internship_id ?? raw.internshipId,
+    studentId: String(raw.student_id ?? raw.studentId ?? raw.student?.id ?? ""),
+    student_id: raw.student_id ?? raw.studentId,
+    industrial_assessment_score: ind != null ? Number(ind) : null,
+    industrialScore: ind != null ? Number(ind) : null,
+    site_visitation_score: visit != null ? Number(visit) : null,
+    siteVisitScore: visit != null ? Number(visit) : null,
+    report_score: rep != null ? Number(rep) : null,
+    reportScore: rep != null ? Number(rep) : null,
+    presentation_score: pres != null ? Number(pres) : null,
+    presentationScore: pres != null ? Number(pres) : null,
+    total_score: total != null ? Number(total) : null,
+    finalPercent: total != null ? Number(total) : null,
+    letter_grade: grade,
+    letterGrade: grade,
+    status: raw.status ?? "draft",
   };
 }
 
@@ -1744,11 +1803,16 @@ export const apiClient = {
 
   async getGrades(filters?: Record<string, unknown>): Promise<ApiResponse<any[]>> {
     const response = await requestApi<unknown>(API_ENDPOINTS.GRADES, { method: "GET", query: filters });
-    return { success: response.success, data: response.success ? extractCollection<any>(response, "grades") : [], message: response.message };
+    return {
+      success: response.success,
+      data: response.success ? extractCollection<any>(response, "grades").map(normalizeFinalGrade) : [],
+      message: response.message,
+    };
   },
 
   async getGrade(internshipId: string): Promise<ApiResponse<any>> {
-    return requestApi<any>(replacePathParams("/api/v1/grades/:internshipId", { internshipId }), { method: "GET" });
+    const res = await requestApi<any>(replacePathParams("/api/v1/grades/:internshipId", { internshipId }), { method: "GET" });
+    return { ...res, data: res.success ? normalizeFinalGrade(unwrapEntity<any>(res, "grade")) : null };
   },
 
   async submitFinalReport(internshipId: string, data: { report_url: string; report_name?: string }): Promise<ApiResponse<null>> {
@@ -1759,11 +1823,13 @@ export const apiClient = {
   },
 
   async compileGrade(internshipId: string): Promise<ApiResponse<any>> {
-    return requestApi<any>(replacePathParams(API_ENDPOINTS.GRADES_COMPILE, { internshipId }), { method: "POST" });
+    const res = await requestApi<any>(replacePathParams(API_ENDPOINTS.GRADES_COMPILE, { internshipId }), { method: "POST" });
+    return { ...res, data: res.success ? normalizeFinalGrade(unwrapEntity<any>(res, "grade")) : null };
   },
 
   async updateGrade(id: string, data?: Record<string, unknown>): Promise<ApiResponse<any>> {
-    return requestApi<any>(replacePathParams("/api/v1/grades/:id", { id }), { method: "PUT", body: JSON.stringify(data ?? {}) });
+    const res = await requestApi<any>(replacePathParams("/api/v1/grades/:id", { id }), { method: "PUT", body: JSON.stringify(data ?? {}) });
+    return { ...res, data: res.success ? normalizeFinalGrade(unwrapEntity<any>(res, "grade")) : null };
   },
 
   async publishGrade(id: string): Promise<ApiResponse<null>> {

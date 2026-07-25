@@ -11,7 +11,7 @@ import { WeeklyRubricForm } from "../../components/grading/weekly-rubric-form";
 import { useAppContext } from "../../lib/context";
 import { apiClient } from "../../lib/api-client";
 import { useToastAction } from "../../lib/hooks";
-import { INDUSTRIAL_CRITERIA } from "../../lib/constants";
+import { INDUSTRIAL_CRITERIA, DEFAULT_SECTION_WEIGHTS } from "../../lib/constants";
 import type { CriterionRating, GradingActor, SectionWeights, WeeklyRubricRatings } from "../../types/grading";
 
 type TabKey = "weekly" | "final";
@@ -155,23 +155,62 @@ export function EvaluatePage() {
 
   useEffect(() => {
     if (!appId || !app) {
-      setSectionWeights(null);
+      setSectionWeights(DEFAULT_SECTION_WEIGHTS);
       return;
     }
     let cancelled = false;
     const termId = app.academic_term_id ?? app.term?.id;
-    const deptId = app?.student?.department?.id;
-    const filter = {
-      ...(deptId ? { department_id: deptId } : { department: getDepartmentName(app) }),
-      ...(termId ? { term_id: termId } : {}),
-    };
-    apiClient.getGradingConfigs(filter).then((res) => {
+    const deptId = app?.student?.department?.id ?? app?.student?.department_id;
+    const deptName = getDepartmentName(app);
+
+    const fetchConfig = async () => {
+      let active: any = null;
+      if (deptId || deptName) {
+        const primaryFilter = {
+          ...(deptId ? { department_id: deptId } : { department: deptName }),
+          ...(termId ? { term_id: termId } : {}),
+        };
+        const res = await apiClient.getGradingConfigs(primaryFilter).catch(() => null);
+        if (res?.success && res.data?.length > 0) {
+          active = res.data.find((c: any) => c.status === "active" || c.is_active || c.is_default) || res.data[0];
+        }
+      }
+
+      if (!active && (deptId || deptName)) {
+        const fallbackRes = await apiClient.getGradingConfigs(deptId ? { department_id: deptId } : { department: deptName }).catch(() => null);
+        if (fallbackRes?.success && fallbackRes.data?.length > 0) {
+          active = fallbackRes.data.find((c: any) => c.status === "active" || c.is_active || c.is_default) || fallbackRes.data[0];
+        }
+      }
+
       if (cancelled) return;
-      const active = res.success ? res.data.find((c: any) => c.status === "active") : undefined;
-      setSectionWeights(active?.sectionWeights ?? null);
-    });
+
+      const rawWeights = active?.sectionWeights ?? active?.section_weights ?? active?.section_weight_config;
+      let parsedWeights: SectionWeights = DEFAULT_SECTION_WEIGHTS;
+
+      if (rawWeights) {
+        if (typeof rawWeights === "string") {
+          try {
+            parsedWeights = JSON.parse(rawWeights);
+          } catch {
+            parsedWeights = DEFAULT_SECTION_WEIGHTS;
+          }
+        } else if (typeof rawWeights === "object") {
+          parsedWeights = {
+            a: rawWeights.a ?? rawWeights.A ?? 30,
+            b: rawWeights.b ?? rawWeights.B ?? 20,
+            c: rawWeights.c ?? rawWeights.C ?? 30,
+            d: rawWeights.d ?? rawWeights.D ?? 20,
+          };
+        }
+      }
+
+      setSectionWeights(parsedWeights);
+    };
+
+    fetchConfig();
     return () => { cancelled = true; };
-  }, [appId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [appId, app]);
 
   // Default tab: deep-link wins → otherwise Weekly (the most-frequent action).
   const initialTab: TabKey = (params.get("tab") as TabKey) || "weekly";
@@ -210,7 +249,7 @@ export function EvaluatePage() {
   const week = weeks.find((w) => w.weekNumber === weekNumber);
   const existingWeekly = appId && week ? rubricsByWeek[weekNumber] : undefined;
 
-  const config = sectionWeights ? { sectionWeights } : null;
+  const config = { sectionWeights: sectionWeights ?? DEFAULT_SECTION_WEIGHTS };
   const existingAssessment = appId ? assessmentsByInternship[appId] : undefined;
   const existingFinal = useMemo(() => {
     if (!existingAssessment) return undefined;

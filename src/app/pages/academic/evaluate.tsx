@@ -357,19 +357,17 @@ export function AcademicEvaluatePage() {
           <div className="space-y-6">
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 dark:bg-blue-950/20 dark:border-blue-800">
               <p className="text-blue-800 dark:text-blue-300" style={{ fontSize: "0.85rem" }}>
-                <strong>Your Role:</strong> As the University Supervisor, you grade three components:
+                <strong>Your Role:</strong> As the University Supervisor, you evaluate and grade the <strong>Site Visitation</strong> component.
               </p>
               <ul className="text-blue-800 dark:text-blue-300 mt-2 space-y-1" style={{ fontSize: "0.85rem" }}>
-                <li>• <strong>Site Visitation</strong> (30%) — Use the <em>Site Visits</em> tab to record observations</li>
-                <li>• <strong>Report</strong> (15%) — Evaluate the final attachment report</li>
-                <li>• <strong>Presentation</strong> (15%) — Grade the student's presentation</li>
+                <li>• <strong>Site Visitation</strong> — Use the <em>Site Visits</em> tab to record field supervision observations and scores</li>
               </ul>
               <p className="text-blue-700 dark:text-blue-400 mt-3" style={{ fontSize: "0.85rem" }}>
-                Once all your scores are submitted, the DLO will compile them with the Industrial Assessment (40% from company supervisor) and publish the final grade.
+                Note: The <strong>Report</strong> and <strong>Presentation</strong> scores are solely inputted by the Departmental Liaison Officer (DLO) according to your department's active grading configuration.
               </p>
               <p className="text-blue-700 dark:text-blue-400 mt-2" style={{ fontSize: "0.75rem" }}>
                 {activeStructure
-                  ? <>Department uses Structure {activeStructure}. The breakdown below shows all components once available.</>
+                  ? <>Department uses Structure {activeStructure}. The breakdown below shows all components once compiled.</>
                   : "Grading structure not yet configured for this department."}
               </p>
             </div>
