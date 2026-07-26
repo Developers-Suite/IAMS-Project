@@ -52,12 +52,6 @@ export function DLOFinalGradingPage() {
     setSavingEdit(true);
     try {
       let currentGradeId = selectedForEdit.gradeId;
-      if (!currentGradeId) {
-        const compileRes = await apiClient.compileGrade(selectedForEdit.internshipId);
-        if (compileRes.success && compileRes.data) {
-          currentGradeId = String(compileRes.data.id || compileRes.data.grade?.id || "");
-        }
-      }
 
       const payload: Record<string, any> = {
         industrial_assessment_score: editIndustrial === "" ? null : Number(editIndustrial),
@@ -70,7 +64,13 @@ export function DLOFinalGradingPage() {
       const res = await apiClient.updateGrade(targetId, payload);
 
       if (res.success) {
-        toast.success("Grades updated successfully!");
+        // Automatically re-compile final grade calculation with new scores
+        const compileRes = await apiClient.compileGrade(selectedForEdit.internshipId);
+        if (compileRes.success) {
+          toast.success("Scores saved & final grade re-compiled!");
+        } else {
+          toast.success("Scores updated successfully.");
+        }
         setSelectedForEdit(null);
         load();
       } else {
@@ -322,12 +322,22 @@ export function DLOFinalGradingPage() {
                             : <><GraduationCap className="w-3.5 h-3.5" /> Compile</>}
                         </button>
                       ) : r.gradeStatus === "calculated" ? (
-                        <button onClick={() => handleApprove(r.gradeId!)} disabled={approving === r.gradeId}
-                          className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-1.5" style={{ fontSize: "0.8rem" }}>
-                          {approving === r.gradeId
-                            ? <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Approving…</>
-                            : <><CheckCircle2 className="w-3.5 h-3.5" /> Approve</>}
-                        </button>
+                        <div className="inline-flex items-center gap-1.5">
+                          <button onClick={() => handleCompile(r.internshipId)} disabled={compiling === r.internshipId}
+                            className="px-2.5 py-1.5 border border-border bg-background hover:bg-muted text-foreground rounded-lg disabled:opacity-50 inline-flex items-center gap-1"
+                            title="Re-compile grade with updated component scores" style={{ fontSize: "0.8rem" }}>
+                            {compiling === r.internshipId
+                              ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                              : <RefreshCw className="w-3.5 h-3.5 text-muted-foreground" />}
+                            <span>Re-compile</span>
+                          </button>
+                          <button onClick={() => handleApprove(r.gradeId!)} disabled={approving === r.gradeId}
+                            className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-1.5" style={{ fontSize: "0.8rem" }}>
+                            {approving === r.gradeId
+                              ? <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Approving…</>
+                              : <><CheckCircle2 className="w-3.5 h-3.5" /> Approve</>}
+                          </button>
+                        </div>
                       ) : r.gradeStatus === "approved" ? (
                         <button onClick={() => handlePublish(r.gradeId!)} disabled={publishing === r.gradeId}
                           className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-1.5" style={{ fontSize: "0.8rem" }}>
