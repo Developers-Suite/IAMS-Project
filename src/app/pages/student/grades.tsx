@@ -150,30 +150,30 @@ export function StudentGradesPage() {
             <ComponentRow
               label="Industrial Assessment"
               score={industrialScore}
-              max={90}
+              max={100}
               weighted={grade?.industrial_assessment_weighted}
-              evaluator="Evaluated by your company supervisor"
+              evaluator="Evaluated by your workplace supervisor"
             />
             <ComponentRow
               label="Site Visitation"
               score={siteVisitScore}
-              max={30}
+              max={100}
               weighted={grade?.site_visitation_weighted}
               evaluator="Evaluated by your university supervisor"
             />
             <ComponentRow
               label="Report"
               score={reportScore}
-              max={20}
+              max={100}
               weighted={grade?.report_weighted}
-              evaluator="Evaluated by your university supervisor"
+              evaluator="Evaluated by Departmental Liaison Officer (DLO)"
             />
             <ComponentRow
               label="Presentation"
               score={presentationScore}
-              max={20}
+              max={100}
               weighted={grade?.presentation_weighted}
-              evaluator="Evaluated by your university supervisor"
+              evaluator="Evaluated by Departmental Liaison Officer (DLO)"
             />
             <div className="pt-2 mt-1 flex items-center justify-between border-t border-border">
               <span className="text-sm font-medium">Total</span>
