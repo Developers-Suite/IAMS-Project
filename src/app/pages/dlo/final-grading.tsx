@@ -87,10 +87,12 @@ export function DLOFinalGradingPage() {
   const load = useCallback(async () => {
     setLoading(true);
     const filter = user?.department_id ? { department_id: user.department_id } : { department };
-    const [internRes, gradesRes, configRes] = await Promise.all([
+    const [internRes, gradesRes, configRes, indAssRes, siteVisRes] = await Promise.all([
       apiClient.getInternships({ status: "active,completed", per_page: 100, department }),
       apiClient.getGrades({ per_page: 100, department }),
       apiClient.getGradingConfigs(filter).catch(() => ({ success: false, data: [] })),
+      apiClient.getIndustrialAssessments({ per_page: 100 }).catch(() => ({ success: false, data: [] })),
+      apiClient.getSiteVisitations({ per_page: 100 }).catch(() => ({ success: false, data: [] })),
     ]);
 
     if (configRes.success && configRes.data?.length > 0) {
@@ -99,24 +101,48 @@ export function DLOFinalGradingPage() {
     }
 
     const gradeByInternship = new Map<string, any>();
-    if (gradesRes.success) {
+    if (gradesRes.success && Array.isArray(gradesRes.data)) {
       for (const g of gradesRes.data) {
         gradeByInternship.set(String(g.internship_id ?? g.internship?.id), g);
       }
     }
 
-    if (internRes.success) {
+    const indByInternship = new Map<string, number>();
+    if (indAssRes?.success && Array.isArray(indAssRes.data)) {
+      for (const a of indAssRes.data) {
+        const iId = String(a.internship_id ?? a.internship?.id ?? "");
+        const score = a.total_score ?? a.score_percentage ?? a.score;
+        if (iId && score != null) indByInternship.set(iId, Number(score));
+      }
+    }
+
+    const siteByInternship = new Map<string, number>();
+    if (siteVisRes?.success && Array.isArray(siteVisRes.data)) {
+      for (const v of siteVisRes.data) {
+        const iId = String(v.internship_id ?? v.internship?.id ?? "");
+        const scoreObj = v.site_visitation_score ?? v.score_object ?? v;
+        const rawScore = scoreObj?.score ?? v.total_score ?? v.score;
+        if (iId && rawScore != null) {
+          const maxScore = Number(scoreObj?.max_score ?? 30);
+          const scorePercent = maxScore > 0 ? (Number(rawScore) / maxScore) * 100 : Number(rawScore);
+          siteByInternship.set(iId, Math.round(scorePercent * 100) / 100);
+        }
+      }
+    }
+
+    if (internRes.success && Array.isArray(internRes.data)) {
       setRows(internRes.data.map((i: any) => {
-        const g = gradeByInternship.get(String(i.id));
+        const iId = String(i.id);
+        const g = gradeByInternship.get(iId);
         return {
-          internshipId: String(i.id),
+          internshipId: iId,
           gradeId: g?.id != null ? String(g.id) : null,
           studentName: i.student?.user?.name ?? "—",
           studentId: i.student?.student_id ?? "—",
           companyName: i.company?.name ?? "—",
           gradeStatus: g?.status ?? null,
-          industrialScore: g?.industrial_assessment_score ?? null,
-          siteVisitScore: g?.site_visitation_score ?? null,
+          industrialScore: g?.industrial_assessment_score ?? indByInternship.get(iId) ?? null,
+          siteVisitScore: g?.site_visitation_score ?? siteByInternship.get(iId) ?? null,
           reportScore: g?.report_score ?? null,
           presentationScore: g?.presentation_score ?? null,
           finalPercent: g?.total_score ?? null,
