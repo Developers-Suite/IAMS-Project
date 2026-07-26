@@ -228,6 +228,11 @@ export function LogbookPage() {
       toast.error("Can only edit draft entries");
       return;
     }
+    const today = new Date().toISOString().split("T")[0];
+    if (entry.entry_date === today && !checkedInToday) {
+      toast.error("Please check in for attendance first before editing today's logbook entry.");
+      return;
+    }
     setEditingEntry(entry);
     setForm({
       entry_date: entry.entry_date,
@@ -267,6 +272,12 @@ export function LogbookPage() {
   const handleSave = async () => {
     if (!isLogbookActive) return;
     if (!internshipId) return;
+
+    const today = new Date().toISOString().split("T")[0];
+    if (form.entry_date === today && !checkedInToday) {
+      toast.error("Please check in for attendance first before saving today's logbook entry.");
+      return;
+    }
 
     await submitLogEntry(async () => {
       const payload = {
@@ -308,6 +319,13 @@ export function LogbookPage() {
   };
 
   const handleSubmitForReview = async (entryId: string) => {
+    const entry = entries.find((e) => String(e.id) === String(entryId));
+    const today = new Date().toISOString().split("T")[0];
+    if (entry && entry.entry_date === today && !checkedInToday) {
+      toast.error("Please check in for attendance first before submitting today's logbook entry.");
+      return;
+    }
+
     await submitLogEntry(async () => {
       const res = await apiClient.submitLogbookEntry(entryId);
       if (res.success) {
@@ -346,6 +364,16 @@ export function LogbookPage() {
           </p>
         </div>
       </div>
+
+      {internshipId && isLogbookActive && !checkedInToday && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3 dark:bg-amber-950/30 dark:border-amber-800">
+          <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">Attendance Check-in Required</p>
+            <p className="text-xs text-amber-700 dark:text-amber-400">You must check in for daily attendance before you can create, edit, or submit today's logbook entry.</p>
+          </div>
+        </div>
+      )}
 
       {internshipId && !isLogbookActive && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-2">

@@ -433,6 +433,7 @@ export function EvaluatePage() {
                   sectionWeights={config.sectionWeights}
                   initialRatings={existingFinal?.ratings}
                   initialComments={existingFinal?.comments}
+                  readOnly={!!existingFinal}
                   onSubmit={async (ratings, comments) => {
                     const result = await runEvaluationAction(async () => {
                       return apiClient.submitIndustrialAssessment(getInternshipId(app), ratings, comments, actor);

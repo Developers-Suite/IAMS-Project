@@ -197,12 +197,6 @@ export function CheckInModal({
       const timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
       const today = now.toISOString().split("T")[0];
 
-      localStorage.setItem(
-        `check_in_${internshipId}_${today}`,
-        JSON.stringify({ time: timeStr, location: locationDetails, lat, lng, timestamp: now.toISOString() })
-      );
-      window.dispatchEvent(new CustomEvent("checkInUpdated", { detail: { internshipId, today, time: timeStr } }));
-
       const res = await (apiClient.checkIn as any)({
         internship_id: internshipId!,
         date: today,
@@ -211,10 +205,12 @@ export function CheckInModal({
         gps_check_in_lng: lng ?? undefined,
         notes: locationDetails || undefined,
         status: "present",
-        gps_accuracy_metres: gpsAccuracy || undefined,
+        gps_accuracy_metres: gpsAccuracy ? Math.round(gpsAccuracy) : undefined,
       });
 
       if (!res.success) {
+        // Remove any stale local storage state on API failure
+        localStorage.removeItem(`check_in_${internshipId}_${today}`);
         if (res.error_code === "outside_geofence" || res.error_code === "location_required") {
           setOutsideGeofence(true);
           inFlightRef.current = false;
@@ -226,6 +222,12 @@ export function CheckInModal({
         setIsSubmitting(false);
         return;
       }
+
+      localStorage.setItem(
+        `check_in_${internshipId}_${today}`,
+        JSON.stringify({ time: timeStr, location: locationDetails, lat, lng, timestamp: now.toISOString() })
+      );
+      window.dispatchEvent(new CustomEvent("checkInUpdated", { detail: { internshipId, today, time: timeStr } }));
 
       setCheckedInTime(timeStr);
       toast.success("Checked in successfully!");
@@ -260,7 +262,7 @@ export function CheckInModal({
         gps_check_in_lng: lng ?? undefined,
         notes: locationDetails || undefined,
         status: "present",
-        gps_accuracy_metres: gpsAccuracy || undefined,
+        gps_accuracy_metres: gpsAccuracy ? Math.round(gpsAccuracy) : undefined,
         manual: true,
         manual_reason: manualReason,
       });
@@ -269,6 +271,12 @@ export function CheckInModal({
         toast.error(res.message ?? "Manual check-in failed");
         return;
       }
+
+      localStorage.setItem(
+        `check_in_${internshipId}_${today}`,
+        JSON.stringify({ time: timeStr, location: manualReason, lat, lng, timestamp: now.toISOString() })
+      );
+      window.dispatchEvent(new CustomEvent("checkInUpdated", { detail: { internshipId, today, time: timeStr } }));
 
       setCheckedInTime(timeStr);
       toast.success("Manual check-in submitted. Your supervisor will verify it.");

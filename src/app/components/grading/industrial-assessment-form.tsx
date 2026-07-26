@@ -3,6 +3,7 @@ import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import { Card } from "../ui/card";
+import { CheckCircle2 } from "lucide-react";
 import { INDUSTRIAL_CRITERIA, RATING_LABELS, SECTION_LABELS } from "../../lib/constants";
 import { calculateIndustrialScore } from "../../services/grading-service";
 import type { CriterionRating, SectionWeights } from "../../types/grading";
@@ -13,10 +14,11 @@ interface Props {
   initialComments?: string;
   onSubmit: (ratings: Record<string, CriterionRating>, comments: string) => void;
   submitting?: boolean;
+  readOnly?: boolean;
 }
 
 export function IndustrialAssessmentForm({
-  sectionWeights, initialRatings = {}, initialComments = "", onSubmit, submitting,
+  sectionWeights, initialRatings = {}, initialComments = "", onSubmit, submitting, readOnly = false,
 }: Props) {
   const [ratings, setRatings] = useState<Record<string, CriterionRating>>(initialRatings);
   const [comments, setComments] = useState(initialComments);
@@ -31,6 +33,13 @@ export function IndustrialAssessmentForm({
 
   return (
     <div className="space-y-6">
+      {readOnly && (
+        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg flex items-center gap-2 text-sm font-medium dark:bg-emerald-950/20 dark:border-emerald-800 dark:text-emerald-300">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          Final Industrial Assessment has been submitted and locked.
+        </div>
+      )}
+
       <Card className="p-4 bg-[#E3F3FF] border-0">
         <div className="flex items-center justify-between">
           <div>
@@ -63,13 +72,14 @@ export function IndustrialAssessmentForm({
                         <button
                           key={n}
                           type="button"
-                          onClick={() => setRatings({ ...ratings, [c.key]: n as CriterionRating })}
+                          disabled={readOnly}
+                          onClick={() => !readOnly && setRatings({ ...ratings, [c.key]: n as CriterionRating })}
                           title={RATING_LABELS[n as 1 | 2 | 3 | 4 | 5]}
                           className={`w-9 h-9 rounded-md border text-sm transition ${
                             active
                               ? "bg-[#0B5ED7] text-white border-[#0B5ED7]"
                               : "border-gray-300 text-gray-700 hover:border-[#0B5ED7]"
-                          }`}
+                          } ${readOnly ? "cursor-not-allowed opacity-75" : ""}`}
                         >
                           {n}
                         </button>
@@ -88,23 +98,28 @@ export function IndustrialAssessmentForm({
         <Textarea
           id="ind-comments"
           value={comments}
+          disabled={readOnly}
           onChange={(e) => setComments(e.target.value)}
           rows={4}
-          placeholder="Optional summary of the student's performance during the attachment..."
-          className="mt-1"
+          placeholder={readOnly ? "No comments provided" : "Optional summary of the student's performance during the attachment..."}
+          className={`mt-1 ${readOnly ? "bg-muted/40 cursor-not-allowed" : ""}`}
         />
       </div>
 
       <div className="flex justify-end">
         <Button
-          disabled={!allRated || submitting}
-          onClick={() => onSubmit(ratings, comments)}
-          className="bg-[#0B5ED7] hover:bg-[#0a52bd]"
+          disabled={!allRated || submitting || readOnly}
+          onClick={() => !readOnly && onSubmit(ratings, comments)}
+          className={
+            readOnly
+              ? "bg-gray-400 text-white cursor-not-allowed hover:bg-gray-400 opacity-60 font-semibold"
+              : "bg-[#0B5ED7] hover:bg-[#0a52bd]"
+          }
         >
-          {submitting ? "Submitting…" : "Submit Assessment"}
+          {submitting ? "Submitting…" : readOnly ? "Final Assessment Submitted" : "Submit Assessment"}
         </Button>
       </div>
-      {!allRated && (
+      {!allRated && !readOnly && (
         <p className="text-sm text-gray-600 text-right">All {INDUSTRIAL_CRITERIA.length} criteria must be rated before submitting.</p>
       )}
     </div>
