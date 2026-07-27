@@ -15,6 +15,7 @@ import { isActiveInternshipStatus, isCheckedInAttendanceRecord } from "../../hoo
 export function LogbookPage() {
   const [internshipId, setInternshipId] = useState<number | null>(null);
   const [internshipStatus, setInternshipStatus] = useState<string | null>(null);
+  const [endDate, setEndDate] = useState<string | null>(null);
   const [companyName, setCompanyName] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<string | null>(null);
   const [checkedInToday, setCheckedInToday] = useState(false);
@@ -43,6 +44,8 @@ export function LogbookPage() {
 
   const { execute: submitLogEntry, loading: isSubmitting } = useToastAction();
 
+  const isLogbookActive = isActiveInternshipStatus(internshipStatus, endDate);
+
   const loadData = useCallback(async () => {
     try {
       const dashRes = await apiClient.getDashboard("student");
@@ -53,9 +56,11 @@ export function LogbookPage() {
       const status = activeInternship.status;
       const company = activeInternship.company?.name;
       const sDate = activeInternship.start_date || activeInternship.created_at || null;
+      const eDate = activeInternship.end_date || activeInternship.endDate || null;
 
       setInternshipId(id);
       setInternshipStatus(status);
+      setEndDate(eDate);
       setCompanyName(company);
       setStartDate(sDate);
 
@@ -376,14 +381,14 @@ export function LogbookPage() {
       )}
 
       {internshipId && !isLogbookActive && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-2">
-          <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 dark:bg-amber-950/30 dark:border-amber-800">
+          <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="text-red-800 font-semibold text-sm">
-              {internshipStatus === "completed" ? "Completed" : "Not Active"}
+            <p className="text-amber-900 font-semibold text-sm dark:text-amber-200">
+              {internshipStatus === "completed" ? "Internship Completed" : "Internship Ended"}
             </p>
-            <p className="text-red-700 text-xs mt-0.5">
-              {internshipStatus === "completed" ? "Internship completed." : "Cannot create entries."}
+            <p className="text-amber-700 text-xs mt-0.5 dark:text-amber-400">
+              Your internship period has ended. Creating, editing, or submitting logbook entries is no longer permitted.
             </p>
           </div>
         </div>

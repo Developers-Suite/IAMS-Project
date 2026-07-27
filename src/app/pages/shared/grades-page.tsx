@@ -54,7 +54,8 @@ export function GradesPage({ viewRole }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [departments, setDepartments] = useState<string[]>([]);
   const [hasActiveConfig, setHasActiveConfig] = useState(true);
-  const department = viewRole === "dlo" ? user?.department : undefined;
+  const userDeptName = typeof user?.department === "object" ? (user?.department as any)?.name : user?.department;
+  const department = (viewRole === "dlo" || viewRole === "hod") ? userDeptName : undefined;
 
   const fetchGrades = useCallback(async () => {
     setLoading(true);
@@ -74,7 +75,7 @@ export function GradesPage({ viewRole }: Props) {
   }, [viewRole]);
 
   useEffect(() => {
-    if (viewRole !== "dlo" || !department) return;
+    if ((viewRole !== "dlo" && viewRole !== "hod") || !department) return;
     let cancelled = false;
     apiClient.getActiveTerm().then((termRes) => {
       const termId = termRes.success ? termRes.data?.term?.id : undefined;
@@ -89,7 +90,7 @@ export function GradesPage({ viewRole }: Props) {
 
   const gradeApps = rawGrades
     .map(normalizeGrade)
-    .filter((g) => department ? g.department === department : (deptFilter === "All" || g.department === deptFilter));
+    .filter((g) => department ? g.department?.toLowerCase() === String(department).toLowerCase() : (deptFilter === "All" || g.department === deptFilter));
 
   const filtered = gradeApps.filter((g) => {
     const matchSearch = search === "" ||

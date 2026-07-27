@@ -13,8 +13,14 @@ function attendanceRecordsFrom(data: any): any[] {
   return data?.attendance ?? [];
 }
 
-export function isActiveInternshipStatus(status?: string | null) {
-  return !!status && ACTIVE_INTERNSHIP_STATUSES.has(status);
+export function isActiveInternshipStatus(status?: string | null, endDate?: string | null) {
+  if (!status || !ACTIVE_INTERNSHIP_STATUSES.has(status)) return false;
+  if (endDate) {
+    const today = new Date().toISOString().split("T")[0];
+    const endStr = new Date(endDate).toISOString().split("T")[0];
+    if (endStr < today) return false;
+  }
+  return true;
 }
 
 export function isCheckedInAttendanceRecord(record: any) {
@@ -22,7 +28,7 @@ export function isCheckedInAttendanceRecord(record: any) {
 }
 
 export function findActiveInternship(internships: any[]) {
-  return internships.find((i: any) => isActiveInternshipStatus(i.status)) ?? internships[0] ?? null;
+  return internships.find((i: any) => isActiveInternshipStatus(i.status, i.end_date ?? i.endDate)) ?? internships[0] ?? null;
 }
 
 export function useStudentCheckIn(enabled = true) {

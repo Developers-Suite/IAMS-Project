@@ -9,6 +9,7 @@ interface CheckInModalProps {
   onSuccess?: () => void;
   internshipId?: number;
   internshipStatus?: string;
+  endDate?: string;
 }
 
 const WARNINGS = [
@@ -35,6 +36,7 @@ export function CheckInModal({
   onSuccess,
   internshipId,
   internshipStatus,
+  endDate,
 }: CheckInModalProps) {
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [isResolvingAddress, setIsResolvingAddress] = useState(false);
@@ -53,7 +55,8 @@ export function CheckInModal({
   const [isSubmittingManual, setIsSubmittingManual] = useState(false);
   const inFlightRef = useRef(false);
 
-  const isInternshipActive = internshipStatus === "active" || internshipStatus === "approved";
+  const isDateEnded = endDate ? new Date(endDate).toISOString().split("T")[0] < new Date().toISOString().split("T")[0] : false;
+  const isInternshipActive = (internshipStatus === "active" || internshipStatus === "approved") && !isDateEnded;
   const canCheckIn = !!internshipId && isInternshipActive;
   const isCheckedIn = !!checkedInTime;
 
