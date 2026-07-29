@@ -164,8 +164,6 @@ export function LogbookPage() {
     return () => window.removeEventListener("checkInUpdated", handleCheckInUpdate);
   }, [loadData]);
 
-  const isLogbookActive = isActiveInternshipStatus(internshipStatus);
-
   const getWeekNumber = (entryDate: string, internshipStart: string) => {
     if (!internshipStart) return 1;
     const start = new Date(internshipStart.split("T")[0]);
