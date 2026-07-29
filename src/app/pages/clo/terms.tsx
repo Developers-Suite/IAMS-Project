@@ -47,7 +47,7 @@ function formatDisplayDate(dateStr?: string | null): string {
   const parts = dateStr.split("T")[0].split("-");
   if (parts.length === 3) {
     if (parts[0].length === 4) {
-      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
     }
     return dateStr;
   }
