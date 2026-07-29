@@ -110,12 +110,7 @@ export function getApiUrl(path: string, query?: Record<string, unknown>): string
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const qs = buildQueryString(query);
   const base = API_BASE_URL || (typeof window !== "undefined" ? window.location.origin : "");
-  try {
-    return new URL(`${normalizedPath}${qs}`, base).toString();
-  } catch {
-    // Fallback to the simple concatenation (shouldn't normally happen)
-    return `${base}${normalizedPath}${qs}`;
-  }
+  return `${base}${normalizedPath}${qs}`;
 }
 
 // Unwrap a single object that the backend nests under data.<key> (e.g. { data: { term: {...} } }).
