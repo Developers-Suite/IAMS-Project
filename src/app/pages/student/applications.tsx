@@ -158,10 +158,12 @@ export function StudentApplicationsPage() {
   const stepKey   = `application_step_${user?.id ?? "anon"}`;
 
   // Block new applications when:
-  // 1. Application is submitted/under_review (awaiting DLO decision)
-  // 2. Application is approved (student must submit company acceptance form first)
-  // Can apply again only if rejected or form is submitted and internship is active
-  const hasPendingApplication = myApp && ["submitted", "under_review", "approved"].includes((myApp.status ?? "").toLowerCase());
+  // 1. Student has an active running internship
+  // 2. Student has a pending application (submitted, under_review, approved) awaiting decision/form
+  const hasPendingApplication = Boolean(
+    activeInternship || (myApp && ["submitted", "under_review", "approved"].includes((myApp.status ?? "").toLowerCase()))
+  );
+
 
   const hasMeaningfulDraft = useCallback((f: FormData, s: number) =>
     s > 1 || !!f.termId || !!f.selectedCompanyId || !!f.newCompanyName, []);
@@ -283,13 +285,15 @@ export function StudentApplicationsPage() {
       return false;
     }
 
-    // Check if already has active application
-    if (myApp && !["completed", "rejected"].includes(myApp.status ?? "")) {
+    // Check if already has an active ongoing internship or pending application
+    const isPendingApp = myApp && ["submitted", "under_review", "approved"].includes((myApp.status ?? "").toLowerCase());
+    if (activeInternship || isPendingApp) {
       setEligibilityError(
-        "You already have an active application. You cannot submit another one until your current application is resolved."
+        "You already have an active application or ongoing internship. You cannot submit another one until it is completed or resolved."
       );
       return false;
     }
+
 
     setEligibilityError(null);
     return true;

@@ -28,8 +28,9 @@ export function isCheckedInAttendanceRecord(record: any) {
 }
 
 export function findActiveInternship(internships: any[]) {
-  return internships.find((i: any) => isActiveInternshipStatus(i.status, i.end_date ?? i.endDate)) ?? internships[0] ?? null;
+  return internships.find((i: any) => isActiveInternshipStatus(i.status, i.end_date ?? i.endDate)) ?? null;
 }
+
 
 export function useStudentCheckIn(enabled = true) {
   const [activeInternship, setActiveInternship] = useState<any | null>(null);
