@@ -158,11 +158,14 @@ export function StudentApplicationsPage() {
   const stepKey   = `application_step_${user?.id ?? "anon"}`;
 
   // Block new applications when:
-  // 1. Student has an active running internship
-  // 2. Student has a pending application (submitted, under_review, approved) awaiting decision/form
-  const hasPendingApplication = Boolean(
-    activeInternship || (myApp && ["submitted", "under_review", "approved"].includes((myApp.status ?? "").toLowerCase()))
-  );
+  // 1. Student has an active running internship in an active term
+  // 2. Student has an active pending application in a currently active term
+  const activeTermIds = new Set(terms.filter((t) => t.status === "active").map((t) => String(t.id)));
+
+  const pendingAppInActiveTerm = myApp && activeTermIds.has(String(myApp.academic_term_id ?? myApp.termId ?? myApp.term_id ?? myApp.academicTerm?.id ?? "")) &&
+    ["submitted", "under_review", "approved", "pending_company_approval"].includes((myApp.status ?? "").toLowerCase());
+
+  const hasPendingApplication = Boolean(activeInternship || pendingAppInActiveTerm);
 
 
   const hasMeaningfulDraft = useCallback((f: FormData, s: number) =>
