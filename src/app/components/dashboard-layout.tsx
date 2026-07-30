@@ -269,24 +269,25 @@ export function DashboardLayout() {
           flex flex-col shrink-0
         `}
       >
-        {/* Sidebar inner container with glassmorphism — dark blue */}
+        {/* Sidebar inner container - floating card design */}
         <div
-          className="flex flex-col flex-1 m-3 rounded-2xl overflow-hidden backdrop-blur-md border text-white"
-          style={{
-            backgroundColor: "#1e3a8a",
-            borderColor: "rgba(255, 255, 255, 0.1)",
-            boxShadow: "0 8px 32px rgba(10, 30, 100, 0.35), 0 2px 8px rgba(10, 30, 100, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.08)"
-          }}
+          className="flex flex-col flex-1 m-3 rounded-2xl bg-primary overflow-hidden text-white"
+          style={{ boxShadow: "0 4px 20px rgba(11,94,215,0.25)" }}
         >
-          {/* Logo */}
+          {/* Logo Area */}
           <div className={`flex items-center ${sidebarOpen || isMobile ? "gap-3 px-5" : "justify-center px-0"} py-5 transition-all duration-300`}>
             {(sidebarOpen || isMobile) ? (
-              <div className="rounded-xl overflow-hidden shrink-0 bg-white shadow-lg shadow-black/10 p-3">
-                <img src="/logo%202.png" alt="HTU IAMS" className="h-8 w-auto object-contain" />
-              </div>
+              <>
+                <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0 p-1.5">
+                  <img src="/logo%202.png" alt="HTU IAMS" className="h-full w-auto object-contain" />
+                </div>
+                <span className="text-white truncate" style={{ fontSize: "1.05rem", fontWeight: 600, letterSpacing: "-0.01em" }}>
+                  HTU IAMS
+                </span>
+              </>
             ) : (
-              <div className="w-8 h-8 rounded-xl overflow-hidden shrink-0 shadow-lg shadow-black/10 bg-white">
-                <img src="/logo%202.png" alt="HTU IAMS" className="w-full h-full object-cover object-left" />
+              <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0 p-1.5">
+                <img src="/logo%202.png" alt="HTU IAMS" className="w-full h-full object-contain" />
               </div>
             )}
             {isMobile && sidebarOpen && (
@@ -296,7 +297,7 @@ export function DashboardLayout() {
             )}
           </div>
 
-          {/* Menu label */}
+          {/* Navigation Area */}
           <nav className="flex-1 overflow-y-auto px-3 pb-3">
             {(sidebarOpen || isMobile) && (
               <p className="px-3 pt-2 pb-2 text-white/60 uppercase tracking-widest" style={{ fontSize: "0.65rem", fontWeight: 500 }}>
@@ -310,26 +311,36 @@ export function DashboardLayout() {
             {/* Main nav */}
             <div className="space-y-0.5">
               {mainNav.map((item) => (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    end={item.to === `/${user.role}`}
-                    onClick={handleNavClick}
-                    className={({ isActive }) => `group relative flex items-center ${sidebarOpen || isMobile ? "gap-3 px-3" : "justify-center px-0"} py-2.5 rounded-xl transition-all duration-200 ${isActive
-                        ? "font-medium"
-                        : "text-white/80 hover:text-white hover:bg-white/10"
-                      }`}
-                    style={({ isActive }: { isActive: boolean }) => isActive ? { backgroundColor: "white", color: "#1e3a8a" } : {}}
-                  >
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.to === `/${user.role}`}
+                  onClick={handleNavClick}
+                  className={({ isActive }) =>
+                    `group relative flex items-center ${
+                      sidebarOpen || isMobile ? "gap-3 px-6 -mx-3" : "justify-center px-0"
+                    } py-3 transition-all duration-200 ${
+                      isActive
+                        ? "bg-white/15 text-white font-medium"
+                        : "text-white/75 hover:bg-white/10 hover:text-white"
+                    }`
+                  }
+                >
                   {({ isActive }) => (
                     <>
-                      <item.icon className={`w-[18px] h-[18px] shrink-0 transition-colors duration-200 ${isActive ? "" : "text-white/60 group-hover:text-white"}`}
-                        style={isActive ? { color: "#1e3a8a" } : {}} />
+                      {/* Active Indicator Bar */}
+                      {isActive && <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-white" />}
+                      {/* Icon */}
+                      <item.icon
+                        className={`w-[18px] h-[18px] shrink-0 transition-colors duration-200 ${
+                          isActive ? "text-white" : "text-white/70 group-hover:text-white"
+                        }`}
+                      />
                       {(sidebarOpen || isMobile) && (
                         <span className="truncate flex-1 flex items-center gap-2" style={{ fontSize: "0.85rem" }}>
                           {item.label}
                           {item.badgeKey && navBadges[item.badgeKey] > 0 && (
-                            <span className="ml-auto inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-[#DD1725] text-white text-[10px] leading-none">
+                            <span className="ml-auto inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-[#DD1725] text-white text-[10px] leading-none font-semibold">
                               {navBadges[item.badgeKey]}
                             </span>
                           )}
@@ -340,9 +351,8 @@ export function DashboardLayout() {
                       )}
                     </>
                   )}
-                  </NavLink>
-                ))}
-
+                </NavLink>
+              ))}
             </div>
           </nav>
         </div>
