@@ -535,10 +535,16 @@ export function StudentApplicationsPage() {
               <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-amber-900 dark:text-amber-100 text-sm">
-                  {myApp.status?.toLowerCase() === "approved" ? "Application Approved" : "Application Pending"}
+                  {activeInternship
+                    ? "Active Internship Ongoing"
+                    : myApp?.status?.toLowerCase() === "approved"
+                    ? "Application Approved"
+                    : "Application Pending"}
                 </p>
                 <p className="text-amber-800 dark:text-amber-200 mt-1 text-xs">
-                  {myApp.status?.toLowerCase() === "approved"
+                  {activeInternship
+                    ? "You have an active ongoing internship. You cannot apply for a new internship until your current one completes."
+                    : myApp?.status?.toLowerCase() === "approved"
                     ? "Visit Documents to complete your company acceptance form to activate your internship"
                     : "Your application is being reviewed. You can't apply for other internships yet."}
                 </p>

@@ -380,15 +380,25 @@ export function DashboardLayout() {
           {/* Student Check-in Button */}
           {user.role === "student" && (
             <button
-              onClick={() => setCheckInModalOpen(true)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${checkedInToday
+              onClick={() => {
+                if (!activeInternship) {
+                  toast.error("Check-in is closed — your internship period for this term has ended.");
+                  return;
+                }
+                setCheckInModalOpen(true);
+              }}
+              disabled={!activeInternship}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                !activeInternship
+                  ? "bg-muted/60 text-muted-foreground cursor-not-allowed opacity-60"
+                  : checkedInToday
                   ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20"
                   : "bg-primary text-primary-foreground hover:opacity-90"
-                }`}
+              }`}
               style={{ fontSize: "0.85rem", fontWeight: 500 }}
             >
               <CheckCircle2 className="w-4 h-4" />
-              {checkedInToday ? "Checked In" : "Check In"}
+              {!activeInternship ? "Check-in Closed" : checkedInToday ? "Checked In" : "Check In"}
             </button>
           )}
 

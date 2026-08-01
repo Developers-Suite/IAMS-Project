@@ -154,6 +154,13 @@ export function StudentDashboard() {
     return null;
   })();
 
+  const isInternshipEnded = Boolean(
+    !activeInternship &&
+    myInternship &&
+    (myInternship.status === "completed" ||
+     (myInternship.end_date && new Date(myInternship.end_date).toISOString().split("T")[0] < new Date().toISOString().split("T")[0]))
+  );
+
   const supervisorName = (() => {
     const rawVal =
       activeInternship?.academic_supervisor?.user?.name ??
@@ -226,6 +233,25 @@ export function StudentDashboard() {
                 <p className="text-sm opacity-90 mb-2">{new Date().toLocaleDateString("en-GB", { month: "long", day: "numeric", year: "numeric" })}</p>
                 <h1 className="text-3xl font-bold mb-2">Welcome back, {user?.name?.split(" ")[0]}!</h1>
                 <p className="opacity-90 text-sm">Always stay updated with your internship progress</p>
+              </div>
+              <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-10 flex items-center justify-center">
+                <Award className="w-40 h-40" />
+              </div>
+            </div>
+          ) : isInternshipEnded ? (
+            <div className="bg-slate-900 text-white rounded-2xl p-8 relative overflow-hidden shadow-lg border border-slate-800">
+              <div className="relative z-10">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/20 text-amber-300 rounded-full text-xs font-semibold mb-3 border border-amber-500/30">
+                  <Clock className="w-3.5 h-3.5" /> Internship Period Ended
+                </div>
+                <h1 className="text-3xl font-bold mb-2">Internship Has Ended</h1>
+                <p className="opacity-90 text-sm max-w-xl mb-4">
+                  Your industrial attachment for <span className="font-semibold text-amber-300">{activeTermName !== "N/A" ? activeTermName : "this academic term"}</span> at <span className="font-semibold text-amber-300">{myInternship?.company?.name || companyName}</span> has officially ended.
+                </p>
+                <div className="flex items-center gap-3 text-xs text-slate-300 bg-slate-800/80 p-3 rounded-lg border border-slate-700/50 max-w-lg">
+                  <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span>Attendance check-ins and new logbook entry submissions for this term are now closed.</span>
+                </div>
               </div>
               <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-10 flex items-center justify-center">
                 <Award className="w-40 h-40" />
@@ -340,8 +366,8 @@ export function StudentDashboard() {
                   <p className="text-muted-foreground text-sm">Company</p>
                   <Briefcase className="w-4 h-4 text-purple-600" />
                 </div>
-                <h3 className="font-bold text-sm">{activeInternship ? companyName : "N/A"}</h3>
-                <p className="text-muted-foreground text-xs">{activeInternship?.company?.industry ?? "No assignment"}</p>
+                <h3 className="font-bold text-sm">{activeInternship ? companyName : (myInternship?.company?.name ?? "N/A")}</h3>
+                <p className="text-muted-foreground text-xs">{activeInternship?.company?.industry ?? myInternship?.company?.industry ?? "Industrial Attachment"}</p>
               </div>
 
               {/* Term Name Card */}
@@ -356,6 +382,7 @@ export function StudentDashboard() {
                 <p className="text-muted-foreground text-xs">
                   {activeInternship?.term?.year ? `Year ${activeInternship.term.year}` :
                    activeInternship?.start_date ? `Started ${new Date(activeInternship.start_date).toLocaleDateString("en-GB")}` :
+                   isInternshipEnded ? "Term ended" :
                    "Pending approval"}
                 </p>
               </div>
@@ -367,8 +394,8 @@ export function StudentDashboard() {
                   <Zap className="w-4 h-4 text-primary" />
                 </div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold capitalize">{appStatus}</h3>
-                  <StatusBadge status={appStatus} />
+                  <h3 className="text-sm font-bold capitalize">{isInternshipEnded ? "Completed" : appStatus}</h3>
+                  <StatusBadge status={isInternshipEnded ? "completed" : appStatus} />
                 </div>
               </div>
 

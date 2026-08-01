@@ -153,10 +153,11 @@ export function AcademicEvaluatePage() {
       id: record.id,
       date: record.attendance_date ?? record.date,
       checkInTime: record.check_in_time ?? "—",
-      checkInType: hasGps ? "gps" : "manual",
-      location: hasGps
-        ? `${record.gps_check_in_lat}, ${record.gps_check_in_lng}`
-        : record.notes ?? "—",
+      checkInType: record.check_in_type ?? (hasGps ? "gps" : "manual"),
+      location: record.notes ?? "—",
+      lat: record.gps_check_in_lat ?? record.latitude,
+      lng: record.gps_check_in_lng ?? record.longitude,
+      notes: record.notes,
       verificationStatus: record.verified_by ? "Verified" : "Pending Verification",
     };
   });

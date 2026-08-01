@@ -8,6 +8,7 @@ import { DatePicker } from "../../components/ui/date-picker";
 import type { ExtendedRole } from "../../services/auth-service";
 import { Card, CardContent } from "../../components/ui/card";
 import { StatCard } from "../../components/stat-card";
+import { GpsLocationDisplay } from "../../components/gps-location-display";
 
 interface Props {
   viewRole: ExtendedRole;
@@ -370,22 +371,18 @@ export function AttendancePage({ viewRole }: Props) {
                   </p>
                 </div>
               </div>
-              {(selectedRecord.gps_check_in_lat || selectedRecord.notes || selectedRecord.manual_reason) && (
+              {(selectedRecord.gps_check_in_lat || selectedRecord.latitude || selectedRecord.notes || selectedRecord.manual_reason) && (
                 <div>
-                  <p className="text-muted-foreground uppercase tracking-wider mb-2" style={{ fontSize: "0.65rem" }}>Location</p>
+                  <p className="text-muted-foreground uppercase tracking-wider mb-2" style={{ fontSize: "0.65rem" }}>Check-In Location</p>
                   <div className="bg-secondary/50 rounded-xl p-4 space-y-2 border border-border">
-                    {selectedRecord.notes && (
-                      <p className="flex items-start gap-1.5" style={{ fontSize: "0.85rem" }}>
-                        <Navigation className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" /> {selectedRecord.notes}
-                      </p>
-                    )}
-                    {selectedRecord.gps_check_in_lat && (
-                      <p className="text-muted-foreground" style={{ fontSize: "0.75rem" }}>
-                        {selectedRecord.gps_check_in_lat}, {selectedRecord.gps_check_in_lng}
-                      </p>
-                    )}
+                    <GpsLocationDisplay
+                      lat={selectedRecord.gps_check_in_lat ?? selectedRecord.latitude}
+                      lng={selectedRecord.gps_check_in_lng ?? selectedRecord.longitude}
+                      notes={selectedRecord.notes}
+                      showMapLink={true}
+                    />
                     {selectedRecord.manual_reason && (
-                      <div className="pt-1 border-t border-border">
+                      <div className="pt-2 border-t border-border">
                         <p className="text-muted-foreground uppercase tracking-wider mb-1" style={{ fontSize: "0.65rem" }}>Manual Reason</p>
                         <p className="text-amber-700 dark:text-amber-400 italic" style={{ fontSize: "0.85rem" }}>"{selectedRecord.manual_reason}"</p>
                       </div>
@@ -440,16 +437,17 @@ export function AttendancePage({ viewRole }: Props) {
                 <th className="text-left px-4 py-3 text-muted-foreground" style={{ fontSize: "0.75rem" }}>Student</th>
                 <th className="text-left px-4 py-3 text-muted-foreground" style={{ fontSize: "0.75rem" }}>Date</th>
                 <th className="text-left px-4 py-3 text-muted-foreground" style={{ fontSize: "0.75rem" }}>Check-In</th>
+                <th className="text-left px-4 py-3 text-muted-foreground" style={{ fontSize: "0.75rem" }}>Location</th>
                 <th className="text-left px-4 py-3 text-muted-foreground" style={{ fontSize: "0.75rem" }}>Status</th>
                 <th className="text-left px-4 py-3 text-muted-foreground" style={{ fontSize: "0.75rem" }}>Verified</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <SkeletonTableRows rows={6} cols={5} />
+                <SkeletonTableRows rows={6} cols={6} />
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">
+                  <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
                     No attendance records found.
                   </td>
                 </tr>
@@ -465,6 +463,14 @@ export function AttendancePage({ viewRole }: Props) {
                       <span className="flex items-center gap-1" style={{ fontSize: "0.85rem" }}>
                         <Clock className="w-3 h-3 text-muted-foreground" /> {r.check_in_time ?? "—"}
                       </span>
+                    </td>
+                    <td className="px-4 py-4 max-w-xs">
+                      <GpsLocationDisplay
+                        lat={r.gps_check_in_lat ?? r.latitude}
+                        lng={r.gps_check_in_lng ?? r.longitude}
+                        notes={r.notes}
+                        showMapLink={true}
+                      />
                     </td>
                     <td className="px-4 py-4">
                       <span className={`px-2 py-0.5 rounded capitalize border ${STATUS_COLORS[r.status] ?? "bg-gray-100 text-gray-600 border-gray-200"}`} style={{ fontSize: "0.7rem" }}>

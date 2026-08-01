@@ -71,7 +71,7 @@ export function SupervisorDashboard() {
 
   const presentToday   = todayAttendance.filter((r: any) => ["present", "late"].includes(r.status)).length;
   const absentToday    = todayAttendance.filter((r: any) => r.status === "absent").length;
-  const pendingVerify  = todayAttendance.filter((r: any) => !r.verified_by).length;
+  const pendingManualVerify = todayAttendance.filter((r: any) => !r.verified_by && r.check_in_type === "manual").length;
 
   const studentStats = internships.map((i: any) => {
     const logs = pendingLogs.filter((l: any) => l.internship_id === i.id);
@@ -111,7 +111,7 @@ export function SupervisorDashboard() {
         <StatCard
           title="Today's Attendance"
           value={`${presentToday} / ${totalStudents}`}
-          subtitle={`${absentToday} absent · ${pendingVerify} unverified`}
+          subtitle={`${absentToday} absent · ${pendingManualVerify} manual unverified`}
           icon={<MapPin className="w-4 h-4" />}
         />
         <StatCard
@@ -143,8 +143,8 @@ export function SupervisorDashboard() {
         </div>
       )}
 
-      {/* Action Alert */}
-      {(pendingLogs.length > 0 || pendingVerify > 0) && (
+      {/* Action Alert — only shown when manual check-ins need verification or logbooks are pending review */}
+      {(pendingLogs.length > 0 || pendingManualVerify > 0) && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-3">
             <AlertTriangle className="w-5 h-5 text-amber-600" />
@@ -161,19 +161,20 @@ export function SupervisorDashboard() {
                 Review {pendingLogs.length} pending log{pendingLogs.length > 1 ? "s" : ""}
               </button>
             )}
-            {pendingVerify > 0 && (
+            {pendingManualVerify > 0 && (
               <button
                 onClick={() => navigate("/supervisor/attendance")}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 style={{ fontSize: "0.85rem" }}
               >
                 <MapPin className="w-4 h-4" />
-                Verify {pendingVerify} check-in{pendingVerify > 1 ? "s" : ""}
+                Verify {pendingManualVerify} manual check-in{pendingManualVerify > 1 ? "s" : ""}
               </button>
             )}
           </div>
         </div>
       )}
+
 
       {/* Assessment Completion Checklist */}
       <AssessmentChecklistCard onNavigate={navigate} />

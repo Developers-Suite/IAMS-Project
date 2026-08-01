@@ -44,14 +44,23 @@ export function StudentMobileShell() {
 
         {/* Check-in button */}
         <button
-          onClick={() => setIsCheckInModalOpen(true)}
+          onClick={() => {
+            if (!activeInternship) {
+              toast.error("Check-in is closed — your internship period for this term has ended.");
+              return;
+            }
+            setIsCheckInModalOpen(true);
+          }}
+          disabled={!activeInternship}
           className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-            checkedInToday
+            !activeInternship
+              ? "bg-muted text-muted-foreground cursor-not-allowed opacity-60"
+              : checkedInToday
               ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
               : "bg-primary text-primary-foreground hover:opacity-90"
           }`}
         >
-          {checkedInToday ? "Checked In" : "Check In"}
+          {!activeInternship ? "Closed" : checkedInToday ? "Checked In" : "Check In"}
         </button>
 
         {/* Notifications bell */}

@@ -48,15 +48,26 @@ export function LogbookPage() {
 
   const loadData = useCallback(async () => {
     try {
-      const dashRes = await apiClient.getDashboard("student");
-      const activeInternship = dashRes.data?.active_internship;
-      if (!activeInternship?.id) return;
+      const [dashRes, internshipsRes] = await Promise.all([
+        apiClient.getDashboard("student"),
+        apiClient.getInternships(),
+      ]);
 
-      const id = Number(activeInternship.id);
-      const status = activeInternship.status;
-      const company = activeInternship.company?.name;
-      const sDate = activeInternship.start_date || activeInternship.created_at || null;
-      const eDate = activeInternship.end_date || activeInternship.endDate || null;
+      let targetInternship = dashRes.data?.active_internship;
+
+      // Fall back to most recent internship if active_internship is null (e.g. ended/completed)
+      if (!targetInternship && internshipsRes.success && Array.isArray(internshipsRes.data) && internshipsRes.data.length > 0) {
+        const sorted = [...internshipsRes.data].sort((a, b) => (b.created_at ?? "") > (a.created_at ?? "") ? 1 : -1);
+        targetInternship = sorted[0];
+      }
+
+      if (!targetInternship?.id) return;
+
+      const id = Number(targetInternship.id);
+      const status = targetInternship.status;
+      const company = targetInternship.company?.name;
+      const sDate = targetInternship.start_date || targetInternship.created_at || null;
+      const eDate = targetInternship.end_date || targetInternship.endDate || null;
 
       setInternshipId(id);
       setInternshipStatus(status);
@@ -575,8 +586,10 @@ export function LogbookPage() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-muted-foreground block mb-1">Date</label>
-                <DatePicker value={form.entry_date} onChange={(val) => setForm({ ...form, entry_date: val })} />
+                <label className="text-xs font-semibold text-muted-foreground block mb-1">
+                  Date <span className="text-xs font-normal text-muted-foreground/70">(Today only)</span>
+                </label>
+                <DatePicker value={form.entry_date} onChange={() => {}} disabled={true} />
               </div>
 
               <div>

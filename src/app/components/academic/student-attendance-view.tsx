@@ -1,4 +1,5 @@
 import { MapPin } from "lucide-react";
+import { GpsLocationDisplay } from "../gps-location-display";
 
 interface AttendanceRecord {
   id: string;
@@ -7,6 +8,9 @@ interface AttendanceRecord {
   checkInType: string;
   location: string;
   verificationStatus: string;
+  lat?: number | string | null;
+  lng?: number | string | null;
+  notes?: string | null;
 }
 
 interface StudentAttendanceViewProps {
@@ -65,11 +69,13 @@ export function StudentAttendanceView({ attendanceRecords }: StudentAttendanceVi
                         {r.checkInType === "gps" ? "GPS" : "Manual"}
                       </span>
                     </td>
-                    <td
-                      className="px-4 py-3 text-muted-foreground max-w-[200px] truncate"
-                      style={{ fontSize: "0.8rem" }}
-                    >
-                      {r.location}
+                    <td className="px-4 py-3 max-w-[260px]">
+                      <GpsLocationDisplay
+                        lat={r.lat}
+                        lng={r.lng}
+                        notes={r.notes || (r.checkInType === "manual" ? r.location : undefined)}
+                        showMapLink={true}
+                      />
                     </td>
                     <td className="px-4 py-3">
                       <span
