@@ -50,7 +50,7 @@ export function AcademicDashboard() {
   const activeCount      = internships.filter((i) => i.status === "active").length;
   const completedCount   = internships.filter((i) => i.status === "completed").length;
   const pendingLogsCount = pendingLogbooks.length;
-  const pendingEvals     = internships.filter((i) => i.status === "active").length;
+  const pendingEvals     = internships.filter((i) => i.status === "active" && !i.final_grade && !i.finalGrade).length;
 
   if (loading) return <SkeletonDashboard statCount={4} />;
 
@@ -217,7 +217,7 @@ export function AcademicDashboard() {
                     </p>
                     <div className="flex items-center gap-3 mt-1.5">
                       <span className="text-muted-foreground flex items-center gap-1" style={{ fontSize: "0.7rem" }}>
-                        <Calendar className="w-3 h-3" /> {v.visit_date}
+                        <Calendar className="w-3 h-3" /> {typeof v.visit_date === "string" && v.visit_date.includes("T") ? v.visit_date.split("T")[0] : (v.visit_date ?? "—")}
                       </span>
                       {v.visit_time && (
                         <span className="text-muted-foreground flex items-center gap-1" style={{ fontSize: "0.7rem" }}>

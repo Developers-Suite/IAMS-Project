@@ -20,7 +20,7 @@ function normalizeVisit(v: any) {
     studentName: v.internship?.student?.user?.name ?? "—",
     companyName: v.internship?.company?.name ?? "—",
     companyAddress: v.internship?.company?.address ?? "",
-    date: v.visit_date,
+    date: typeof v.visit_date === "string" && v.visit_date.includes("T") ? v.visit_date.split("T")[0] : (v.visit_date ?? "—"),
     time: v.visit_time ?? "",
     status: statusMap[v.status] ?? "Scheduled",
     notes: v.visit_purpose ?? "",

@@ -2005,9 +2005,8 @@ export const apiClient = {
         total: dashboard.assigned_students || 0,
       },
       attendance: {
-        verified: dashboard.today_attendance?.filter((a: any) => a.verified_by).length || 0,
-        pending_verification: dashboard.today_attendance?.filter((a: any) => !a.verified_by)
-          .length || 0,
+        verified: dashboard.today_attendance?.filter((a: any) => a.verified_by || a.verified_at || a.check_in_type === "gps").length || 0,
+        pending_verification: dashboard.today_attendance?.filter((a: any) => !a.verified_by && !a.verified_at && a.check_in_type === "manual").length || 0,
       },
       comments: {
         added: 0,
@@ -2023,6 +2022,13 @@ export const apiClient = {
 
   async getActiveTerm(): Promise<ApiResponse<any>> {
     return requestApi<any>(API_ENDPOINTS.TERM_ACTIVE, { method: "GET" });
+  },
+
+  async sendHeartbeat(): Promise<ApiResponse<{ is_online: boolean; last_seen_at: string }>> {
+    return requestApi<{ is_online: boolean; last_seen_at: string }>(
+      "/api/v1/user/heartbeat",
+      { method: "POST" }
+    );
   },
 };
 

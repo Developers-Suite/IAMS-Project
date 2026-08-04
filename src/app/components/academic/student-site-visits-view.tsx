@@ -188,7 +188,9 @@ export function StudentSiteVisitsView({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-primary" />
-                <span style={{ fontSize: "0.9rem" }} className="font-semibold">{visit.date}</span>
+                <span style={{ fontSize: "0.9rem" }} className="font-semibold">
+                  {typeof visit.date === "string" && visit.date.includes("T") ? visit.date.split("T")[0] : (visit.date ?? "—")}
+                </span>
               </div>
               <div className="flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((n) => (

@@ -52,7 +52,7 @@ export function StudentAttendanceView({ attendanceRecords }: StudentAttendanceVi
                 {attendanceRecords.map((r) => (
                   <tr key={r.id} className="hover:bg-secondary/20 transition-colors">
                     <td className="px-4 py-3 font-medium" style={{ fontSize: "0.85rem" }}>
-                      {r.date}
+                      {typeof r.date === "string" && r.date.includes("T") ? r.date.split("T")[0] : (r.date ?? "—")}
                     </td>
                     <td className="px-4 py-3 font-medium text-muted-foreground" style={{ fontSize: "0.85rem" }}>
                       {r.checkInTime}

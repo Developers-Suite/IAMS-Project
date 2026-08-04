@@ -26,9 +26,11 @@ interface NormalizedStudent {
 
 // Convert a raw site visitation from the API to the SiteVisitNote shape
 function normalizeVisitToNote(v: any) {
+  const rawDate = v.visit_date ?? "—";
+  const dateStr = typeof rawDate === "string" && rawDate.includes("T") ? rawDate.split("T")[0] : String(rawDate);
   return {
     id: String(v.id),
-    date: v.visit_date ?? "—",
+    date: dateStr,
     observations: v.observations ?? v.visit_purpose ?? "",
     studentEngagement: v.student_engagement_rating ?? 3,
     companyFeedback: v.company_feedback ?? "",
@@ -149,20 +151,34 @@ export function AcademicEvaluatePage() {
   // Attendance view records
   const attendanceViewRecords = attendanceRecords.map((record: any) => {
     const hasGps = record.gps_check_in_lat != null && record.gps_check_in_lng != null;
+    const isVerified = Boolean(
+      record.verified_at ||
+      record.verified_by ||
+      record.check_in_type === "gps" ||
+      hasGps
+    );
+    const rawDate = record.attendance_date ?? record.date ?? "—";
+    const cleanDate = typeof rawDate === "string" && rawDate.includes("T") ? rawDate.split("T")[0] : String(rawDate);
     return {
       id: record.id,
-      date: record.attendance_date ?? record.date,
+      date: cleanDate,
       checkInTime: record.check_in_time ?? "—",
       checkInType: record.check_in_type ?? (hasGps ? "gps" : "manual"),
       location: record.notes ?? "—",
       lat: record.gps_check_in_lat ?? record.latitude,
       lng: record.gps_check_in_lng ?? record.longitude,
       notes: record.notes,
-      verificationStatus: record.verified_by ? "Verified" : "Pending Verification",
+      verificationStatus: isVerified ? "Verified" : "Pending Verification",
     };
   });
 
-  const verifiedAttendance = attendanceRecords.filter((r: any) => r.verified_by).length;
+  const verifiedAttendance = attendanceRecords.filter(
+    (r: any) =>
+      r.verified_at ||
+      r.verified_by ||
+      r.check_in_type === "gps" ||
+      (r.gps_check_in_lat != null && r.gps_check_in_lng != null)
+  ).length;
 
   // Logbook view records
   const logbookViewRecords = logbookEntries.map((entry: any) => ({

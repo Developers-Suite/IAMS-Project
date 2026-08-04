@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { useAppContext } from "../../../lib/context";
 import { apiClient } from "../../../lib/api-client";
 import { usePolling } from "../../../lib/hooks";
-import { MessageSquare, Send, ArrowLeft, Plus, Search, X, Phone, Video, MoreVertical, CheckCircle2 } from "lucide-react";
+import { MessageSquare, Send, ArrowLeft, Search, X, MoreVertical, CheckCircle2 } from "lucide-react";
 
 interface Thread {
   id: string | number;
@@ -93,23 +93,32 @@ export function MessagesPanel({ preselectedRecipientId, preselectedThreadId, onC
     }
   }, [selectedThread]);
 
-  useEffect(() => {
-    apiClient.getMessageContacts().then((res) => {
+  const fetchContacts = useCallback(async () => {
+    try {
+      const res = await apiClient.getMessageContacts();
       if (res.success) {
         const contactsList = Array.isArray(res.data) ? res.data : (res.data as any)?.contacts || [];
         if (contactsList.length > 0) {
           setContacts(contactsList.filter((c: any) => String(c.id) !== userId));
         } else {
-          apiClient.getUsers().then((usersRes) => {
-            if (usersRes.success) {
-              setContacts(usersRes.data.filter((u: any) => String(u.id) !== userId));
-            }
-          });
+          const usersRes = await apiClient.getUsers();
+          if (usersRes.success) {
+            setContacts(usersRes.data.filter((u: any) => String(u.id) !== userId));
+          }
         }
       }
-    });
+    } catch {}
+  }, [userId]);
+
+  useEffect(() => {
+    fetchContacts();
     fetchThreads();
-  }, [userId, fetchThreads]);
+    const interval = setInterval(() => {
+      fetchContacts();
+      fetchThreads();
+    }, 15_000);
+    return () => clearInterval(interval);
+  }, [fetchContacts, fetchThreads]);
 
   // When arriving from the students page with a pre-selected recipient
   useEffect(() => {
@@ -299,6 +308,11 @@ export function MessagesPanel({ preselectedRecipientId, preselectedThreadId, onC
                 const label = getThreadLabel(thread);
                 const role = getThreadRole(thread);
                 const isActive = selectedThread === String(thread.id);
+
+                const otherP = thread.participants?.find((p: any) => String(p.id) !== userId);
+                const cObj = contacts.find((c) => String(c.id) === String(otherP?.id));
+                const isOnline = cObj ? Boolean(cObj.is_online) : false;
+
                 return (
                   <button
                     key={thread.id}
@@ -312,7 +326,7 @@ export function MessagesPanel({ preselectedRecipientId, preselectedThreadId, onC
                         <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-700 dark:text-emerald-300 font-bold">
                           {getInitials(label)}
                         </div>
-                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white dark:border-gray-900 rounded-full" />
+                        <div className={`absolute bottom-0 right-0 w-3 h-3 border-2 border-white dark:border-gray-900 rounded-full ${isOnline ? "bg-emerald-500" : "bg-gray-400"}`} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-0.5">
@@ -388,21 +402,22 @@ export function MessagesPanel({ preselectedRecipientId, preselectedThreadId, onC
                   <h3 className="text-sm font-bold truncate leading-tight text-foreground">
                     {currentThread ? getThreadLabel(currentThread) : ""}
                   </h3>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 bg-emerald-500 rounded-full" />
-                    <span className="text-xs text-muted-foreground">
-                      {currentThread ? getThreadRole(currentThread) : ""} · Active
-                    </span>
-                  </div>
+                  {(() => {
+                    const otherP = currentThread?.participants?.find((p: any) => String(p.id) !== userId);
+                    const cObj = contacts.find((c) => String(c.id) === String(otherP?.id));
+                    const isOnline = cObj ? Boolean(cObj.is_online) : false;
+                    return (
+                      <div className="flex items-center gap-1.5">
+                        <span className={`w-2 h-2 rounded-full ${isOnline ? "bg-emerald-500" : "bg-gray-400"}`} />
+                        <span className="text-xs text-muted-foreground">
+                          {currentThread ? getThreadRole(currentThread) : ""} · {isOnline ? "Online" : "Offline"}
+                        </span>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
               <div className="flex items-center gap-1">
-                <button className="p-2 rounded-full hover:bg-muted text-muted-foreground transition-colors">
-                  <Phone className="w-4.5 h-4.5" />
-                </button>
-                <button className="p-2 rounded-full hover:bg-muted text-muted-foreground transition-colors">
-                  <Video className="w-4.5 h-4.5" />
-                </button>
                 <button className="p-2 rounded-full hover:bg-muted text-muted-foreground transition-colors">
                   <MoreVertical className="w-4.5 h-4.5" />
                 </button>
@@ -478,9 +493,6 @@ export function MessagesPanel({ preselectedRecipientId, preselectedThreadId, onC
             {/* Chat Input */}
             <div className="p-3 sm:p-4 bg-white dark:bg-gray-900 border-t border-border">
               <div className="max-w-4xl mx-auto flex items-end gap-2 bg-muted/40 p-1.5 rounded-2xl border border-border/50 focus-within:border-emerald-500/50 focus-within:ring-4 focus-within:ring-emerald-500/10 transition-all">
-                <button className="p-2.5 text-muted-foreground hover:text-emerald-500 transition-colors">
-                  <Plus className="w-5 h-5" />
-                </button>
                 <textarea
                   value={messageText}
                   onChange={(e) => setMessageText(e.target.value)}
@@ -557,7 +569,7 @@ export function MessagesPanel({ preselectedRecipientId, preselectedThreadId, onC
                   <option value="">Select a contact...</option>
                   {contacts.map((c) => (
                     <option key={c.id} value={String(c.id)}>
-                      {c.name} ({humanizeRole(c.role)})
+                      {c.name} ({humanizeRole(c.role)}) {c.is_online ? "🟢 Online" : "⚪ Offline"}
                     </option>
                   ))}
                 </select>

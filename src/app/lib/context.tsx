@@ -1,7 +1,9 @@
 import { createContext, useContext, useState, useSyncExternalStore, useEffect, useRef, type ReactNode } from "react";
+import { toast } from "sonner";
 import type { AuthUser, ExtendedRole } from "../services/auth-service";
 import { subscribe, getState, type StoreState } from "./store";
 import { setCurrentUser, apiClient } from "./api-client";
+import { isPWAInstalled } from "./pwa-utils";
 
 interface AppContextType {
   user: AuthUser | null;
@@ -174,6 +176,55 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     backfill();
   }, [user?.id, user?.role, user?.department_id]);
+
+  // ── INACTIVITY TIMEOUT & ACTIVE PRESENCE HEARTBEAT ──
+  const lastActivityRef = useRef<number>(Date.now());
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const updateActivity = () => {
+      lastActivityRef.current = Date.now();
+    };
+
+    const events = ["mousemove", "keydown", "click", "touchstart", "scroll"];
+    events.forEach((ev) => window.addEventListener(ev, updateActivity, { passive: true }));
+
+    // Dual-strategy inactivity limit:
+    // PWA / Installed Mobile app users: 30 days persistent login
+    // Web Browser users: 8 hours (workday shift timeout)
+    const isPWA = isPWAInstalled();
+    const INACTIVITY_LIMIT_MS = isPWA
+      ? 30 * 24 * 60 * 60 * 1000 // 30 days
+      : 8 * 60 * 60 * 1000;      // 8 hours
+
+    const checkInactivityInterval = setInterval(() => {
+      if (Date.now() - lastActivityRef.current >= INACTIVITY_LIMIT_MS) {
+        setUserState(null);
+        saveUser(null);
+        setCurrentUser(null);
+        apiClient.setToken(null);
+        toast.error("Session expired due to inactivity. Please log in again.");
+        window.location.href = "/login";
+      }
+    }, 60_000);
+
+    // Active Site Presence Heartbeat (every 30s when tab is visible)
+    const sendHeartbeatIfActive = () => {
+      if (document.visibilityState === "visible" && Date.now() - lastActivityRef.current < INACTIVITY_LIMIT_MS) {
+        apiClient.sendHeartbeat().catch(() => {});
+      }
+    };
+
+    sendHeartbeatIfActive();
+    const heartbeatInterval = setInterval(sendHeartbeatIfActive, 30_000);
+
+    return () => {
+      events.forEach((ev) => window.removeEventListener(ev, updateActivity));
+      clearInterval(checkInactivityInterval);
+      clearInterval(heartbeatInterval);
+    };
+  }, [user?.id]);
 
   const setUser = (u: AuthUser | null) => {
     saveUser(u);
