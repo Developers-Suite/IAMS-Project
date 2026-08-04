@@ -63,7 +63,9 @@ export function IndustrialAssessmentForm({
               <Card key={c.key} className="p-3">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                   <div className="flex-1">
-                    <div className="text-sm text-[#1a1a2e]">{c.key}. {c.label}</div>
+                    <div className="text-sm font-semibold text-[#1a1a2e]">
+                      {c.label.includes(".") ? c.label.split(".").slice(1).join(".").trim() : c.label}
+                    </div>
                   </div>
                   <div className="flex gap-1">
                     {[1, 2, 3, 4, 5].map((n) => {

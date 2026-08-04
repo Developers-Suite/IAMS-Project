@@ -60,10 +60,16 @@ export function HelpPage() {
           ),
         },
         {
-          title: "How do I reset my password?",
+          title: "How do I sign in or reset my password?",
           content: (
-            <div className="space-y-2 text-sm">
-              <p>Click "Forgot Password" on the login page. You'll receive a password reset link via email. If you don't see it, check your spam folder.</p>
+            <div className="space-y-2 text-sm text-muted-foreground">
+              <p>
+                HTU IAMS uses <strong>Google OAuth (Institutional Single Sign-On)</strong> with your official university email (e.g. <code>@htu.edu.gh</code>).
+              </p>
+              <ul className="list-disc list-inside space-y-1">
+                <li>Click <strong>"Sign in with Google"</strong> on the login page.</li>
+                <li>To change or reset your password, manage your Google Account password directly via Google Account Security or contact HTU ICT Support.</li>
+              </ul>
             </div>
           ),
         },
@@ -494,11 +500,12 @@ export function HelpPage() {
   ];
 
   let roleCategories: HelpCategory[] = [];
-  if (user?.role === "student") roleCategories = studentCategories;
-  else if (user?.role === "supervisor") roleCategories = supervisorCategories;
-  else if (user?.role === "academic") roleCategories = academicCategories;
-  else if (user?.role === "clo") roleCategories = cloCategories;
-  else if (user?.role === "dlo") roleCategories = dloCategories;
+  const r = user?.role;
+  if (r === "student") roleCategories = studentCategories;
+  else if (r === "supervisor" || r === "industry_supervisor") roleCategories = supervisorCategories;
+  else if (r === "academic" || r === "academic_supervisor") roleCategories = academicCategories;
+  else if (r === "clo") roleCategories = cloCategories;
+  else if (r === "dlo" || r === "hod") roleCategories = dloCategories;
 
   const allCategories = [...commonCategories, ...roleCategories];
 

@@ -70,16 +70,33 @@ self.addEventListener("push", (event) => {
     }
   }
 
-  event.waitUntil(
-    self.registration.showNotification(notificationData.title, {
-      body: notificationData.body,
-      icon: notificationData.icon,
-      badge: notificationData.badge,
-      tag: notificationData.tag,
-      requireInteraction: false,
-      data: notificationData.data,
-    })
-  );
+  const unreadCount = notificationData.data?.unreadCount || notificationData.data?.unread_count;
+
+  const showNotificationPromise = self.registration.showNotification(notificationData.title, {
+    body: notificationData.body,
+    icon: notificationData.icon,
+    badge: notificationData.badge,
+    tag: notificationData.tag,
+    requireInteraction: false,
+    data: notificationData.data,
+  });
+
+  const setBadgePromise = (async () => {
+    if ("setAppBadge" in self.navigator) {
+      try {
+        const count = typeof unreadCount === "number" ? unreadCount : 1;
+        if (count > 0) {
+          await self.navigator.setAppBadge(count);
+        } else if ("clearAppBadge" in self.navigator) {
+          await self.navigator.clearAppBadge();
+        }
+      } catch (e) {
+        console.debug("[SW] Failed to set app badge:", e);
+      }
+    }
+  })();
+
+  event.waitUntil(Promise.all([showNotificationPromise, setBadgePromise]));
 });
 
 // Notification click event
@@ -87,6 +104,10 @@ self.addEventListener("notificationclick", (event) => {
   console.log("[ServiceWorker] Notification clicked:", event.notification.tag);
 
   event.notification.close();
+
+  if ("clearAppBadge" in self.navigator) {
+    self.navigator.clearAppBadge().catch(() => {});
+  }
 
   const notificationUrl =
     event.notification.data?.url ||
@@ -101,14 +122,12 @@ self.addEventListener("notificationclick", (event) => {
         includeUncontrolled: true,
       })
       .then((clientList) => {
-        // Check if app is already open
         for (let i = 0; i < clientList.length; i++) {
           const client = clientList[i];
           if (client.url === urlToOpen.toString() && "focus" in client) {
             return client.focus();
           }
         }
-        // Open new window/tab if app not open
         if (clients.openWindow) {
           return clients.openWindow(urlToOpen.toString());
         }
@@ -125,6 +144,15 @@ self.addEventListener("message", (event) => {
     event.waitUntil(
       self.registration.showNotification(notification.title, notification.options)
     );
+  } else if (event.data && event.data.type === "UPDATE_BADGE") {
+    const count = event.data.unreadCount ?? 0;
+    if ("setAppBadge" in self.navigator) {
+      if (count > 0) {
+        self.navigator.setAppBadge(count).catch(() => {});
+      } else if ("clearAppBadge" in self.navigator) {
+        self.navigator.clearAppBadge().catch(() => {});
+      }
+    }
   }
 });
 

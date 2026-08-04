@@ -283,3 +283,29 @@ export async function sendTestNotification(): Promise<void> {
   }
 }
 
+/**
+ * Update the app badge icon (PWA home screen / desktop taskbar badge number)
+ */
+export async function updateAppBadge(unreadCount: number): Promise<void> {
+  if (typeof window === "undefined" || typeof navigator === "undefined") return;
+
+  try {
+    if ("setAppBadge" in navigator) {
+      if (unreadCount > 0) {
+        await (navigator as any).setAppBadge(unreadCount);
+      } else if ("clearAppBadge" in navigator) {
+        await (navigator as any).clearAppBadge();
+      }
+    }
+  } catch (err) {
+    console.debug("[Badging] Failed to update app badge:", err);
+  }
+
+  if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({
+      type: "UPDATE_BADGE",
+      unreadCount,
+    });
+  }
+}
+

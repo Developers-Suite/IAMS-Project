@@ -65,7 +65,12 @@ export function AcademicEvaluatePage() {
       if (res.success) setDashboard(res.data);
       setLoading(false);
     });
-  }, []);
+    if (user?.id) {
+      try {
+        localStorage.setItem(`evals_dismissed_${user.id}`, "true");
+      } catch {}
+    }
+  }, [user?.id]);
 
   // Derive assigned students from dashboard internships
   const assignedStudents: NormalizedStudent[] = (dashboard?.assigned_internships ?? []).map(

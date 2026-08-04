@@ -7,6 +7,7 @@ import { markNotificationRead as markStoreNotificationRead, setNotifications as 
 import { toast } from "sonner";
 import type { NotificationResponse } from "../types/api";
 import { getRoutePrefix } from "../services/auth-service";
+import { updateAppBadge } from "../lib/push-notifications";
 
 type NotificationFilter = "all" | "unread" | "read";
 type DisplayNotification = NotificationResponse & {
@@ -31,6 +32,10 @@ export function NotificationBell() {
     if (filter === "read") return notification.read;
     return true;
   });
+
+  useEffect(() => {
+    updateAppBadge(unreadCount);
+  }, [unreadCount]);
 
   useEffect(() => {
     loadNotifications();
