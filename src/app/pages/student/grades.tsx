@@ -58,6 +58,18 @@ export function StudentGradesPage() {
   const gpa               = grade?.gpa                        ?? null;
   const gradeStatus       = grade?.status                     ?? null;
 
+  const isPublished = gradeStatus === "published";
+  const showFields = isPublished || isCompleted;
+
+  // Display-safe versions of scores/grades (only show actual scores if grades are published)
+  const displayIndustrialScore   = isPublished ? industrialScore : null;
+  const displaySiteVisitScore    = isPublished ? siteVisitScore : null;
+  const displayReportScore       = isPublished ? reportScore : null;
+  const displayPresentationScore = isPublished ? presentationScore : null;
+  const displayTotalScore        = isPublished ? totalScore : null;
+  const displayLetterGrade       = isPublished ? letterGrade : null;
+  const displayGpa               = isPublished ? gpa : null;
+
   const ComponentRow = ({ label, score, max, weighted, evaluator }: { label: string; score: number | null; max: number; weighted?: number | null; evaluator?: string }) => (
     <div className="space-y-1.5 py-2">
       <div className="flex items-start justify-between gap-2">
@@ -89,7 +101,7 @@ export function StudentGradesPage() {
         <p className="text-muted-foreground text-sm mt-1">Your internship performance</p>
       </div>
 
-      {!grade || totalScore === null ? (
+      {!showFields ? (
         <Card className="p-6 text-center space-y-2">
           {isActive ? (
             <>
@@ -97,14 +109,6 @@ export function StudentGradesPage() {
               <p className="font-semibold text-sm">Evaluation in Progress</p>
               <p className="text-muted-foreground text-xs">
                 Your workplace supervisor and university supervisor are currently evaluating your performance. Your grade will appear once all evaluations are complete and approved by your DLO.
-              </p>
-            </>
-          ) : isCompleted ? (
-            <>
-              <AlertCircle className="w-10 h-10 text-amber-500 mx-auto" />
-              <p className="font-semibold text-sm">Grade Under Review</p>
-              <p className="text-muted-foreground text-xs">
-                Your evaluations are complete. Your DLO is reviewing and compiling your final grade. This may take a few days.
               </p>
             </>
           ) : (
@@ -119,20 +123,33 @@ export function StudentGradesPage() {
         </Card>
       ) : (
         <>
+          {/* Banner explaining completed but unpublished state */}
+          {!isPublished && isCompleted && (
+            <Card className="p-4 border-amber-200 bg-amber-50/50 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="font-semibold text-amber-900 text-sm">Grade Under Review</p>
+                <p className="text-muted-foreground text-xs">
+                  Your evaluations are complete. Your DLO is reviewing and compiling your final grade. The actual scores and grade will be displayed here once published.
+                </p>
+              </div>
+            </Card>
+          )}
+
           {/* Final Grade Banner */}
-          <Card className={`p-4 ${gradeStatus === "published" ? "border-emerald-200 bg-emerald-50" : "border-primary/20 bg-primary/5"}`}>
+          <Card className={`p-4 ${isPublished ? "border-emerald-200 bg-emerald-50" : "border-primary/20 bg-primary/5"}`}>
             <div className="flex items-center gap-3">
               <div className={`w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold shrink-0 ${
-                gradeStatus === "published" ? "bg-emerald-100 text-emerald-700" : "bg-primary/10 text-primary"
+                isPublished ? "bg-emerald-100 text-emerald-700" : "bg-primary/10 text-primary"
               }`}>
-                {letterGrade ?? "—"}
+                {displayLetterGrade ?? "—"}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-lg">
-                  {totalScore !== null ? `${Number(totalScore).toFixed(1)}%` : "—"}
+                  {displayTotalScore !== null ? `${Number(displayTotalScore).toFixed(1)}%` : "—"}
                 </p>
-                <p className="text-muted-foreground text-xs">GPA: {gpa ?? "—"} / 4.0</p>
-                {gradeStatus === "published" && (
+                <p className="text-muted-foreground text-xs">GPA: {displayGpa ?? "—"} / 4.0</p>
+                {isPublished && (
                   <div className="flex items-center gap-1 text-emerald-700 text-xs mt-1">
                     <CheckCircle2 className="w-3 h-3" />
                     <span>Published</span>
@@ -149,28 +166,28 @@ export function StudentGradesPage() {
             </h3>
             <ComponentRow
               label="Industrial Assessment"
-              score={industrialScore}
+              score={displayIndustrialScore}
               max={100}
               weighted={grade?.industrial_assessment_weighted}
               evaluator="Evaluated by your workplace supervisor"
             />
             <ComponentRow
               label="Site Visitation"
-              score={siteVisitScore}
+              score={displaySiteVisitScore}
               max={100}
               weighted={grade?.site_visitation_weighted}
               evaluator="Evaluated by your university supervisor"
             />
             <ComponentRow
               label="Report"
-              score={reportScore}
+              score={displayReportScore}
               max={100}
               weighted={grade?.report_weighted}
               evaluator="Evaluated by Departmental Liaison Officer (DLO)"
             />
             <ComponentRow
               label="Presentation"
-              score={presentationScore}
+              score={displayPresentationScore}
               max={100}
               weighted={grade?.presentation_weighted}
               evaluator="Evaluated by Departmental Liaison Officer (DLO)"
@@ -178,7 +195,7 @@ export function StudentGradesPage() {
             <div className="pt-2 mt-1 flex items-center justify-between border-t border-border">
               <span className="text-sm font-medium">Total</span>
               <span className="font-bold text-primary">
-                {totalScore !== null ? `${Number(totalScore).toFixed(1)}%` : "—"}
+                {displayTotalScore !== null ? `${Number(displayTotalScore).toFixed(1)}%` : "—"}
               </span>
             </div>
           </Card>
@@ -198,7 +215,7 @@ export function StudentGradesPage() {
           </Card>
 
           {/* Supervisor Comments */}
-          {grade?.industrial_assessment && (
+          {isPublished && grade?.industrial_assessment && (
             <Card className="p-4 space-y-2">
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4" />
@@ -208,7 +225,7 @@ export function StudentGradesPage() {
             </Card>
           )}
 
-          {grade?.site_visitation_assessment && (
+          {isPublished && grade?.site_visitation_assessment && (
             <Card className="p-4 space-y-2">
               <div className="flex items-center gap-2">
                 <BookMarked className="w-4 h-4" />
@@ -217,7 +234,7 @@ export function StudentGradesPage() {
               <p className="text-xs text-muted-foreground">{grade.site_visitation_assessment.comments || "—"}</p>
             </Card>
           )}
-</>
+        </>
       )}
     </div>
   );
