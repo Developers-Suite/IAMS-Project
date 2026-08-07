@@ -234,6 +234,7 @@ export function StudentDashboard() {
           {isInternshipEnded ? (
             <div className="bg-emerald-600 rounded-2xl p-8 text-white relative overflow-hidden">
               <div className="relative z-10">
+                <p className="text-sm opacity-90 mb-2">{new Date().toLocaleDateString("en-GB", { month: "long", day: "numeric", year: "numeric" })}</p>
                 <h1 className="text-3xl font-bold mb-2">Internship Has Ended</h1>
                 <p className="opacity-95 text-sm max-w-xl mb-4">
                   Your industrial attachment for <span className="font-semibold text-red-100">{activeTermName !== "N/A" ? activeTermName : "this academic term"}</span> at <span className="font-semibold text-red-100">{myInternship?.company?.name || companyName}</span> has officially ended.
