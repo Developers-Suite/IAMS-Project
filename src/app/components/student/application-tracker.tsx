@@ -16,9 +16,10 @@ interface ApplicationTrackerProps {
   onViewWindows: () => void;
   onCancelApplication?: () => void;
   onAcceptanceSubmitted?: () => void;
+  isInternshipEnded?: boolean;
 }
 
-function getStatusHistory(app: any) {
+function getStatusHistory(app: any, isInternshipEnded?: boolean) {
   const history: { status: string; timestamp: string; description: string; actor: string }[] = [];
   const createdAt = app.created_at ?? app.dateApplied ?? "";
   const supervisorName = app.academic_supervisor?.name ?? app.supervisorAssigned ?? "University Supervisor";
@@ -95,6 +96,13 @@ function getStatusHistory(app: any) {
       description: "Internship completed. Final evaluation submitted.",
       actor: "System",
     });
+  } else if (isInternshipEnded) {
+    history.push({
+      status: "Internship Ended",
+      timestamp: "—",
+      description: "Internship period officially ended. Grade under review.",
+      actor: "System",
+    });
   }
   return history;
 }
@@ -105,6 +113,7 @@ export function ApplicationTracker({
   onViewWindows,
   onCancelApplication,
   onAcceptanceSubmitted,
+  isInternshipEnded = false,
 }: ApplicationTrackerProps) {
   const [acceptanceModalOpen, setAcceptanceModalOpen] = useState(false);
 
@@ -128,7 +137,7 @@ export function ApplicationTracker({
     );
   }
 
-  const statusHistory = getStatusHistory(myApp);
+  const statusHistory = getStatusHistory(myApp, isInternshipEnded);
   const internshipStartDate = formatDisplayDate(getInternshipStartDate(myApp, terms));
   const dateApplied = myApp.created_at ? new Date(myApp.created_at).toLocaleDateString("en-GB") : (myApp.dateApplied ?? "—");
 
@@ -213,7 +222,12 @@ export function ApplicationTracker({
 
   return (
     <div className="space-y-5">
-      <ApplicationStatus status={myApp.status} createdAt={dateApplied} internshipStartDate={internshipStartDate} />
+      <ApplicationStatus
+        status={isInternshipEnded && myApp.status !== "completed" ? "completed" : myApp.status}
+        createdAt={dateApplied}
+        internshipStartDate={internshipStartDate}
+        isEnded={isInternshipEnded}
+      />
 
       <ApplicationActions
         status={myApp.status}

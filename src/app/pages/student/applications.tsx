@@ -5,6 +5,7 @@ import { apiClient } from "../../lib/api-client";
 import { useToastAction } from "../../lib/hooks";
 import { useStudentCheckIn } from "../../hooks/use-student-check-in";
 import { ghanaRegions } from "../../lib/mock-data";
+import { getInternshipEndDate } from "../../lib/application-helpers";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { applicationSchema, type ApplicationInput } from "../../lib/schemas";
@@ -107,6 +108,7 @@ export function StudentApplicationsPage() {
   const [companies, setCompanies] = useState<any[]>([]);
   const [branches, setBranches] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [grade, setGrade] = useState<any>(null);
 
   const refreshApplications = async () => {
     setRefreshing(true);
@@ -116,14 +118,31 @@ export function StudentApplicationsPage() {
         apiClient.getTerms(),
         apiClient.getCompanies({ approval_status: "approved", per_page: 200 }),
       ]);
+
+      let resolvedApp: any = null;
       if (appsRes.success && appsRes.data.length > 0) {
         const sorted = [...appsRes.data].sort((a, b) =>
           (b.created_at ?? "") > (a.created_at ?? "") ? 1 : -1
         );
-        setMyApp(sorted[0]);
+        resolvedApp = sorted[0];
+        setMyApp(resolvedApp);
       }
       if (termsRes.success) setTerms(termsRes.data.map(normalizeTerm));
       if (companiesRes.success) setCompanies(companiesRes.data);
+
+      const targetInternship = activeInternship || resolvedApp?.internship || resolvedApp;
+      if (targetInternship?.id) {
+        const gradeRes = await apiClient.getGrade(String(targetInternship.id));
+        if (gradeRes.success) {
+          setGrade(gradeRes.data?.grade ?? gradeRes.data ?? null);
+        } else {
+          setGrade(null);
+        }
+      } else {
+        setGrade(null);
+      }
+    } catch (e) {
+      console.error("Error refreshing application or grade details:", e);
     } finally {
       setRefreshing(false);
     }
@@ -146,12 +165,34 @@ export function StudentApplicationsPage() {
   const [eligibilityError, setEligibilityError] = useState<string | null>(null);
   const [hasSavedDraft, setHasSavedDraft] = useState(false);
 
-  // Auto-switch to tracker view when active internship exists
+  // Determine if the current internship has ended
+  const targetAppOrInternship = activeInternship || myApp?.internship || myApp;
+  const isInternshipEnded = Boolean(
+    targetAppOrInternship && (
+      targetAppOrInternship.status === "completed" ||
+      (getInternshipEndDate(targetAppOrInternship, terms) &&
+        new Date(getInternshipEndDate(targetAppOrInternship, terms)!).toISOString().split("T")[0] <
+          new Date().toISOString().split("T")[0])
+    )
+  );
+
+  const isGradePublished = grade?.status === "published";
+
+  // Find matching term for targetAppOrInternship to check if it's archived
+  const matchingTermId = targetAppOrInternship?.academic_term_id ?? targetAppOrInternship?.academic_term?.id ?? targetAppOrInternship?.term_id ?? targetAppOrInternship?.term?.id;
+  const matchingTerm = terms.find((t) => String(t.id) === String(matchingTermId));
+  const isTermArchived = matchingTerm?.status === "archived";
+
+  const shouldShowTrackerOnly = Boolean(
+    activeInternship || (targetAppOrInternship && (!isInternshipEnded || !(isGradePublished && isTermArchived)))
+  );
+
+  // Auto-switch to tracker view when active internship exists or if tracking should continue
   useEffect(() => {
-    if (activeInternship && (view === "windows" || view === "apply")) {
+    if (shouldShowTrackerOnly && (view === "windows" || view === "apply")) {
       setView("tracker");
     }
-  }, [activeInternship]);
+  }, [shouldShowTrackerOnly, view]);
 
   // Per-user draft keys so drafts don't bleed between accounts
   const draftKey  = `application_form_${user?.id ?? "anon"}`;
@@ -487,8 +528,8 @@ export function StudentApplicationsPage() {
           { key: "tracker" as const, label: "Track", icon: Eye },
         ]
           .filter((tab) => {
-            // If student has active internship, only show tracker tab
-            if (activeInternship && tab.key !== "tracker") {
+            // If student has active internship / tracking ongoing, only show tracker tab
+            if (shouldShowTrackerOnly && tab.key !== "tracker") {
               return false;
             }
             return true;
@@ -707,6 +748,7 @@ export function StudentApplicationsPage() {
               }
             });
           }}
+          isInternshipEnded={isInternshipEnded}
         />
       )}
     </div>
