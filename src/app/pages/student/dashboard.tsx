@@ -232,7 +232,7 @@ export function StudentDashboard() {
 
           {/* Hero Banner - Based on Application Status */}
           {isInternshipEnded ? (
-            <div className="bg-emerald-100 rounded-2xl p-8 text-white relative overflow-hidden">
+            <div className="bg-emerald-600 rounded-2xl p-8 text-white relative overflow-hidden">
               <div className="relative z-10">
                 <h1 className="text-3xl font-bold mb-2">Internship Has Ended</h1>
                 <p className="opacity-95 text-sm max-w-xl mb-4">
