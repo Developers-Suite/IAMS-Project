@@ -239,7 +239,7 @@ export function StudentDashboard() {
                   Your industrial attachment for <span className="font-semibold text-red-100">{activeTermName !== "N/A" ? activeTermName : "this academic term"}</span> at <span className="font-semibold text-red-100">{myInternship?.company?.name || companyName}</span> has officially ended.
                 </p>
               </div>
-              <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-0 flex items-center justify-center">
+              <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-10 flex items-center justify-center">
                 <Award className="w-40 h-40" />
               </div>
             </div>
