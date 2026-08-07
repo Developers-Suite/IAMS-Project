@@ -155,10 +155,14 @@ export function StudentDashboard() {
   })();
 
   const isInternshipEnded = Boolean(
-    !activeInternship &&
-    myInternship &&
-    (myInternship.status === "completed" ||
-     (myInternship.end_date && new Date(myInternship.end_date).toISOString().split("T")[0] < new Date().toISOString().split("T")[0]))
+    (activeInternship && (
+      activeInternship.status === "completed" ||
+      (activeInternship.end_date && new Date(activeInternship.end_date).toISOString().split("T")[0] < new Date().toISOString().split("T")[0])
+    )) ||
+    (!activeInternship && myInternship && (
+      myInternship.status === "completed" ||
+      (myInternship.end_date && new Date(myInternship.end_date).toISOString().split("T")[0] < new Date().toISOString().split("T")[0])
+    ))
   );
 
   const supervisorName = (() => {
@@ -227,31 +231,31 @@ export function StudentDashboard() {
         <div className="space-y-6 lg:col-span-2">
 
           {/* Hero Banner - Based on Application Status */}
-          {activeInternship ? (
-            <div className="bg-primary rounded-2xl p-8 text-white relative overflow-hidden">
+          {isInternshipEnded ? (
+            <div className="bg-red-600 text-white rounded-2xl p-8 relative overflow-hidden shadow-lg border border-red-700">
               <div className="relative z-10">
-                <p className="text-sm opacity-90 mb-2">{new Date().toLocaleDateString("en-GB", { month: "long", day: "numeric", year: "numeric" })}</p>
-                <h1 className="text-3xl font-bold mb-2">Welcome back, {user?.name?.split(" ")[0]}!</h1>
-                <p className="opacity-90 text-sm">Always stay updated with your internship progress</p>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/20 text-white rounded-full text-xs font-semibold mb-3 border border-white/30 animate-pulse">
+                  <Clock className="w-3.5 h-3.5" /> Internship Period Ended
+                </div>
+                <h1 className="text-3xl font-bold mb-2">Internship Has Ended</h1>
+                <p className="opacity-95 text-sm max-w-xl mb-4">
+                  Your industrial attachment for <span className="font-semibold text-red-100">{activeTermName !== "N/A" ? activeTermName : "this academic term"}</span> at <span className="font-semibold text-red-100">{myInternship?.company?.name || companyName}</span> has officially ended.
+                </p>
+                <div className="flex items-center gap-3 text-xs text-red-100 bg-red-700/50 p-3 rounded-lg border border-red-500/30 max-w-lg">
+                  <AlertCircle className="w-4 h-4 text-white shrink-0" />
+                  <span>Attendance check-ins and new logbook entry submissions for this term are now closed.</span>
+                </div>
               </div>
               <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-10 flex items-center justify-center">
                 <Award className="w-40 h-40" />
               </div>
             </div>
-          ) : isInternshipEnded ? (
-            <div className="bg-slate-900 text-white rounded-2xl p-8 relative overflow-hidden shadow-lg border border-slate-800">
+          ) : activeInternship ? (
+            <div className="bg-primary rounded-2xl p-8 text-white relative overflow-hidden">
               <div className="relative z-10">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/20 text-amber-300 rounded-full text-xs font-semibold mb-3 border border-amber-500/30">
-                  <Clock className="w-3.5 h-3.5" /> Internship Period Ended
-                </div>
-                <h1 className="text-3xl font-bold mb-2">Internship Has Ended</h1>
-                <p className="opacity-90 text-sm max-w-xl mb-4">
-                  Your industrial attachment for <span className="font-semibold text-amber-300">{activeTermName !== "N/A" ? activeTermName : "this academic term"}</span> at <span className="font-semibold text-amber-300">{myInternship?.company?.name || companyName}</span> has officially ended.
-                </p>
-                <div className="flex items-center gap-3 text-xs text-slate-300 bg-slate-800/80 p-3 rounded-lg border border-slate-700/50 max-w-lg">
-                  <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span>Attendance check-ins and new logbook entry submissions for this term are now closed.</span>
-                </div>
+                <p className="text-sm opacity-90 mb-2">{new Date().toLocaleDateString("en-GB", { month: "long", day: "numeric", year: "numeric" })}</p>
+                <h1 className="text-3xl font-bold mb-2">Welcome back, {user?.name?.split(" ")[0]}!</h1>
+                <p className="opacity-90 text-sm">Always stay updated with your internship progress</p>
               </div>
               <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-10 flex items-center justify-center">
                 <Award className="w-40 h-40" />
@@ -380,10 +384,17 @@ export function StudentDashboard() {
                   {activeTermName}
                 </h3>
                 <p className="text-muted-foreground text-xs">
-                  {activeInternship?.term?.year ? `Year ${activeInternship.term.year}` :
-                   activeInternship?.start_date ? `Started ${new Date(activeInternship.start_date).toLocaleDateString("en-GB")}` :
-                   isInternshipEnded ? "Term ended" :
-                   "Pending approval"}
+                  {activeInternship?.start_date ? (
+                    `Started ${new Date(activeInternship.start_date).toLocaleDateString("en-GB")}${activeInternship.end_date ? ` to ${new Date(activeInternship.end_date).toLocaleDateString("en-GB")}` : ""}`
+                  ) : myInternship?.start_date ? (
+                    `Started ${new Date(myInternship.start_date).toLocaleDateString("en-GB")}${myInternship.end_date ? ` to ${new Date(myInternship.end_date).toLocaleDateString("en-GB")}` : ""}`
+                  ) : activeInternship?.term?.year ? (
+                    `Year ${activeInternship.term.year}`
+                  ) : isInternshipEnded ? (
+                    "Term ended"
+                  ) : (
+                    "Pending approval"
+                  )}
                 </p>
               </div>
 
