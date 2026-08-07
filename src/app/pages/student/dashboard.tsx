@@ -232,14 +232,14 @@ export function StudentDashboard() {
 
           {/* Hero Banner - Based on Application Status */}
           {isInternshipEnded ? (
-            <div className="bg-primary rounded-2xl p-8 text-white relative overflow-hidden">
+            <div className="bg-emerald-100 rounded-2xl p-8 text-white relative overflow-hidden">
               <div className="relative z-10">
                 <h1 className="text-3xl font-bold mb-2">Internship Has Ended</h1>
                 <p className="opacity-95 text-sm max-w-xl mb-4">
                   Your industrial attachment for <span className="font-semibold text-red-100">{activeTermName !== "N/A" ? activeTermName : "this academic term"}</span> at <span className="font-semibold text-red-100">{myInternship?.company?.name || companyName}</span> has officially ended.
                 </p>
               </div>
-              <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-100 flex items-center justify-center">
+              <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-0 flex items-center justify-center">
                 <Award className="w-40 h-40" />
               </div>
             </div>
