@@ -232,21 +232,14 @@ export function StudentDashboard() {
 
           {/* Hero Banner - Based on Application Status */}
           {isInternshipEnded ? (
-            <div className="bg-blue-600 text-red-600 rounded-2xl p-8 relative overflow-hidden shadow-lg border border-red-700">
+            <div className="bg-primary rounded-2xl p-8 text-white relative overflow-hidden">
               <div className="relative z-10">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/20 text-white rounded-full text-xs font-semibold mb-3 border border-white/30 animate-pulse">
-                  <Clock className="w-3.5 h-3.5" /> Internship Period Ended
-                </div>
                 <h1 className="text-3xl font-bold mb-2">Internship Has Ended</h1>
                 <p className="opacity-95 text-sm max-w-xl mb-4">
                   Your industrial attachment for <span className="font-semibold text-red-100">{activeTermName !== "N/A" ? activeTermName : "this academic term"}</span> at <span className="font-semibold text-red-100">{myInternship?.company?.name || companyName}</span> has officially ended.
                 </p>
-                <div className="flex items-center gap-3 text-xs text-red-100 bg-red-700/50 p-3 rounded-lg border border-red-500/30 max-w-lg">
-                  <AlertCircle className="w-4 h-4 text-white shrink-0" />
-                  <span>Attendance check-ins and new logbook entry submissions for this term are now closed.</span>
-                </div>
               </div>
-              <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-10 flex items-center justify-center">
+              <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-0 flex items-center justify-center">
                 <Award className="w-40 h-40" />
               </div>
             </div>
