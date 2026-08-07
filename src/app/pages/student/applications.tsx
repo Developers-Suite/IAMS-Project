@@ -371,6 +371,8 @@ export function StudentApplicationsPage() {
         let companyId = "";
         const actor = user?.name || "Student";
 
+        const isNewCompany = form.companyChoice === "new";
+
         if (form.companyChoice === "existing") {
           const company = companies.find((c: any) => String(c.id) === form.selectedCompanyId);
           if (!company) {
@@ -412,17 +414,6 @@ export function StudentApplicationsPage() {
             return { success: false, data: null, message: companyRes.message || "Failed to register company." };
           }
           companyId = companyRes.data.company.id;
-
-          // New company is pending DLO approval — cannot submit application yet.
-          // Show a success message explaining next steps and exit without creating an application.
-          clearDraft();
-          await refreshApplications(); // refresh company list
-          setView("windows");
-          return {
-            success: true,
-            data: null,
-            message: `"${form.newCompanyName}" has been submitted for DLO approval. Once approved it will appear in the company search and you can submit your application.`,
-          };
         }
 
         const createRes = await apiClient.createApplication({
@@ -430,7 +421,7 @@ export function StudentApplicationsPage() {
           academic_term_id: Number(form.termId),
           application_type: "individual",
           cover_letter: form.additionalNotes || undefined,
-          status: "submitted", // Create directly as submitted, not draft
+          status: isNewCompany ? "pending_company_approval" : "submitted",
         });
         if (!createRes.success || !createRes.data?.id) {
           // If student profile not found, provide helpful message

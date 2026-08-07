@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { useAppContext } from "../../../lib/context";
 import { apiClient } from "../../../lib/api-client";
 import { usePolling } from "../../../lib/hooks";
-import { MessageSquare, Send, ArrowLeft, Search, X, MoreVertical, CheckCircle2 } from "lucide-react";
+import { MessageSquare, Send, ArrowLeft, Search, X, CheckCircle2, Plus } from "lucide-react";
 
 interface Thread {
   id: string | number;
@@ -72,13 +72,13 @@ export function MessagesPanel({ preselectedRecipientId, preselectedThreadId, onC
       if (res.success) {
         setThreads(res.data);
         setApiAvailable(true);
-      } else if (apiAvailable === null) {
-        setApiAvailable(false);
+      } else {
+        setApiAvailable((prev) => (prev === null ? false : prev));
       }
     } catch {
-      if (apiAvailable === null) setApiAvailable(false);
+      setApiAvailable((prev) => (prev === null ? false : prev));
     }
-  }, [userId, apiAvailable]);
+  }, [userId]);
 
   const fetchMessages = useCallback(async () => {
     if (!selectedThread) return;
@@ -416,11 +416,6 @@ export function MessagesPanel({ preselectedRecipientId, preselectedThreadId, onC
                     );
                   })()}
                 </div>
-              </div>
-              <div className="flex items-center gap-1">
-                <button className="p-2 rounded-full hover:bg-muted text-muted-foreground transition-colors">
-                  <MoreVertical className="w-4.5 h-4.5" />
-                </button>
               </div>
             </div>
 
