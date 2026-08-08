@@ -9,6 +9,7 @@ import {
 import { StatusBadge } from "../../components/status-badge";
 import { toast } from "sonner";
 import { exportLogbookToPDF } from "../../lib/logbook-export";
+import { INDUSTRIAL_CRITERIA } from "../../lib/constants";
 
 interface LogbookEntry {
   id: string;
@@ -30,6 +31,26 @@ interface AttendanceRecord {
 }
 
 type TabType = "overview" | "logbooks" | "attendance" | "grades" | "documents";
+
+const getSectionAverageFromCriteria = (assessment: any, section: "A" | "B" | "C" | "D") => {
+  const criteria = INDUSTRIAL_CRITERIA.filter(c => c.section === section);
+  const values = criteria
+    .map(c => assessment[c.key] !== undefined ? Number(assessment[c.key]) : null)
+    .filter((v): v is number => v !== null && !isNaN(v) && v > 0);
+  if (values.length === 0) return null;
+  return values.reduce((sum, v) => sum + v, 0) / values.length;
+};
+
+const getOverallRating = (assessment: any) => {
+  if (assessment.overall_rating || assessment.overall_score) {
+    return assessment.overall_rating || assessment.overall_score;
+  }
+  const values = INDUSTRIAL_CRITERIA
+    .map(c => assessment[c.key] !== undefined ? Number(assessment[c.key]) : null)
+    .filter((v): v is number => v !== null && !isNaN(v) && v > 0);
+  if (values.length === 0) return null;
+  return values.reduce((sum, v) => sum + v, 0) / values.length;
+};
 
 export function StudentHistoryPage() {
   const { user } = useAppContext();
@@ -145,6 +166,7 @@ export function StudentHistoryPage() {
     }));
     try {
       const res = await apiClient.getGrade(internshipId);
+      console.log("LOAD GRADES RESULT:", internshipId, JSON.stringify(res));
       if (res.success && res.data) {
         setGradeMap((prev) => ({ ...prev, [internshipId]: res.data }));
       }
@@ -167,16 +189,36 @@ export function StudentHistoryPage() {
       [internshipId]: { ...prev[internshipId], evaluation: true }
     }));
     try {
-      // Fetch assessments without filters to avoid permission issues
-      const res = await apiClient.getIndustrialAssessments();
-      if (res.success && res.data && res.data.length > 0) {
-        // Filter client-side for this internship
-        const filtered = res.data.filter((a: any) => String(a.internship_id) === internshipId);
-        if (filtered.length > 0) {
-          setAssessmentMap((prev) => ({ ...prev, [internshipId]: filtered[0] }));
+      let assessment = null;
+
+      // 1. Check if we have the grade loaded, or load it now
+      let currentGrade = gradeMap[internshipId];
+      if (!currentGrade) {
+        const gradeRes = await apiClient.getGrade(internshipId);
+        if (gradeRes.success && gradeRes.data) {
+          currentGrade = gradeRes.data;
+          setGradeMap((prev) => ({ ...prev, [internshipId]: gradeRes.data }));
         }
       }
-      // Evaluations are only available after supervisor review - this is normal
+
+      if (currentGrade && currentGrade.industrial_assessment) {
+        assessment = currentGrade.industrial_assessment;
+      }
+
+      // 2. Fallback to direct fetch if not found in grade response
+      if (!assessment) {
+        const res = await apiClient.getIndustrialAssessments();
+        if (res.success && res.data && res.data.length > 0) {
+          const filtered = res.data.filter((a: any) => String(a.internship_id) === internshipId);
+          if (filtered.length > 0) {
+            assessment = filtered[0];
+          }
+        }
+      }
+
+      if (assessment) {
+        setAssessmentMap((prev) => ({ ...prev, [internshipId]: assessment }));
+      }
     } catch (error) {
       // Silently handle errors (evaluations not yet available)
     } finally {
@@ -388,35 +430,50 @@ export function StudentHistoryPage() {
                 <div className="space-y-3">
                   {loadingMap[id]?.grades ? (
                     <p className="text-muted-foreground text-xs text-center py-3">Loading...</p>
-                  ) : gradeMap[id] ? (
+                  ) : gradeMap[id] && gradeMap[id].status === "published" ? (
                     <div className="space-y-3">
                       <div className="p-3 bg-card rounded border border-border">
                         <p className="text-muted-foreground text-xs font-semibold mb-1">Final Grade</p>
-                        <p className="text-2xl font-bold text-primary">{gradeMap[id].final_grade || gradeMap[id].overall_score || "N/A"}</p>
+                        <p className="text-2xl font-bold text-primary">
+                          {gradeMap[id].letter_grade ? (
+                            `${gradeMap[id].letter_grade}${gradeMap[id].total_score !== null ? ` (${Number(gradeMap[id].total_score).toFixed(1)}%)` : ""}`
+                          ) : gradeMap[id].total_score !== null ? (
+                            `${Number(gradeMap[id].total_score).toFixed(1)}%`
+                          ) : (
+                            "—"
+                          )}
+                        </p>
+                        {gradeMap[id].gpa && (
+                          <p className="text-muted-foreground text-xs mt-1">GPA: {Number(gradeMap[id].gpa).toFixed(1)} / 4.0</p>
+                        )}
                       </div>
 
-                      {(gradeMap[id].logbook_grade || gradeMap[id].supervisor_grade || gradeMap[id].academic_grade) && (
-                        <div className="grid grid-cols-2 gap-2">
-                          {gradeMap[id].logbook_grade && (
-                            <div className="p-2 bg-card rounded border border-border">
-                              <p className="text-muted-foreground text-[10px] font-semibold">Logbook</p>
-                              <p className="text-lg font-bold">{gradeMap[id].logbook_grade}</p>
-                            </div>
-                          )}
-                          {gradeMap[id].supervisor_grade && (
-                            <div className="p-2 bg-card rounded border border-border">
-                              <p className="text-muted-foreground text-[10px] font-semibold">Supervisor</p>
-                              <p className="text-lg font-bold">{gradeMap[id].supervisor_grade}</p>
-                            </div>
-                          )}
-                          {gradeMap[id].academic_grade && (
-                            <div className="p-2 bg-card rounded border border-border">
-                              <p className="text-muted-foreground text-[10px] font-semibold">Academic</p>
-                              <p className="text-lg font-bold">{gradeMap[id].academic_grade}</p>
-                            </div>
-                          )}
-                        </div>
-                      )}
+                      <div className="grid grid-cols-2 gap-2">
+                        {gradeMap[id].industrial_assessment_score !== null && (
+                          <div className="p-2 bg-card rounded border border-border">
+                            <p className="text-muted-foreground text-[10px] font-semibold">Industrial Assessment</p>
+                            <p className="text-lg font-bold">{Number(gradeMap[id].industrial_assessment_score).toFixed(1)} / 100</p>
+                          </div>
+                        )}
+                        {gradeMap[id].site_visitation_score !== null && (
+                          <div className="p-2 bg-card rounded border border-border">
+                            <p className="text-muted-foreground text-[10px] font-semibold">Site Visitation</p>
+                            <p className="text-lg font-bold">{Number(gradeMap[id].site_visitation_score).toFixed(1)} / 100</p>
+                          </div>
+                        )}
+                        {gradeMap[id].report_score !== null && (
+                          <div className="p-2 bg-card rounded border border-border">
+                            <p className="text-muted-foreground text-[10px] font-semibold">Report Score</p>
+                            <p className="text-lg font-bold">{Number(gradeMap[id].report_score).toFixed(1)} / 100</p>
+                          </div>
+                        )}
+                        {gradeMap[id].presentation_score !== null && (
+                          <div className="p-2 bg-card rounded border border-border">
+                            <p className="text-muted-foreground text-[10px] font-semibold">Presentation Score</p>
+                            <p className="text-lg font-bold">{Number(gradeMap[id].presentation_score).toFixed(1)} / 100</p>
+                          </div>
+                        )}
+                      </div>
 
                       {gradeMap[id].comments && (
                         <div className="p-3 bg-card rounded border border-border">
@@ -424,6 +481,11 @@ export function StudentHistoryPage() {
                           <p className="text-sm text-foreground">{gradeMap[id].comments}</p>
                         </div>
                       )}
+                    </div>
+                  ) : gradeMap[id] && gradeMap[id].status !== "published" ? (
+                    <div className="text-center py-6">
+                      <p className="text-muted-foreground text-xs mb-1">Grade Under Review</p>
+                      <p className="text-[10px] text-muted-foreground">The final grade is currently being reviewed and compiled by your DLO</p>
                     </div>
                   ) : (
                     <div className="text-center py-6">
@@ -445,7 +507,12 @@ export function StudentHistoryPage() {
                         <p className="text-muted-foreground text-xs font-semibold mb-2">Overall Rating</p>
                         <div className="flex items-center gap-2">
                           <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                          <span className="text-xl font-bold">{assessmentMap[id].overall_rating || assessmentMap[id].overall_score || "N/A"}/5</span>
+                          <span className="text-xl font-bold">
+                            {(() => {
+                              const overall = getOverallRating(assessmentMap[id]);
+                              return overall !== null ? `${Number(overall).toFixed(1)}` : "N/A";
+                            })()}/5
+                          </span>
                         </div>
                       </div>
 
@@ -456,31 +523,47 @@ export function StudentHistoryPage() {
                         </div>
                       )}
 
-                      {(assessmentMap[id].tech_understanding || assessmentMap[id].prof_communication || assessmentMap[id].eth_integrity) && (
-                        <div className="space-y-2">
-                          <p className="text-muted-foreground text-xs font-semibold">Assessment Scores</p>
-                          <div className="grid grid-cols-1 gap-2">
-                            {assessmentMap[id].tech_understanding && (
-                              <div className="flex justify-between p-2 bg-card rounded border border-border text-xs">
-                                <span>Technical Skills</span>
-                                <span className="font-bold">{assessmentMap[id].tech_understanding}/5</span>
+                      {(() => {
+                        const secA = getSectionAverageFromCriteria(assessmentMap[id], "A");
+                        const secB = getSectionAverageFromCriteria(assessmentMap[id], "B");
+                        const secC = getSectionAverageFromCriteria(assessmentMap[id], "C");
+                        const secD = getSectionAverageFromCriteria(assessmentMap[id], "D");
+
+                        if (secA !== null || secB !== null || secC !== null || secD !== null) {
+                          return (
+                            <div className="space-y-2">
+                              <p className="text-muted-foreground text-xs font-semibold">Assessment Scores</p>
+                              <div className="grid grid-cols-1 gap-2">
+                                {secA !== null && (
+                                  <div className="flex justify-between p-2 bg-card rounded border border-border text-xs">
+                                    <span>Technical Skills (Section A)</span>
+                                    <span className="font-bold">{Number(secA).toFixed(1)}/5</span>
+                                  </div>
+                                )}
+                                {secB !== null && (
+                                  <div className="flex justify-between p-2 bg-card rounded border border-border text-xs">
+                                    <span>Professional Skills (Section B)</span>
+                                    <span className="font-bold">{Number(secB).toFixed(1)}/5</span>
+                                  </div>
+                                )}
+                                {secC !== null && (
+                                  <div className="flex justify-between p-2 bg-card rounded border border-border text-xs">
+                                    <span>Ethics & Conduct (Section C)</span>
+                                    <span className="font-bold">{Number(secC).toFixed(1)}/5</span>
+                                  </div>
+                                )}
+                                {secD !== null && (
+                                  <div className="flex justify-between p-2 bg-card rounded border border-border text-xs">
+                                    <span>Overall Performance (Section D)</span>
+                                    <span className="font-bold">{Number(secD).toFixed(1)}/5</span>
+                                  </div>
+                                )}
                               </div>
-                            )}
-                            {assessmentMap[id].prof_communication && (
-                              <div className="flex justify-between p-2 bg-card rounded border border-border text-xs">
-                                <span>Communication</span>
-                                <span className="font-bold">{assessmentMap[id].prof_communication}/5</span>
-                              </div>
-                            )}
-                            {assessmentMap[id].eth_integrity && (
-                              <div className="flex justify-between p-2 bg-card rounded border border-border text-xs">
-                                <span>Integrity</span>
-                                <span className="font-bold">{assessmentMap[id].eth_integrity}/5</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
                     </div>
                   ) : (
                     <div className="text-center py-6">
