@@ -5,6 +5,7 @@ import { useAppContext } from "../../lib/context";
 import { AlertTriangle, GraduationCap, RefreshCw, CheckCircle2, Send, Pen } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "../../lib/api-client";
+import { useTerm } from "../../lib/term-context";
 
 interface Row {
   internshipId: string;
@@ -23,6 +24,7 @@ interface Row {
 
 export function DLOFinalGradingPage() {
   const { user } = useAppContext();
+  const { selectedTermId, isArchiveMode } = useTerm();
   const department = user?.department || "";
 
   const [rows, setRows] = useState<Row[]>([]);
@@ -87,12 +89,13 @@ export function DLOFinalGradingPage() {
   const load = useCallback(async () => {
     setLoading(true);
     const filter = user?.department_id ? { department_id: user.department_id } : { department };
+    const termParams = selectedTermId ? { term_id: selectedTermId } : {};
     const [internRes, gradesRes, configRes, indAssRes, siteVisRes] = await Promise.all([
-      apiClient.getInternships({ status: "active,completed", per_page: 100, department }),
-      apiClient.getGrades({ per_page: 100, department }),
+      apiClient.getInternships({ status: "active,completed", per_page: 100, department, ...termParams }),
+      apiClient.getGrades({ per_page: 100, department, ...termParams }),
       apiClient.getGradingConfigs(filter).catch(() => ({ success: false, data: [] })),
-      apiClient.getIndustrialAssessments({ per_page: 100 }).catch(() => ({ success: false, data: [] })),
-      apiClient.getSiteVisitations({ per_page: 100 }).catch(() => ({ success: false, data: [] })),
+      apiClient.getIndustrialAssessments({ per_page: 100, ...termParams }).catch(() => ({ success: false, data: [] })),
+      apiClient.getSiteVisitations({ per_page: 100, ...termParams }).catch(() => ({ success: false, data: [] })),
     ]);
 
     if (configRes.success && configRes.data?.length > 0) {
@@ -149,9 +152,11 @@ export function DLOFinalGradingPage() {
           letterGrade: g?.letter_grade ?? null,
         };
       }));
+    } else {
+      setRows([]);
     }
     setLoading(false);
-  }, [department, user?.department_id]);
+  }, [department, user?.department_id, selectedTermId]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -304,7 +309,7 @@ export function DLOFinalGradingPage() {
                     </td>
                     <td className="px-4 py-3"><StatusBadge status={displayStatus(r.gradeStatus)} /></td>
                     <td className="px-4 py-3 text-right space-x-2">
-                      {r.gradeStatus !== "published" && (
+                      {!isArchiveMode && r.gradeStatus !== "published" && (
                         <button
                           onClick={() => handleOpenEdit(r)}
                           className="px-2 py-1.5 border border-border rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
@@ -314,21 +319,21 @@ export function DLOFinalGradingPage() {
                           <Pen className="w-3.5 h-3.5" />
                         </button>
                       )}
-                      {r.gradeStatus === "draft" || !r.gradeStatus ? (
+                      {!isArchiveMode && (r.gradeStatus === "draft" || !r.gradeStatus) ? (
                         <button onClick={() => handleCompile(r.internshipId)} disabled={compiling === r.internshipId}
                           className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-1.5" style={{ fontSize: "0.8rem" }}>
                           {compiling === r.internshipId
                             ? <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Compiling…</>
                             : <><GraduationCap className="w-3.5 h-3.5" /> Compile</>}
                         </button>
-                      ) : r.gradeStatus === "calculated" ? (
+                      ) : !isArchiveMode && r.gradeStatus === "calculated" ? (
                         <button onClick={() => handleApprove(r.gradeId!)} disabled={approving === r.gradeId}
                           className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-1.5" style={{ fontSize: "0.8rem" }}>
                           {approving === r.gradeId
                             ? <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Approving…</>
                             : <><CheckCircle2 className="w-3.5 h-3.5" /> Approve</>}
                         </button>
-                      ) : r.gradeStatus === "approved" ? (
+                      ) : !isArchiveMode && r.gradeStatus === "approved" ? (
                         <button onClick={() => handlePublish(r.gradeId!)} disabled={publishing === r.gradeId}
                           className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-1.5" style={{ fontSize: "0.8rem" }}>
                           {publishing === r.gradeId
@@ -337,7 +342,7 @@ export function DLOFinalGradingPage() {
                         </button>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-emerald-600" style={{ fontSize: "0.8rem" }}>
-                          <CheckCircle2 className="w-3.5 h-3.5" /> Published
+                          {r.gradeStatus === "published" ? <><CheckCircle2 className="w-3.5 h-3.5" /> Published</> : ""}
                         </span>
                       )}
                     </td>

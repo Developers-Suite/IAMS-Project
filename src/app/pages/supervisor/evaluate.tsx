@@ -12,6 +12,7 @@ import { useAppContext } from "../../lib/context";
 import { apiClient } from "../../lib/api-client";
 import { useToastAction } from "../../lib/hooks";
 import { INDUSTRIAL_CRITERIA, DEFAULT_SECTION_WEIGHTS } from "../../lib/constants";
+import { useTerm } from "../../lib/term-context";
 import type { CriterionRating, GradingActor, SectionWeights, WeeklyRubricRatings } from "../../types/grading";
 
 type TabKey = "weekly" | "final";
@@ -91,6 +92,7 @@ function getCurrentWeekNumberFromWeeks(weeks: Array<{ weekNumber: number; weekSt
 
 export function EvaluatePage() {
   const { user } = useAppContext();
+  const { selectedTermId, isArchiveMode } = useTerm();
   const [assignedInternships, setAssignedInternships] = useState<any[]>([]);
   const [rubricsByWeek, setRubricsByWeek] = useState<Record<number, { ratings: Record<string, string>; notes: string }>>({});
   const [assessmentsByInternship, setAssessmentsByInternship] = useState<Record<string, any>>({});
@@ -102,14 +104,15 @@ export function EvaluatePage() {
 
   useEffect(() => {
     let cancelled = false;
-    apiClient.getDashboard("industry-supervisor").then((res) => {
+    const termParams = selectedTermId ? { term_id: selectedTermId } : {};
+    apiClient.getDashboard("industry-supervisor", termParams).then((res) => {
       if (!cancelled && res.success) {
         // Backend already scopes assigned_internships to this supervisor
         setAssignedInternships(res.data?.assigned_internships ?? []);
       }
     });
     return () => { cancelled = true; };
-  }, [user?.id]);
+  }, [user?.id, selectedTermId]);
 
   const activeApps = assignedInternships;
 
@@ -142,7 +145,8 @@ export function EvaluatePage() {
 
   useEffect(() => {
     let cancelled = false;
-    apiClient.getIndustrialAssessments({ per_page: 100 }).then((res) => {
+    const termParams = selectedTermId ? { term_id: selectedTermId } : {};
+    apiClient.getIndustrialAssessments({ per_page: 100, ...termParams }).then((res) => {
       if (cancelled || !res.success) return;
       const map: Record<string, any> = {};
       for (const a of res.data) {
@@ -151,7 +155,7 @@ export function EvaluatePage() {
       setAssessmentsByInternship(map);
     });
     return () => { cancelled = true; };
-  }, [user?.id]);
+  }, [user?.id, selectedTermId]);
 
   useEffect(() => {
     if (!appId || !app) {
@@ -386,7 +390,7 @@ export function EvaluatePage() {
                             weekEnd={w.weekEnd}
                             initialRatings={rubricsByWeek[w.weekNumber]?.ratings as WeeklyRubricRatings | undefined}
                             initialNotes={rubricsByWeek[w.weekNumber]?.notes}
-                            readOnly={filled}
+                            readOnly={isArchiveMode || filled}
                             onSubmit={async (ratings, notes) => {
                               const result = await runEvaluationAction(async () => {
                                 return apiClient.submitWeeklyRubric(getInternshipId(app), w.weekNumber, ratings, notes, actor);
@@ -433,7 +437,7 @@ export function EvaluatePage() {
                   sectionWeights={config.sectionWeights}
                   initialRatings={existingFinal?.ratings}
                   initialComments={existingFinal?.comments}
-                  readOnly={!!existingFinal}
+                  readOnly={isArchiveMode || !!existingFinal}
                   onSubmit={async (ratings, comments) => {
                     const result = await runEvaluationAction(async () => {
                       return apiClient.submitIndustrialAssessment(getInternshipId(app), ratings, comments, actor);

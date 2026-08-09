@@ -1451,7 +1451,8 @@ export const apiClient = {
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   async getDashboard(
-    role: "student" | "clo" | "dlo" | "hod" | "industry-supervisor" | "academic-supervisor"
+    role: "student" | "clo" | "dlo" | "hod" | "industry-supervisor" | "academic-supervisor",
+    params?: Record<string, unknown>
   ): Promise<ApiResponse<any>> {
     const endpointMap: Record<string, string> = {
       student: API_ENDPOINTS.DASHBOARD_STUDENT,
@@ -1461,7 +1462,8 @@ export const apiClient = {
       "industry-supervisor": API_ENDPOINTS.DASHBOARD_SUPERVISOR,
       "academic-supervisor": API_ENDPOINTS.DASHBOARD_ACADEMIC,
     };
-    return requestApi<any>(endpointMap[role], { method: "GET" });
+    const url = params ? `${endpointMap[role]}?${buildQueryString(params)}` : endpointMap[role];
+    return requestApi<any>(url, { method: "GET" });
   },
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━

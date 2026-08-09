@@ -3,10 +3,11 @@ import { SkeletonTableRows } from "../../components/skeleton";
 import { StatusBadge } from "../../components/status-badge";
 import { useAppContext } from "../../lib/context";
 import { apiClient } from "../../lib/api-client";
-import { Search, CheckCircle2, XCircle, UserPlus, Download } from "lucide-react";
+import { Search, CheckCircle2, XCircle, UserPlus, Download, Lock } from "lucide-react";
 import { toast } from "sonner";
 import type { ExtendedRole } from "../../services/auth-service";
 import { exportToCSV } from "../../lib/csv-export";
+import { useTerm } from "../../lib/term-context";
 
 interface Props {
   viewRole: ExtendedRole;
@@ -14,6 +15,7 @@ interface Props {
 
 export function ApplicationsPage({ viewRole }: Props) {
   const { user } = useAppContext();
+  const { selectedTermId, isArchiveMode } = useTerm();
   const [applications, setApplications] = useState<any[]>([]);
   const [academicSupervisors, setAcademicSupervisors] = useState<any[]>([]);
   const [search, setSearch] = useState("");
@@ -24,10 +26,12 @@ export function ApplicationsPage({ viewRole }: Props) {
 
   const fetchApplications = useCallback(async () => {
     setLoading(true);
-    const res = await apiClient.getApplications();
+    const res = await apiClient.getApplications(
+      selectedTermId ? { academic_term_id: selectedTermId } : undefined
+    );
     if (res.success) setApplications(res.data);
     setLoading(false);
-  }, []);
+  }, [selectedTermId]);
 
   useEffect(() => {
     fetchApplications();
@@ -120,13 +124,15 @@ export function ApplicationsPage({ viewRole }: Props) {
             {viewRole === "clo" ? "All departments" : `${user?.department ?? ""} Department`}
           </p>
         </div>
-        <button
-          onClick={handleBulkApprove}
-          className="px-3 md:px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 flex items-center gap-2"
-          style={{ fontSize: "0.85rem" }}
-        >
-          <CheckCircle2 className="w-4 h-4" /> <span className="hidden sm:inline">Bulk Approve</span>
-        </button>
+        {!isArchiveMode && (
+          <button
+            onClick={handleBulkApprove}
+            className="px-3 md:px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 flex items-center gap-2"
+            style={{ fontSize: "0.85rem" }}
+          >
+            <CheckCircle2 className="w-4 h-4" /> <span className="hidden sm:inline">Bulk Approve</span>
+          </button>
+        )}
         <button
           onClick={() =>
             exportToCSV(
@@ -210,7 +216,7 @@ export function ApplicationsPage({ viewRole }: Props) {
                 {viewRole === "clo" && (
                   <p className="text-muted-foreground" style={{ fontSize: "0.78rem" }}>{deptName}</p>
                 )}
-                {(viewRole === "dlo" && (app.status === "submitted" || app.status === "approved" || app.status === "company_accepted")) && (
+                {!isArchiveMode && (viewRole === "dlo" && (app.status === "submitted" || app.status === "approved" || app.status === "company_accepted")) && (
                   <div className="flex gap-2 pt-2 border-t border-border" onClick={(e) => e.stopPropagation()}>
                     {app.status === "submitted" && (
                       <>

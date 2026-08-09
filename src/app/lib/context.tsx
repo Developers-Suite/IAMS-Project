@@ -4,6 +4,7 @@ import type { AuthUser, ExtendedRole } from "../services/auth-service";
 import { subscribe, getState, type StoreState } from "./store";
 import { setCurrentUser, apiClient } from "./api-client";
 import { isPWAInstalled } from "./pwa-utils";
+import { TermProvider } from "./term-context";
 
 interface AppContextType {
   user: AuthUser | null;
@@ -244,7 +245,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <AppContext.Provider value={{ user, setUser, sidebarOpen, setSidebarOpen, store }}>
-      {children}
+      <TermProvider>
+        {children}
+      </TermProvider>
     </AppContext.Provider>
   );
 }

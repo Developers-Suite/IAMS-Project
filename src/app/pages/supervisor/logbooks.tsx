@@ -8,9 +8,11 @@ import {
   ChevronDown, ChevronUp, FileText, Eye, ExternalLink, Shield,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useTerm } from "../../lib/term-context";
 
 export function SupervisorLogbooksPage() {
   const { user } = useAppContext();
+  const { selectedTermId, isArchiveMode } = useTerm();
   // Note: Backend now handles filtering via supervisor_id parameter
   // Client-side filtering temporarily disabled to debug routing error
   const [entries, setEntries] = useState<any[]>([]);
@@ -26,7 +28,7 @@ export function SupervisorLogbooksPage() {
   const fetchEntries = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await apiClient.getLogbookEntries({ per_page: 100 });
+      const res = await apiClient.getLogbookEntries({ per_page: 100, ...(selectedTermId ? { term_id: selectedTermId } : {}) });
       // Backend scopes logbook entries to the authenticated supervisor
       if (res.success && Array.isArray(res.data)) {
         setEntries(res.data);
@@ -39,7 +41,7 @@ export function SupervisorLogbooksPage() {
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, selectedTermId]);
 
   useEffect(() => { fetchEntries(); }, [fetchEntries]);
 
@@ -114,11 +116,9 @@ export function SupervisorLogbooksPage() {
             Review and approve daily logbook entries from your assigned students
           </p>
         </div>
-        {pendingCount > 0 && (
-          <button onClick={handleBulkApprove}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
-            style={{ fontSize: "0.85rem" }}>
-            <CheckCircle2 className="w-4 h-4" /> Approve All Pending ({pendingCount})
+        {!isArchiveMode && pendingCount > 0 && (
+          <button onClick={handleBulkApprove} className="w-full sm:w-auto px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center justify-center gap-2" style={{ fontSize: "0.85rem" }}>
+            <CheckCircle2 className="w-4 h-4" /> Approve All {pendingCount} Pending
           </button>
         )}
       </div>
@@ -218,7 +218,7 @@ export function SupervisorLogbooksPage() {
                     </div>
                     <p className="text-muted-foreground truncate mt-1" style={{ fontSize: "0.8rem" }}>{entry.activities_description}</p>
                   </div>
-                  {entry.status === "submitted" && (
+                  {!isArchiveMode && entry.status === "submitted" && (
                     <div className="flex gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                       <button onClick={() => handleApprove(String(entry.id))}
                         className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-1" style={{ fontSize: "0.8rem" }}>

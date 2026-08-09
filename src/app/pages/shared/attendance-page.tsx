@@ -9,6 +9,7 @@ import type { ExtendedRole } from "../../services/auth-service";
 import { Card, CardContent } from "../../components/ui/card";
 import { StatCard } from "../../components/stat-card";
 import { GpsLocationDisplay } from "../../components/gps-location-display";
+import { useTerm } from "../../lib/term-context";
 
 interface Props {
   viewRole: ExtendedRole;
@@ -29,6 +30,7 @@ const STATUS_COLORS: Record<string, string> = {
 export function AttendancePage({ viewRole }: Props) {
   // SECURITY: Backend filters by supervisor_id parameter (sent automatically)
   // Client-side filtering disabled to debug routing error
+  const { selectedTermId, isArchiveMode } = useTerm();
   const [records, setRecords] = useState<any[]>([]);
   const [missed, setMissed] = useState<any[]>([]);
   const [pendingManual, setPendingManual] = useState<any[]>([]);
@@ -48,12 +50,13 @@ export function AttendancePage({ viewRole }: Props) {
           from_date: dateFrom || undefined,
           to_date: dateTo || undefined,
           per_page: 100,
+          ...(selectedTermId ? { term_id: selectedTermId } : {}),
         }),
-        apiClient.getMissedAttendance(),
+        apiClient.getMissedAttendance(selectedTermId ? { term_id: selectedTermId } : undefined),
       ];
       if (viewRole === "supervisor") {
         promises.push(
-          apiClient.getAttendance({ check_in_type: "manual", unverified: "1", per_page: 100 } as any)
+          apiClient.getAttendance({ check_in_type: "manual", unverified: "1", per_page: 100, ...(selectedTermId ? { term_id: selectedTermId } : {}) } as any)
         );
       }
 
@@ -203,22 +206,24 @@ export function AttendancePage({ viewRole }: Props) {
                       )}
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleVerify(String(r.id), "present")}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
-                      style={{ fontSize: "0.8rem" }}
-                    >
-                      <CheckCircle2 className="w-3 h-3" /> Verify Present
-                    </button>
-                    <button
-                      onClick={() => handleVerify(String(r.id), "absent")}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                      style={{ fontSize: "0.8rem" }}
-                    >
-                      <XCircle className="w-3 h-3" /> Reject
-                    </button>
-                  </div>
+                  {!isArchiveMode && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleVerify(String(r.id), "present")}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
+                        style={{ fontSize: "0.8rem" }}
+                      >
+                        <CheckCircle2 className="w-3 h-3" /> Verify Present
+                      </button>
+                      <button
+                        onClick={() => handleVerify(String(r.id), "absent")}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                        style={{ fontSize: "0.8rem" }}
+                      >
+                        <XCircle className="w-3 h-3" /> Reject
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -254,22 +259,24 @@ export function AttendancePage({ viewRole }: Props) {
                       </div>
                     </div>
                   </button>
-                  <div className="flex gap-2 shrink-0">
-                    <button
-                      onClick={() => handleVerify(String(r.id), "present")}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
-                      style={{ fontSize: "0.8rem" }}
-                    >
-                      <CheckCircle2 className="w-3 h-3" /> Verify
-                    </button>
-                    <button
-                      onClick={() => handleVerify(String(r.id), "absent")}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                      style={{ fontSize: "0.8rem" }}
-                    >
-                      <XCircle className="w-3 h-3" /> Reject
-                    </button>
-                  </div>
+                  {!isArchiveMode && (
+                    <div className="flex gap-2 shrink-0">
+                      <button
+                        onClick={() => handleVerify(String(r.id), "present")}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
+                        style={{ fontSize: "0.8rem" }}
+                      >
+                        <CheckCircle2 className="w-3 h-3" /> Verify
+                      </button>
+                      <button
+                        onClick={() => handleVerify(String(r.id), "absent")}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                        style={{ fontSize: "0.8rem" }}
+                      >
+                        <XCircle className="w-3 h-3" /> Reject
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

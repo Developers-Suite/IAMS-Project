@@ -5,6 +5,7 @@ import { StatCard } from "../../components/stat-card";
 import { AssessmentChecklistCard } from "../../components/supervisor/assessment-checklist-card";
 import { apiClient } from "../../lib/api-client";
 import { SkeletonDashboard } from "../../components/skeleton";
+import { useTerm } from "../../lib/term-context";
 import {
   GraduationCap, BookMarked, ClipboardCheck, AlertTriangle,
   MapPin, TrendingUp, Calendar, CheckCircle2, Shield
@@ -19,6 +20,7 @@ function getDept(i: any)        { return i.student?.department?.name ?? "—"; }
 export function SupervisorDashboard() {
   const { user } = useAppContext();
   const navigate = useNavigate();
+  const { selectedTermId, isArchiveMode } = useTerm();
 
   const [dashboard, setDashboard] = useState<any>(null);
   const [pendingLogs, setPendingLogs] = useState<any[]>([]);
@@ -29,9 +31,10 @@ export function SupervisorDashboard() {
     let cancelled = false;
 
     const load = async () => {
+      const termParams = selectedTermId ? { term_id: selectedTermId } : {};
       const [dashRes, logsRes, approvalsRes] = await Promise.all([
-        apiClient.getDashboard("industry-supervisor"),
-        apiClient.getLogbookEntries({ status: "submitted", per_page: 10 }),
+        apiClient.getDashboard("industry-supervisor", termParams),
+        apiClient.getLogbookEntries({ status: "submitted", per_page: 10, ...termParams }),
         apiClient.getPendingSupervisorInvitations(),
       ]);
       if (cancelled) return;
@@ -54,7 +57,7 @@ export function SupervisorDashboard() {
     void load();
     const interval = setInterval(() => { void load(); }, 30_000);
     return () => { cancelled = true; clearInterval(interval); };
-  }, [user?.id]);
+  }, [user?.id, selectedTermId]);
 
   // Backend already scopes assigned_internships to this supervisor via industry_supervisor_id
   const internships: any[] = dashboard?.assigned_internships ?? [];
@@ -143,10 +146,10 @@ export function SupervisorDashboard() {
         </div>
       )}
 
-      {/* Action Alert — only shown when manual check-ins need verification or logbooks are pending review */}
-      {(pendingLogs.length > 0 || pendingManualVerify > 0) && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-3">
+      {/* Actions Required (hidden in archive mode) */}
+      {!isArchiveMode && (pendingLogs.length > 0 || pendingManualVerify > 0) && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 md:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3 mb-3">
             <AlertTriangle className="w-5 h-5 text-amber-600" />
             <h4 className="text-amber-800">Actions Required</h4>
           </div>

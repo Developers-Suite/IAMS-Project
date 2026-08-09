@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner";
 import type { ExtendedRole } from "../../services/auth-service";
 import { exportToCSV } from "../../lib/csv-export";
+import { useTerm } from "../../lib/term-context";
 
 interface Props {
   viewRole: ExtendedRole;
@@ -41,6 +42,7 @@ const ROLE_PATH: Record<string, string> = {
 
 export function StudentsPage({ viewRole }: Props) {
   const { user } = useAppContext();
+  const { selectedTermId, isArchiveMode } = useTerm();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [deptFilter, setDeptFilter] = useState("All");
@@ -66,6 +68,10 @@ export function StudentsPage({ viewRole }: Props) {
   const [reportComment, setReportComment] = useState("");
   const [presScore, setPresScore] = useState("");
   const [presComment, setPresComment] = useState("");
+  const [indScore, setIndScore] = useState("");
+  const [indComment, setIndComment] = useState("");
+  const [siteScore, setSiteScore] = useState("");
+  const [siteComment, setSiteComment] = useState("");
   const [scoreSaving, setScoreSaving] = useState(false);
 
   const canScore = viewRole === "dlo" || viewRole === "clo";
@@ -101,7 +107,7 @@ export function StudentsPage({ viewRole }: Props) {
 
     const [usersRes, internshipsRes] = await Promise.all([
       apiClient.getUsers({ role: "student", per_page: 200 }),
-      apiClient.getInternships({ per_page: 200 }),
+      apiClient.getInternships({ per_page: 200, ...(selectedTermId ? { academic_term_id: selectedTermId } : {}) }),
     ]);
     if (usersRes.success) {
       // Build a map from userId → internship
@@ -119,7 +125,7 @@ export function StudentsPage({ viewRole }: Props) {
       setTotalPages(Math.ceil(rows.length / itemsPerPage) || 1);
     }
     setLoading(false);
-  }, [viewRole, itemsPerPage]);
+  }, [viewRole, itemsPerPage, selectedTermId]);
 
   const fetchMissed = useCallback(async () => {
     const [r3, r7] = await Promise.all([
@@ -139,6 +145,7 @@ export function StudentsPage({ viewRole }: Props) {
       setDetailAttendance([]);
       setDetailGrade(null);
       setReportScore(""); setReportComment(""); setPresScore(""); setPresComment("");
+      setIndScore(""); setIndComment(""); setSiteScore(""); setSiteComment("");
       return;
     }
     const row = enrolledStudents.find((s) => s.id === selectedStudent);
@@ -163,6 +170,14 @@ export function StudentsPage({ viewRole }: Props) {
         setReportComment(g?.report_comments ?? "");
         setPresScore(String(g?.presentation_score ?? ""));
         setPresComment(g?.presentation_comments ?? "");
+        setIndScore(String(g?.industrial_assessment_score ?? ""));
+        setIndComment(g?.industrial_assessment_comments ?? "");
+        setSiteScore(String(g?.site_visitation_score ?? ""));
+        setSiteComment(g?.site_visitation_comments ?? "");
+      } else {
+        setDetailGrade(null);
+        setReportScore(""); setReportComment(""); setPresScore(""); setPresComment("");
+        setIndScore(""); setIndComment(""); setSiteScore(""); setSiteComment("");
       }
     }).finally(() => setDetailLoading(false));
   }, [selectedStudent, enrolledStudents]);
@@ -273,6 +288,38 @@ export function StudentsPage({ viewRole }: Props) {
       setScoreSaving(false);
       toast.error("An error occurred while saving presentation score.");
     }
+  };
+
+  const handleSaveInd = async () => {
+    if (!selectedInternshipId) return;
+    setScoreSaving(true);
+    const targetId = detailGrade?.id || selectedInternshipId;
+    const res = await apiClient.updateGrade(String(targetId), {
+      industrial_assessment_score: indScore ? Number(indScore) : null,
+      remarks: indComment || undefined,
+    });
+    setScoreSaving(false);
+    if (res.success) {
+      toast.success("Industrial Assessment score saved.");
+      const gr = await apiClient.getGrade(selectedInternshipId);
+      if (gr.success) setDetailGrade((gr.data as any)?.grade ?? gr.data);
+    } else toast.error(res.message ?? "Failed to save score.");
+  };
+
+  const handleSaveSite = async () => {
+    if (!selectedInternshipId) return;
+    setScoreSaving(true);
+    const targetId = detailGrade?.id || selectedInternshipId;
+    const res = await apiClient.updateGrade(String(targetId), {
+      site_visitation_score: siteScore ? Number(siteScore) : null,
+      remarks: siteComment || undefined,
+    });
+    setScoreSaving(false);
+    if (res.success) {
+      toast.success("Site Visitation score saved.");
+      const gr = await apiClient.getGrade(selectedInternshipId);
+      if (gr.success) setDetailGrade((gr.data as any)?.grade ?? gr.data);
+    } else toast.error(res.message ?? "Failed to save score.");
   };
 
   const handleApproveGrade = async () => {
@@ -648,22 +695,65 @@ export function StudentsPage({ viewRole }: Props) {
                     </div>
                   </div>
 
-                  {/* Report Score - shown for Structures A, C, D */}
+                  <div className="rounded-lg border border-border p-3 space-y-2">
+                    <p className="text-muted-foreground" style={{ fontSize: "0.7rem" }}>INDUSTRIAL ASSESSMENT (OVERRIDE)</p>
+                    <div className="flex gap-2">
+                      <input type="number" min={0} max={100} value={indScore} onChange={(e) => setIndScore(e.target.value)}
+                        placeholder="0–100"
+                        disabled={isArchiveMode}
+                        className="flex-1 px-3 py-1.5 rounded-md border border-border bg-card disabled:opacity-50" style={{ fontSize: "0.85rem" }} />
+                      {!isArchiveMode && (
+                        <button onClick={handleSaveInd} disabled={scoreSaving || !indScore}
+                          className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md hover:opacity-90 disabled:opacity-50" style={{ fontSize: "0.8rem" }}>
+                          Save
+                        </button>
+                      )}
+                    </div>
+                    <textarea value={indComment} onChange={(e) => setIndComment(e.target.value)}
+                      placeholder="Comments (optional)" rows={2}
+                      disabled={isArchiveMode}
+                      className="w-full px-3 py-1.5 rounded-md border border-border bg-card disabled:opacity-50" style={{ fontSize: "0.8rem" }} />
+                  </div>
+
+                  <div className="rounded-lg border border-border p-3 space-y-2">
+                    <p className="text-muted-foreground" style={{ fontSize: "0.7rem" }}>SITE VISITATION (OVERRIDE)</p>
+                    <div className="flex gap-2">
+                      <input type="number" min={0} max={100} value={siteScore} onChange={(e) => setSiteScore(e.target.value)}
+                        placeholder="0–100"
+                        disabled={isArchiveMode}
+                        className="flex-1 px-3 py-1.5 rounded-md border border-border bg-card disabled:opacity-50" style={{ fontSize: "0.85rem" }} />
+                      {!isArchiveMode && (
+                        <button onClick={handleSaveSite} disabled={scoreSaving || !siteScore}
+                          className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md hover:opacity-90 disabled:opacity-50" style={{ fontSize: "0.8rem" }}>
+                          Save
+                        </button>
+                      )}
+                    </div>
+                    <textarea value={siteComment} onChange={(e) => setSiteComment(e.target.value)}
+                      placeholder="Comments (optional)" rows={2}
+                      disabled={isArchiveMode}
+                      className="w-full px-3 py-1.5 rounded-md border border-border bg-card disabled:opacity-50" style={{ fontSize: "0.8rem" }} />
+                  </div>
+
                   {showReport && (
                     <div className="rounded-lg border border-border p-3 space-y-2">
                       <p className="text-muted-foreground" style={{ fontSize: "0.7rem" }}>REPORT SCORE</p>
                       <div className="flex gap-2">
                         <input type="number" min={0} max={100} value={reportScore} onChange={(e) => setReportScore(e.target.value)}
                           placeholder="0–100"
-                          className="flex-1 px-3 py-1.5 rounded-md border border-border bg-card" style={{ fontSize: "0.85rem" }} />
-                        <button onClick={handleSaveReport} disabled={scoreSaving || !reportScore}
-                          className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md hover:opacity-90 disabled:opacity-50" style={{ fontSize: "0.8rem" }}>
-                          Save
-                        </button>
+                          disabled={isArchiveMode}
+                          className="flex-1 px-3 py-1.5 rounded-md border border-border bg-card disabled:opacity-50" style={{ fontSize: "0.85rem" }} />
+                        {!isArchiveMode && (
+                          <button onClick={handleSaveReport} disabled={scoreSaving || !reportScore}
+                            className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md hover:opacity-90 disabled:opacity-50" style={{ fontSize: "0.8rem" }}>
+                            Save
+                          </button>
+                        )}
                       </div>
                       <textarea value={reportComment} onChange={(e) => setReportComment(e.target.value)}
                         placeholder="Comments (optional)" rows={2}
-                        className="w-full px-3 py-1.5 rounded-md border border-border bg-card" style={{ fontSize: "0.8rem" }} />
+                        disabled={isArchiveMode}
+                        className="w-full px-3 py-1.5 rounded-md border border-border bg-card disabled:opacity-50" style={{ fontSize: "0.8rem" }} />
                     </div>
                   )}
 
@@ -674,33 +764,39 @@ export function StudentsPage({ viewRole }: Props) {
                       <div className="flex gap-2">
                         <input type="number" min={0} max={100} value={presScore} onChange={(e) => setPresScore(e.target.value)}
                           placeholder="0–100"
-                          className="flex-1 px-3 py-1.5 rounded-md border border-border bg-card" style={{ fontSize: "0.85rem" }} />
-                        <button onClick={handleSavePresentation} disabled={scoreSaving || !presScore}
-                          className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md hover:opacity-90 disabled:opacity-50" style={{ fontSize: "0.8rem" }}>
-                          Save
-                        </button>
+                          disabled={isArchiveMode}
+                          className="flex-1 px-3 py-1.5 rounded-md border border-border bg-card disabled:opacity-50" style={{ fontSize: "0.85rem" }} />
+                        {!isArchiveMode && (
+                          <button onClick={handleSavePresentation} disabled={scoreSaving || !presScore}
+                            className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md hover:opacity-90 disabled:opacity-50" style={{ fontSize: "0.8rem" }}>
+                            Save
+                          </button>
+                        )}
                       </div>
                       <textarea value={presComment} onChange={(e) => setPresComment(e.target.value)}
                         placeholder="Comments (optional)" rows={2}
-                        className="w-full px-3 py-1.5 rounded-md border border-border bg-card" style={{ fontSize: "0.8rem" }} />
+                        disabled={isArchiveMode}
+                        className="w-full px-3 py-1.5 rounded-md border border-border bg-card disabled:opacity-50" style={{ fontSize: "0.8rem" }} />
                     </div>
                   )}
 
                   {/* Compile + Approve */}
-                  <div className="rounded-lg border border-border p-3 space-y-2">
-                    <p className="text-muted-foreground" style={{ fontSize: "0.7rem" }}>FINALISE</p>
-                    {!detailGrade?.id && (
-                      <button onClick={handleCompileGrade}
-                        className="w-full py-2 bg-blue-600 text-white rounded-md hover:opacity-90 flex items-center justify-center gap-2" style={{ fontSize: "0.85rem" }}>
-                        <FileText className="w-4 h-4" /> Compile Grade
+                  {!isArchiveMode && (
+                    <div className="rounded-lg border border-border p-3 space-y-2">
+                      <p className="text-muted-foreground" style={{ fontSize: "0.7rem" }}>FINALISE</p>
+                      {!detailGrade?.id && (
+                        <button onClick={handleCompileGrade}
+                          className="w-full py-2 bg-blue-600 text-white rounded-md hover:opacity-90 flex items-center justify-center gap-2" style={{ fontSize: "0.85rem" }}>
+                          <FileText className="w-4 h-4" /> Compile Grade
+                        </button>
+                      )}
+                      <button onClick={handleApproveGrade}
+                        disabled={!detailGrade?.id || detailGrade?.status === "approved" || detailGrade?.status === "published"}
+                        className="w-full py-2 bg-emerald-600 text-white rounded-md hover:opacity-90 disabled:opacity-40 flex items-center justify-center gap-2" style={{ fontSize: "0.85rem" }}>
+                        <CheckCircle2 className="w-4 h-4" /> Approve Final Grade
                       </button>
-                    )}
-                    <button onClick={handleApproveGrade}
-                      disabled={!detailGrade?.id || detailGrade?.status === "approved" || detailGrade?.status === "published"}
-                      className="w-full py-2 bg-emerald-600 text-white rounded-md hover:opacity-90 disabled:opacity-40 flex items-center justify-center gap-2" style={{ fontSize: "0.85rem" }}>
-                      <CheckCircle2 className="w-4 h-4" /> Approve Final Grade
-                    </button>
-                  </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

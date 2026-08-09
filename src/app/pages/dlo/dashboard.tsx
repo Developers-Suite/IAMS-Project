@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { StatCard } from "../../components/stat-card";
 import { StatusBadge } from "../../components/status-badge";
 import { useAppContext } from "../../lib/context";
@@ -13,6 +13,7 @@ import {
   Legend, CartesianGrid
 } from "recharts";
 import { useNavigate } from "react-router";
+import { useTerm } from "../../lib/term-context";
 
 // Helpers to read nested backend fields
 function getStudentName(app: any): string { return app.student?.user?.name ?? app.studentName ?? "—"; }
@@ -22,6 +23,7 @@ function getCompanyName(app: any): string { return app.company?.name ?? app.comp
 export function DLODashboard() {
   const { user } = useAppContext();
   const navigate = useNavigate();
+  const { selectedTermId } = useTerm();
   const dept = user?.department || "";
 
   const [applications, setApplications] = useState<any[]>([]);
@@ -31,14 +33,14 @@ export function DLODashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setRefreshing(true);
     try {
       const [appsRes, dashRes, notifRes, assignRes] = await Promise.all([
-        apiClient.getApplications({ department: dept }),
-        apiClient.getDashboard("dlo"),
-        apiClient.getNotifications({ per_page: 4 }),
-        apiClient.getSupervisorAssignmentsPending({ per_page: 6, department: dept }),
+        apiClient.getApplications({ department: dept, ...(selectedTermId ? { term_id: selectedTermId } : {}) }),
+        apiClient.getDashboard("dlo", selectedTermId ? { term_id: selectedTermId } : undefined),
+        apiClient.getNotifications({ per_page: 4, ...(selectedTermId ? { term_id: selectedTermId } : {}) }),
+        apiClient.getSupervisorAssignmentsPending({ per_page: 6, department: dept, ...(selectedTermId ? { term_id: selectedTermId } : {}) }),
       ]);
       if (appsRes.success)    setApplications(appsRes.data);
       if (dashRes.success)    setDashboardCounts(dashRes.data);
@@ -48,7 +50,7 @@ export function DLODashboard() {
     } finally {
       setRefreshing(false);
     }
-  };
+  }, [dept, selectedTermId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -63,7 +65,7 @@ export function DLODashboard() {
 
     void init();
     return () => { cancelled = true; };
-  }, [dept]);
+  }, [load]);
 
   // Counts from backend dashboard endpoint (pre-computed, dept-scoped)
   const activeStudents    = dashboardCounts?.internship_counts?.active    ?? 0;

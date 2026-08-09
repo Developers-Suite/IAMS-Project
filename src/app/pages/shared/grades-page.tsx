@@ -9,6 +9,7 @@ import { AlertTriangle } from "lucide-react";
 import { CheckCircle2, RotateCcw, Search, Download, FileText, Clock, BarChart3, Eye, X } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { apiClient } from "../../lib/api-client";
+import { useTerm } from "../../lib/term-context";
 
 interface Props {
   viewRole: ExtendedRole;
@@ -46,6 +47,7 @@ function normalizeGrade(g: any) {
 
 export function GradesPage({ viewRole }: Props) {
   const { user } = useAppContext();
+  const { selectedTermId, isArchiveMode } = useTerm();
   const [rawGrades, setRawGrades] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -59,10 +61,10 @@ export function GradesPage({ viewRole }: Props) {
 
   const fetchGrades = useCallback(async () => {
     setLoading(true);
-    const res = await apiClient.getGrades();
+    const res = await apiClient.getGrades(selectedTermId ? { term_id: selectedTermId } : undefined);
     if (res.success) setRawGrades(res.data);
     setLoading(false);
-  }, []);
+  }, [selectedTermId]);
 
   useEffect(() => { fetchGrades(); }, [fetchGrades]);
 
@@ -322,7 +324,7 @@ export function GradesPage({ viewRole }: Props) {
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-border">
                   <StatusBadge status={g.gradeStatus} />
-                  {g.gradeStatus === "Submitted" && (
+                  {!isArchiveMode && g.gradeStatus === "Submitted" && (
                     <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                       <button onClick={() => handleApprove(g.id)} className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg flex items-center gap-1.5" style={{ fontSize: "0.8rem" }}>
                         <CheckCircle2 className="w-3.5 h-3.5" /> Approve
@@ -332,7 +334,7 @@ export function GradesPage({ viewRole }: Props) {
                       </button>
                     </div>
                   )}
-                  {(g.gradeStatus === "Approved") && (
+                  {!isArchiveMode && (g.gradeStatus === "Approved") && (
                     <button onClick={(e) => { e.stopPropagation(); handlePublish(g.id); }} className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg flex items-center gap-1.5" style={{ fontSize: "0.8rem" }}>
                       Publish
                     </button>
@@ -418,7 +420,7 @@ export function GradesPage({ viewRole }: Props) {
                       <td className="px-4 py-3"><StatusBadge status={g.gradeStatus} /></td>
                       <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                         <div className="flex gap-1">
-                          {g.gradeStatus === "Submitted" && (
+                          {!isArchiveMode && g.gradeStatus === "Submitted" && (
                             <>
                               <button onClick={() => handleApprove(g.id)} className="p-1.5 rounded-md hover:bg-emerald-100 text-emerald-600" title="Approve">
                                 <CheckCircle2 className="w-4 h-4" />
@@ -428,7 +430,7 @@ export function GradesPage({ viewRole }: Props) {
                               </button>
                             </>
                           )}
-                          {g.gradeStatus === "Approved" && (
+                          {!isArchiveMode && g.gradeStatus === "Approved" && (
                             <button onClick={() => handlePublish(g.id)} className="px-2 py-1 text-xs bg-primary text-primary-foreground rounded-md hover:opacity-90">
                               Publish
                             </button>
@@ -520,7 +522,7 @@ export function GradesPage({ viewRole }: Props) {
                   </div>
                 )}
 
-                {detail.gradeStatus === "Submitted" && (
+                {!isArchiveMode && detail.gradeStatus === "Submitted" && (
                   <div className="pt-3 border-t border-border space-y-2">
                     <button
                       onClick={() => { handleApprove(detail.id); setSelectedId(null); }}
@@ -538,7 +540,7 @@ export function GradesPage({ viewRole }: Props) {
                     </button>
                   </div>
                 )}
-                {detail.gradeStatus === "Approved" && (
+                {!isArchiveMode && detail.gradeStatus === "Approved" && (
                   <div className="pt-3 border-t border-border">
                     <button
                       onClick={() => { handlePublish(detail.id); setSelectedId(null); }}

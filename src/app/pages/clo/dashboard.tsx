@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { StatCard } from "../../components/stat-card";
 import { StatusBadge } from "../../components/status-badge";
 import { exportToCSV } from "../../lib/csv-export";
@@ -11,6 +11,7 @@ import {
 import { SkeletonStatCards, SkeletonDashboard } from "../../components/skeleton";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import { useNavigate } from "react-router";
+import { useTerm } from "../../lib/term-context";
 
 // ── Field accessors ────────────────────────────────────────────────────────────
 function getStudentName(app: any): string { return app.student?.user?.name ?? app.studentName ?? "—"; }
@@ -31,6 +32,7 @@ function toDateStr(iso?: string): string {
 // ── Component ──────────────────────────────────────────────────────────────────
 export function CLODashboard() {
   const navigate = useNavigate();
+  const { selectedTermId } = useTerm();
   const [applications, setApplications] = useState<any[]>([]);
   const [companies, setCompanies] = useState<any[]>([]);
   const [dashData, setDashData] = useState<any>(null);
@@ -38,14 +40,14 @@ export function CLODashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setRefreshing(true);
     try {
       const [appsRes, companiesRes, dashRes, notifRes] = await Promise.all([
-        apiClient.getApplications(),
-        apiClient.getCompanies(),
-        apiClient.getDashboard("clo"),
-        apiClient.getNotifications({ per_page: 5 }),
+        apiClient.getApplications(selectedTermId ? { term_id: selectedTermId } : undefined),
+        apiClient.getCompanies(selectedTermId ? { term_id: selectedTermId } : undefined),
+        apiClient.getDashboard("clo", selectedTermId ? { term_id: selectedTermId } : undefined),
+        apiClient.getNotifications({ per_page: 5, ...(selectedTermId ? { term_id: selectedTermId } : {}) }),
       ]);
       if (appsRes.success) setApplications(appsRes.data);
       if (companiesRes.success) setCompanies(companiesRes.data);
@@ -55,7 +57,7 @@ export function CLODashboard() {
     } finally {
       setRefreshing(false);
     }
-  };
+  }, [selectedTermId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -68,7 +70,7 @@ export function CLODashboard() {
     };
     void init();
     return () => { cancelled = true; };
-  }, []);
+  }, [load]);
 
   // ── Derived values from API ──────────────────────────────────────────────────
   const activeTerm        = dashData?.active_term ?? null;

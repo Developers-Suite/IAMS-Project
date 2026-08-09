@@ -15,6 +15,7 @@ import { setNotifications } from "../lib/store";
 import { CheckInModal } from "./check-in-modal";
 import { NotificationBell } from "./notification-bell";
 import { useStudentCheckIn } from "../hooks/use-student-check-in";
+import { TermSwitcher, ArchiveModeBanner } from "./term-switcher";
 
 interface NavItem {
   to: string;
@@ -402,6 +403,11 @@ export function DashboardLayout() {
             </button>
           )}
 
+          {/* Term Switcher — visible for CLO, DLO, supervisors (not students) */}
+          {user.role !== "student" && (
+            <TermSwitcher />
+          )}
+
           {/* Notifications */}
           <NotificationBell />
 
@@ -521,6 +527,7 @@ export function DashboardLayout() {
         </header>
 
         {/* Page Content */}
+        <ArchiveModeBanner />
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <Outlet />
         </main>

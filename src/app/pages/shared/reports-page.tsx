@@ -9,6 +9,7 @@ import {
 } from "recharts";
 import { toast } from "sonner";
 import type { ExtendedRole } from "../../services/auth-service";
+import { useTerm } from "../../lib/term-context";
 
 interface Props { viewRole: ExtendedRole; }
 type ReportTab = "overview" | "placement" | "grades" | "companies";
@@ -19,6 +20,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export function ReportsPage({ viewRole }: Props) {
+  const { selectedTermId } = useTerm();
   const [activeTab, setActiveTab] = useState<ReportTab>("overview");
   const [loading, setLoading] = useState(true);
   const [overview, setOverview] = useState<any>(null);
@@ -32,13 +34,13 @@ export function ReportsPage({ viewRole }: Props) {
     setLoading(true);
     try {
       const [ovRes, progRes, deptRes, perfRes, coRes, supRes] = await Promise.all([
-        apiClient.getAnalyticsOverview(),
-        apiClient.getInternshipProgress(),
-        apiClient.getDepartmentStatistics(),
-        apiClient.getStudentPerformance(),
-        apiClient.getCompanies({ per_page: 200 }),
+        apiClient.getAnalyticsOverview(selectedTermId ? { term_id: selectedTermId } : undefined),
+        apiClient.getInternshipProgress(selectedTermId ? { term_id: selectedTermId } : undefined),
+        apiClient.getDepartmentStatistics(selectedTermId ? { term_id: selectedTermId } : undefined),
+        apiClient.getStudentPerformance(selectedTermId ? { term_id: selectedTermId } : undefined),
+        apiClient.getCompanies({ per_page: 200, ...(selectedTermId ? { term_id: selectedTermId } : {}) }),
         // Graceful: CLO/DLO only — HOD will get 403 and supRes.success=false
-        apiClient.getAvailableSupervisors().catch(() => ({ success: false, data: [] })),
+        apiClient.getAvailableSupervisors({ ...(selectedTermId ? { term_id: selectedTermId } : {}) }).catch(() => ({ success: false, data: [] })),
       ]);
       if (ovRes.success)   setOverview(ovRes.data);
       if (progRes.success) setProgress(progRes.data);
@@ -51,7 +53,7 @@ export function ReportsPage({ viewRole }: Props) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [selectedTermId]);
 
   useEffect(() => { load(); }, [load]);
 

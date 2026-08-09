@@ -7,6 +7,7 @@ import {
 import { toast } from "sonner";
 
 import { apiClient } from "../../lib/api-client";
+import { useTerm } from "../../lib/term-context";
 
 interface PendingRow {
   internshipId: string;
@@ -33,7 +34,7 @@ export function DLOAssignmentsPage() {
   const [pending, setPending] = useState<PendingRow[]>([]);
   const [assigned, setAssigned] = useState<PendingRow[]>([]);
   const [supervisors, setSupervisors] = useState<SupervisorRow[]>([]);
-  const [activeTermId, setActiveTermId] = useState<number | null>(null);
+  const { selectedTermId, isArchiveMode } = useTerm();
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [assignFor, setAssignFor] = useState<string | null>(null);
@@ -43,11 +44,10 @@ export function DLOAssignmentsPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [pendingRes, assignedRes, supsRes, termRes] = await Promise.all([
-      apiClient.getSupervisorAssignmentsPending({ per_page: 100, department }),
-      apiClient.getSupervisorAssignmentsAssigned({ per_page: 100, department }),
-      apiClient.getAvailableSupervisors({ department }),
-      apiClient.getActiveTerm(),
+    const [pendingRes, assignedRes, supsRes] = await Promise.all([
+      apiClient.getSupervisorAssignmentsPending({ per_page: 100, department, ...(selectedTermId ? { term_id: selectedTermId } : {}) }),
+      apiClient.getSupervisorAssignmentsAssigned({ per_page: 100, department, ...(selectedTermId ? { term_id: selectedTermId } : {}) }),
+      apiClient.getAvailableSupervisors({ department, ...(selectedTermId ? { term_id: selectedTermId } : {}) }),
     ]);
     if (pendingRes.success) {
       setPending(pendingRes.data.map((i: any) => ({
@@ -77,9 +77,8 @@ export function DLOAssignmentsPage() {
         maxLoad: s.max_students ?? 0,
       })));
     }
-    if (termRes.success) setActiveTermId(termRes.data?.term?.id ?? termRes.data?.id ?? null);
     setLoading(false);
-  }, [department]);
+  }, [department, selectedTermId]);
 
   useEffect(() => {
     load();
@@ -133,9 +132,9 @@ export function DLOAssignmentsPage() {
   };
 
   const handleAutoAssign = async () => {
-    if (!activeTermId) { toast.error("No active term found for auto-assignment."); return; }
+    if (!selectedTermId) { toast.error("No term selected for auto-assignment."); return; }
     setAutoRunning(true);
-    const res = await apiClient.autoAssignSupervisors({ term_id: activeTermId });
+    const res = await apiClient.autoAssignSupervisors({ term_id: selectedTermId });
     setAutoRunning(false);
     if (res.success) {
       toast.success(res.message ?? "Auto-assignment complete.");
@@ -164,10 +163,12 @@ export function DLOAssignmentsPage() {
             <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
             {!refreshing && "Refresh"}
           </button>
-          <button onClick={handleAutoAssign} disabled={autoRunning || totalPending === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:opacity-50" style={{ fontSize: "0.85rem" }}>
-            {autoRunning ? <><RefreshCw className="w-4 h-4 animate-spin" /> Assigning…</> : <><Zap className="w-4 h-4" /> Run Auto-Assignment</>}
-          </button>
+          {!isArchiveMode && (
+            <button onClick={handleAutoAssign} disabled={autoRunning || totalPending === 0}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:opacity-50" style={{ fontSize: "0.85rem" }}>
+              {autoRunning ? <><RefreshCw className="w-4 h-4 animate-spin" /> Assigning…</> : <><Zap className="w-4 h-4" /> Run Auto-Assignment</>}
+            </button>
+          )}
         </div>
       </div>
 
@@ -238,10 +239,12 @@ export function DLOAssignmentsPage() {
                     <td className="px-4 py-3 text-muted-foreground" style={{ fontSize: "0.8rem" }}>{e.currentSupervisorName}</td>
                   )}
                   <td className="px-4 py-3">
-                    <button onClick={() => { setAssignFor(e.internshipId); setAssignTo(e.currentSupervisorId ?? ""); }}
-                      className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg hover:opacity-90" style={{ fontSize: "0.8rem" }}>
-                      {isReassigning ? "Reassign" : "Assign"}
-                    </button>
+                    {!isArchiveMode && (
+                      <button onClick={() => { setAssignFor(e.internshipId); setAssignTo(e.currentSupervisorId ?? ""); }}
+                        className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg hover:opacity-90" style={{ fontSize: "0.8rem" }}>
+                        {isReassigning ? "Reassign" : "Assign"}
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
