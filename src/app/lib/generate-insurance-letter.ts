@@ -151,6 +151,19 @@ export function openInsuranceLetter(data: InsuranceLetterData): void {
       margin-top: 25px;
       font-weight: bold;
       font-size: 9.5pt;
+      position: relative;
+    }
+    .right-stamp-container {
+      position: relative;
+      width: 2.2in;
+      height: 1.1in;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .insurance-stamp-img {
+      max-height: 1.1in;
+      opacity: 0.85;
     }
     .footer-note {
       border-top: 1px solid #ccc;
@@ -226,7 +239,7 @@ export function openInsuranceLetter(data: InsuranceLetterData): void {
           <div class="sign-row" style="margin-top: 6px;">
             <span class="field-label">Signature:</span>
             <span class="field-line" style="min-height: 25px;">
-              ${signatureUrl ? `<img class="signature-img" src="${signatureUrl}" alt="Signature" />` : ""}
+              <img class="signature-img" src="${signatureUrl || `${window.location.origin}/Signature.png`}" alt="Signature" />
             </span>
           </div>
           <div class="sign-row" style="margin-top: 6px;">
@@ -235,6 +248,9 @@ export function openInsuranceLetter(data: InsuranceLetterData): void {
           </div>
         </div>
         <div style="display: flex; flex-direction: column; justify-content: flex-end; align-items: center;">
+          <div class="right-stamp-container">
+            <img class="insurance-stamp-img" src="${window.location.origin}/Stamp.png" alt="University Stamp" />
+          </div>
           <div class="right-sign-line">Industrial Liaison Office Stamp</div>
         </div>
       </div>

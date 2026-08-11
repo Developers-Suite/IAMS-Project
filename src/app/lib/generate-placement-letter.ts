@@ -173,6 +173,13 @@ export function openPlacementLetter(data: PlacementLetterData): void {
     .signature-block {
       margin-top: 0.4in;
       font-size: 11px;
+      position: relative;
+    }
+    .signature-container {
+      position: relative;
+      height: 1.2in;
+      margin-top: 0.1in;
+      margin-bottom: 0.1in;
     }
     .signature-line {
       border-top: 1px solid #333;
@@ -182,9 +189,19 @@ export function openPlacementLetter(data: PlacementLetterData): void {
       display: inline-block;
     }
     .signature-image {
-      height: 0.6in;
-      display: block;
-      margin-top: 0.2in;
+      height: 0.8in;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 2;
+    }
+    .stamp-image {
+      height: 1.1in;
+      position: absolute;
+      top: -0.15in;
+      left: 0.5in;
+      z-index: 1;
+      opacity: 0.85;
     }
     .signature-title {
       font-weight: bold;
@@ -260,9 +277,10 @@ export function openPlacementLetter(data: PlacementLetterData): void {
     <div class="closing">Yours faithfully,</div>
 
     <div class="signature-block">
-      ${override?.signatureUrl && isSafeUrl(override.signatureUrl)
-        ? `<img class="signature-image" src="${override.signatureUrl}" alt="" />`
-        : `<div class="signature-line"></div>`}
+      <div class="signature-container">
+        <img class="signature-image" src="${override?.signatureUrl && isSafeUrl(override.signatureUrl) ? override.signatureUrl : `${window.location.origin}/Signature.png`}" alt="Signature" />
+        <img class="stamp-image" src="${window.location.origin}/Stamp.png" alt="University Stamp" />
+      </div>
       <div class="signature-title">${data.dloName || "Industrial Liaison Officer"}</div>
       <div class="signature-subtitle">Industrial Liaison Office</div>
       <div class="signature-subtitle">${data.universityName || "Ho Technical University"}</div>

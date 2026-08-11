@@ -246,11 +246,11 @@ export function DocumentsPage() {
       `
       : "";
 
-    const signatureHtml = (t.has_signature || t.hasSignature) && t.signature_url
+    const signatureHtml = (t.has_signature || t.hasSignature)
       ? `
       <div class="signature-section" style="margin-top: 0.4in; page-break-inside: avoid;">
         <p style="margin-bottom: 0.05in;">Yours faithfully,</p>
-        <img src="${t.signature_url}" alt="Signature" style="max-height: 60px; object-fit: contain; display: block; margin-bottom: 0.05in;" />
+        <img src="${t.signature_url || `${window.location.origin}/Signature.png`}" alt="Signature" style="max-height: 60px; object-fit: contain; display: block; margin-bottom: 0.05in;" />
         <p style="font-weight: bold; border-top: 1px solid #ccc; display: inline-block; padding-top: 2px;">Industrial Liaison Officer</p>
         <p style="font-size: 10pt; color: #555; margin-top: 2px;">Industrial Liaison Office</p>
         <p style="font-size: 10pt; color: #555;">Ho Technical University</p>
