@@ -14,6 +14,8 @@ import {
 import { toast } from "sonner";
 import { DatePicker } from "../../components/ui/date-picker";
 
+import { useTerm } from "../../lib/term-context";
+
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 interface TermShape {
@@ -116,6 +118,7 @@ const emptyForm = {
 // ── Component ──────────────────────────────────────────────────────────────────
 
 export function TermsPage() {
+  const { refreshTerms } = useTerm();
   const [terms, setTerms] = useState<TermShape[]>([]);
   const [deptOptions, setDeptOptions] = useState<DeptOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -231,7 +234,11 @@ export function TermsPage() {
       setTerms((prev) => prev.map((t) =>
         t.id === editTarget.id ? (updated ?? { ...t, ...payload }) : t
       ));
-      toast.success("Term updated.");
+      if (editTarget.status === "Active") {
+        toast.success("Active term updated. Date extension and department changes take effect immediately across the system.");
+      } else {
+        toast.success("Term updated.");
+      }
     } else {
       const res = await apiClient.createTerm(payload);
       if (!res.success || !res.data) {
@@ -243,6 +250,7 @@ export function TermsPage() {
       toast.success("Term created.");
     }
 
+    refreshTerms();
     setSaving(false);
     setShowModal(false);
     setEditTarget(null);
@@ -263,6 +271,7 @@ export function TermsPage() {
       return t;
     }));
     if (selectedTerm?.id === term.id) setSelectedTerm(updated);
+    refreshTerms();
     toast.success(`${term.name} activated.`);
   };
 
@@ -275,6 +284,7 @@ export function TermsPage() {
     const updated: TermShape = { ...term, status: "Draft" };
     setTerms((prev) => prev.map((t) => t.id === term.id ? updated : t));
     if (selectedTerm?.id === term.id) setSelectedTerm(updated);
+    refreshTerms();
     toast.success(`${term.name} unpublished. Students can no longer see this window.`);
   };
 
@@ -287,6 +297,7 @@ export function TermsPage() {
     const updated: TermShape = { ...term, status: "Upcoming" };
     setTerms((prev) => prev.map((t) => t.id === term.id ? updated : t));
     if (selectedTerm?.id === term.id) setSelectedTerm(updated);
+    refreshTerms();
     toast.success(`${term.name} published. Students can now view this window.`);
   };
 
@@ -299,6 +310,7 @@ export function TermsPage() {
     const updated: TermShape = { ...term, status: "Archived" };
     setTerms((prev) => prev.map((t) => t.id === term.id ? updated : t));
     if (selectedTerm?.id === term.id) setSelectedTerm(updated);
+    refreshTerms();
     toast.success(`${term.name} archived.`);
   };
 
@@ -529,6 +541,15 @@ export function TermsPage() {
                 <X className="w-4 h-4" />
               </button>
             </div>
+
+            {editTarget?.status === "Active" && (
+              <div className="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-xl p-3.5 flex items-start gap-2.5 text-xs text-emerald-800 dark:text-emerald-300">
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 mt-0.5" />
+                <div>
+                  <span className="font-semibold">Editing Active Term:</span> Extending internship dates or adding new eligible departments will take effect immediately across all student application forms, logbooks, and supervisor workspaces.
+                </div>
+              </div>
+            )}
 
             {/* ── Basic info ─────────────────────────────────────────────────────── */}
             <section className="space-y-4">
