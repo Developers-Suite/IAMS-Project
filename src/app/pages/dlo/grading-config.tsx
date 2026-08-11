@@ -10,8 +10,11 @@ import { DEFAULT_STRUCTURE, DEFAULT_STRUCTURE_WEIGHTS, DEFAULT_SECTION_WEIGHTS }
 import { ChevronDown, Lock, Loader2 } from "lucide-react";
 import type { TermResponse } from "../../types/api";
 
+import { useTerm } from "../../lib/term-context";
+
 export function DLOGradingConfigPage() {
   const { user } = useAppContext();
+  const { selectedTermId: workspaceTermId, isArchiveMode } = useTerm();
   // Prefer the department name from the user object (populated after backend fix).
   // Fall back to resolving by department_id from the departments list.
   const [department, setDepartment] = useState<string>(user?.department ?? "");
@@ -26,6 +29,12 @@ export function DLOGradingConfigPage() {
   const [loading, setLoading] = useState(true);
   const [pendingInput, setPendingInput] = useState<any>(null);
   const [isActivating, setIsActivating] = useState(false);
+
+  useEffect(() => {
+    if (workspaceTermId) {
+      setSelectedTermId(workspaceTermId);
+    }
+  }, [workspaceTermId]);
 
   // Resolve department name from departments list if not already set via user context
   useEffect(() => {
@@ -212,7 +221,7 @@ export function DLOGradingConfigPage() {
         <Card className="p-6">
           <GradingConfigForm
             initial={config}
-            readOnly={isLocked}
+            readOnly={isLocked || isArchiveMode}
             onSave={handleSaveAndActivate}
             saveLabel={isActivating ? "Activating…" : "Save & Activate for Term"}
           />

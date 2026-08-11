@@ -5,6 +5,8 @@ import { GraduationCap, ChevronDown, ChevronUp } from "lucide-react";
 import { apiClient } from "../../lib/api-client";
 import { getNameInitials } from "../../lib/validation";
 
+import { useTerm } from "../../lib/term-context";
+
 type FilterTab = "pending" | "approved" | "all";
 
 function normalizeGrade(g: any) {
@@ -28,6 +30,7 @@ function normalizeGrade(g: any) {
 }
 
 export function HODApprovalsPage() {
+  const { selectedTermId, isArchiveMode } = useTerm();
   const [grades, setGrades] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterTab>("pending");
@@ -35,10 +38,10 @@ export function HODApprovalsPage() {
 
   const fetchGrades = useCallback(async () => {
     setLoading(true);
-    const res = await apiClient.getGrades({ per_page: 100 });
+    const res = await apiClient.getGrades({ per_page: 100, ...(selectedTermId ? { term_id: selectedTermId } : {}) });
     if (res.success) setGrades(res.data.map(normalizeGrade));
     setLoading(false);
-  }, []);
+  }, [selectedTermId]);
 
   useEffect(() => { fetchGrades(); }, [fetchGrades]);
 

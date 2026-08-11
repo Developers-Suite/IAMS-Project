@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useAppContext } from "../../lib/context";
 import { StatCard } from "../../components/stat-card";
 import { apiClient } from "../../lib/api-client";
@@ -10,6 +10,7 @@ import {
 import { useNavigate } from "react-router";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { getNameInitials } from "../../lib/validation";
+import { useTerm } from "../../lib/term-context";
 
 function getStudentName(g: any) { return g.internship?.student?.user?.name ?? g.student?.user?.name ?? "—"; }
 function getStudentNum(g: any)  { return g.internship?.student?.student_id ?? g.student?.student_id ?? "—"; }
@@ -17,6 +18,7 @@ function getStudentNum(g: any)  { return g.internship?.student?.student_id ?? g.
 export function HODDashboard() {
   const { user } = useAppContext();
   const navigate = useNavigate();
+  const { selectedTermId } = useTerm();
   const dept = user?.department || "";
   const deptId = user?.department_id;
 
@@ -27,12 +29,13 @@ export function HODDashboard() {
 
   useEffect(() => {
     let cancelled = false;
+    const termParams = selectedTermId ? { term_id: selectedTermId } : undefined;
     const requests: Promise<any>[] = [
-      apiClient.getDashboard("hod"),
-      apiClient.getGrades({ status: "calculated" }),
+      apiClient.getDashboard("hod", termParams),
+      apiClient.getGrades({ status: "calculated", ...termParams }),
     ];
     if (deptId) {
-      requests.push(apiClient.getDepartmentAnalytics(String(deptId)));
+      requests.push(apiClient.getDepartmentAnalytics(String(deptId), termParams));
     }
     Promise.all(requests).then(([dashRes, gradesRes, analyticsRes]) => {
       if (cancelled) return;
@@ -42,7 +45,7 @@ export function HODDashboard() {
       setLoading(false);
     });
     return () => { cancelled = true; };
-  }, [deptId]);
+  }, [deptId, selectedTermId]);
 
   const internshipCounts = dashboard?.internship_counts ?? { active: 0, completed: 0, pending: 0 };
   const gradeCounts = dashboard?.grade_counts ?? { calculated: 0, approved: 0, published: 0 };

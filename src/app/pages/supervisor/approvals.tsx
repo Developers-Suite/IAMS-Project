@@ -5,7 +5,10 @@ import {
   CheckCircle2, Clock, Mail, RefreshCw, AlertCircle
 } from "lucide-react";
 
+import { useTerm } from "../../lib/term-context";
+
 export function SupervisorApprovalsPage() {
+  const { selectedTermId, isArchiveMode } = useTerm();
   const [invitations, setInvitations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -13,7 +16,7 @@ export function SupervisorApprovalsPage() {
   const load = async () => {
     setRefreshing(true);
     try {
-      const res = await apiClient.getPendingSupervisorInvitations();
+      const res = await apiClient.getPendingSupervisorInvitations(selectedTermId ? { term_id: selectedTermId } : undefined);
       if (res.success) {
         setInvitations(res.data || []);
       } else {
@@ -30,7 +33,7 @@ export function SupervisorApprovalsPage() {
     // Auto-refresh every 30 seconds
     const interval = setInterval(load, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [selectedTermId]);
 
   const handleApprove = async (invitationId: string, studentName: string) => {
     const res = await apiClient.approveSupervisorInvitation(invitationId);
@@ -123,8 +126,9 @@ export function SupervisorApprovalsPage() {
 
                 {/* Action Button */}
                 <button
+                  disabled={isArchiveMode}
                   onClick={() => handleApprove(invitation.id, invitation.student?.user?.name || invitation.student_name || "Student")}
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-1.5 transition-colors shrink-0"
+                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 transition-colors shrink-0"
                   style={{ fontSize: "0.8rem" }}
                 >
                   <CheckCircle2 className="w-4 h-4" />

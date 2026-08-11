@@ -40,6 +40,7 @@ function normalizeVisitToNote(v: any) {
 
 export function AcademicEvaluatePage() {
   const { user } = useAppContext();
+  const { selectedTermId, isArchiveMode } = useTerm();
 
   // ── Dashboard data ──
   const [dashboard, setDashboard] = useState<any>(null);
@@ -61,7 +62,7 @@ export function AcademicEvaluatePage() {
 
   // Load dashboard
   useEffect(() => {
-    apiClient.getDashboard("academic-supervisor").then((res) => {
+    apiClient.getDashboard("academic-supervisor", selectedTermId ? { term_id: selectedTermId } : undefined).then((res) => {
       if (res.success) setDashboard(res.data);
       setLoading(false);
     });
@@ -70,7 +71,7 @@ export function AcademicEvaluatePage() {
         localStorage.setItem(`evals_dismissed_${user.id}`, "true");
       } catch {}
     }
-  }, [user?.id]);
+  }, [user?.id, selectedTermId]);
 
   // Derive assigned students from dashboard internships
   const assignedStudents: NormalizedStudent[] = (dashboard?.assigned_internships ?? []).map(

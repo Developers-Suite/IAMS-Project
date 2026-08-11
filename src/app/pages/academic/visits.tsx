@@ -8,6 +8,8 @@ import { RescheduleVisitModal } from "../../components/academic/reschedule-visit
 import { CompleteVisitModal } from "../../components/academic/complete-visit-modal";
 import { VisitListCard } from "../../components/academic/visit-list-card";
 
+import { useTerm } from "../../lib/term-context";
+
 type FilterStatus = "All" | "Scheduled" | "Completed" | "Cancelled";
 
 // Map backend site-visitation to the shape VisitListCard expects
@@ -30,6 +32,7 @@ function normalizeVisit(v: any) {
 }
 
 export function AcademicVisitsPage() {
+  const { selectedTermId, isArchiveMode } = useTerm();
   const [visits, setVisits] = useState<any[]>([]);
   const [internships, setInternships] = useState<any[]>([]);
   const [filter, setFilter] = useState<FilterStatus>("All");
@@ -39,13 +42,14 @@ export function AcademicVisitsPage() {
   const [rescheduleVisitId, setRescheduleVisitId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
+    const termParams = selectedTermId ? { term_id: selectedTermId } : undefined;
     const [visitsRes, internshipsRes] = await Promise.all([
-      apiClient.getSiteVisitations({ per_page: 100 }),
-      apiClient.getActiveInternships(),
+      apiClient.getSiteVisitations({ per_page: 100, ...termParams }),
+      apiClient.getActiveInternships(termParams),
     ]);
     if (visitsRes.success) setVisits(visitsRes.data.map(normalizeVisit));
     if (internshipsRes.success) setInternships(internshipsRes.data);
-  }, []);
+  }, [selectedTermId]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -133,10 +137,12 @@ export function AcademicVisitsPage() {
             Schedule, track, and record observations from company site visits
           </p>
         </div>
-        <button onClick={() => setShowNewForm(true)}
-          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 flex items-center gap-2 font-medium" style={{ fontSize: "0.85rem" }}>
-          <Plus className="w-4 h-4" /> Schedule New Visit
-        </button>
+        {!isArchiveMode && (
+          <button onClick={() => setShowNewForm(true)}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 flex items-center gap-2 font-medium" style={{ fontSize: "0.85rem" }}>
+            <Plus className="w-4 h-4" /> Schedule New Visit
+          </button>
+        )}
       </div>
 
       {/* Summary */}

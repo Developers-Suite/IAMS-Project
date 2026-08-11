@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router";
 import { getNameInitials } from "../../lib/validation";
+import { useTerm } from "../../lib/term-context";
 
 function getStudentName(i: any) { return i.student?.user?.name ?? "—"; }
 function getStudentNum(i: any)  { return i.student?.student_id ?? "—"; }
@@ -19,6 +20,7 @@ function getDept(i: any)        { return i.student?.department?.name ?? "—"; }
 export function AcademicDashboard() {
   const { user } = useAppContext();
   const navigate = useNavigate();
+  const { selectedTermId } = useTerm();
 
   const [dashboard, setDashboard] = useState<any>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -28,8 +30,8 @@ export function AcademicDashboard() {
     let cancelled = false;
     const load = () => {
       Promise.all([
-        apiClient.getDashboard("academic-supervisor"),
-        apiClient.getNotifications({ per_page: 4 }),
+        apiClient.getDashboard("academic-supervisor", selectedTermId ? { term_id: selectedTermId } : undefined),
+        apiClient.getNotifications({ per_page: 4, ...(selectedTermId ? { term_id: selectedTermId } : {}) }),
       ]).then(([dashRes, notifRes]) => {
         if (cancelled) return;
         if (dashRes.success)  setDashboard(dashRes.data);
@@ -40,7 +42,7 @@ export function AcademicDashboard() {
     load();
     const interval = setInterval(load, 30_000);
     return () => { cancelled = true; clearInterval(interval); };
-  }, []);
+  }, [selectedTermId]);
 
   const internships: any[]    = dashboard?.assigned_internships ?? [];
   const pendingLogbooks: any[] = dashboard?.pending_logbooks     ?? [];

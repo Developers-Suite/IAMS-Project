@@ -7,23 +7,19 @@ import { apiClient } from "../../lib/api-client";
 import { DEFAULT_STRUCTURE, DEFAULT_STRUCTURE_WEIGHTS, DEFAULT_SECTION_WEIGHTS } from "../../lib/constants";
 import { Loader2 } from "lucide-react";
 
+import { useTerm } from "../../lib/term-context";
+
 export function HODGradingConfigPage() {
   const { user } = useAppContext();
+  const { selectedTermId } = useTerm();
   const department = user?.department ?? "Computer Science";
 
   const [config, setConfig] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTermId, setActiveTermId] = useState<string | number | undefined>(undefined);
-
-  useEffect(() => {
-    apiClient.getActiveTerm().then((res) => {
-      if (res.success) setActiveTermId(res.data?.term?.id);
-    });
-  }, []);
 
   const fetchConfig = async () => {
     setLoading(true);
-    const res = await apiClient.getGradingConfigs({ department, ...(activeTermId ? { term_id: activeTermId } : {}) });
+    const res = await apiClient.getGradingConfigs({ department, ...(selectedTermId ? { term_id: selectedTermId } : {}) });
     if (res.success && res.data.length > 0) {
       setConfig(res.data[0]);
     } else {
@@ -42,7 +38,7 @@ export function HODGradingConfigPage() {
 
   useEffect(() => {
     fetchConfig();
-  }, [department, activeTermId]);
+  }, [department, selectedTermId]);
 
   if (loading) {
     return (

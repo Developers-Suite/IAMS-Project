@@ -9,6 +9,8 @@ import { apiClient } from "../../lib/api-client";
 import { getNameInitials } from "../../lib/validation";
 import { toast } from "sonner";
 
+import { useTerm } from "../../lib/term-context";
+
 interface SupervisorRow {
   id: string;
   name: string;
@@ -29,6 +31,7 @@ function normalizeSupervisor(s: any): SupervisorRow {
 
 export function SupervisorsPage() {
   const { user } = useAppContext();
+  const { selectedTermId, isArchiveMode } = useTerm();
   const department = user?.department || "";
 
   const [supervisors, setSupervisors] = useState<SupervisorRow[]>([]);
@@ -44,10 +47,10 @@ export function SupervisorsPage() {
 
   const fetchSupervisors = useCallback(async () => {
     setLoading(true);
-    const res = await apiClient.getAvailableSupervisors({ department });
+    const res = await apiClient.getAvailableSupervisors({ department, ...(selectedTermId ? { term_id: selectedTermId } : {}) });
     if (res.success) setSupervisors(res.data.map(normalizeSupervisor));
     setLoading(false);
-  }, [department]);
+  }, [department, selectedTermId]);
 
   useEffect(() => { fetchSupervisors(); }, [fetchSupervisors]);
 
@@ -115,13 +118,15 @@ export function SupervisorsPage() {
             {department ? `${department} · ` : ""}Academic supervisor pool and workload distribution
           </p>
         </div>
-        <button
-          onClick={openAddModal}
-          className="px-4 py-2 bg-primary text-primary-foreground rounded-xl hover:opacity-90 flex items-center gap-2"
-          style={{ fontSize: "0.85rem" }}
-        >
-          <Plus className="w-4 h-4" /> Add Supervisor
-        </button>
+        {!isArchiveMode && (
+          <button
+            onClick={openAddModal}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-xl hover:opacity-90 flex items-center gap-2"
+            style={{ fontSize: "0.85rem" }}
+          >
+            <Plus className="w-4 h-4" /> Add Supervisor
+          </button>
+        )}
       </div>
 
       {/* Summary Stats */}
