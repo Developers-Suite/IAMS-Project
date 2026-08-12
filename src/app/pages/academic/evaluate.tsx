@@ -12,6 +12,7 @@ import { StudentListReview } from "../../components/academic/student-list-review
 import { StudentLogbookView } from "../../components/academic/student-logbook-view";
 import { StudentAttendanceView } from "../../components/academic/student-attendance-view";
 import { StudentSiteVisitsView } from "../../components/academic/student-site-visits-view";
+import { useTerm } from "../../lib/term-context";
 
 type Tab = "logbook" | "attendance" | "evaluation" | "visits";
 
