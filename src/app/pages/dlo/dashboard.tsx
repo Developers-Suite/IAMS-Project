@@ -21,7 +21,7 @@ function getStudentNum(app: any): string  { return app.student?.student_id ?? ap
 function getCompanyName(app: any): string { return app.company?.name ?? app.companyName ?? "—"; }
 
 export function DLODashboard() {
-  const { user, selectedTermId } = useAppContext();
+  const { user } = useAppContext();
   const navigate = useNavigate();
   const { selectedTermId } = useTerm();
   const dept = user?.department || "";

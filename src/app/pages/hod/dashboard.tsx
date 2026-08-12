@@ -16,7 +16,7 @@ function getStudentName(g: any) { return g.internship?.student?.user?.name ?? g.
 function getStudentNum(g: any)  { return g.internship?.student?.student_id ?? g.student?.student_id ?? "—"; }
 
 export function HODDashboard() {
-  const { user, selectedTermId } = useAppContext();
+  const { user } = useAppContext();
   const navigate = useNavigate();
   const { selectedTermId } = useTerm();
   const dept = user?.department || "";

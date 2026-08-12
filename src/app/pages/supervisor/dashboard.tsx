@@ -18,7 +18,7 @@ function getCompanyName(i: any) { return i.company?.name ?? "—"; }
 function getDept(i: any)        { return i.student?.department?.name ?? "—"; }
 
 export function SupervisorDashboard() {
-  const { user, selectedTermId } = useAppContext();
+  const { user } = useAppContext();
   const navigate = useNavigate();
   const { selectedTermId, isArchiveMode } = useTerm();
 
