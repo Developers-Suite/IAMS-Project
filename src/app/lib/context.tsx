@@ -12,6 +12,8 @@ interface AppContextType {
   sidebarOpen: boolean;
   setSidebarOpen: (o: boolean) => void;
   store: StoreState;
+  selectedTermId: string | null;
+  setSelectedTermId: (id: string | null) => void;
 }
 
 const AppContext = createContext<AppContextType>({
@@ -20,6 +22,8 @@ const AppContext = createContext<AppContextType>({
   sidebarOpen: true,
   setSidebarOpen: () => {},
   store: getState(),
+  selectedTermId: null,
+  setSelectedTermId: () => {},
 });
 
 const USER_KEY = "iams_user";
@@ -88,6 +92,19 @@ function saveUser(user: AuthUser | null): void {
 export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUserState] = useState<AuthUser | null>(loadUser);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [selectedTermId, setSelectedTermIdState] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem("iams_selected_term_id");
+    } catch { return null; }
+  });
+
+  const setSelectedTermId = (id: string | null) => {
+    try {
+      if (id) localStorage.setItem("iams_selected_term_id", id);
+      else localStorage.removeItem("iams_selected_term_id");
+    } catch {}
+    setSelectedTermIdState(id);
+  };
 
   const store = useSyncExternalStore(subscribe, getState, getState);
 
@@ -244,7 +261,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AppContext.Provider value={{ user, setUser, sidebarOpen, setSidebarOpen, store }}>
+    <AppContext.Provider value={{ user, setUser, sidebarOpen, setSidebarOpen, store, selectedTermId, setSelectedTermId }}>
       <TermProvider>
         {children}
       </TermProvider>
