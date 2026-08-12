@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useAppContext } from "../../lib/context";
 import { apiClient } from "../../lib/api-client";
 import { useToastAction } from "../../lib/hooks";
+import { toast } from "sonner";
 import { useStudentCheckIn } from "../../hooks/use-student-check-in";
 import { ghanaRegions } from "../../lib/mock-data";
 import { getInternshipEndDate } from "../../lib/application-helpers";
@@ -183,8 +184,9 @@ export function StudentApplicationsPage() {
   const matchingTerm = terms.find((t) => String(t.id) === String(matchingTermId));
   const isTermArchived = matchingTerm?.status === "archived";
 
+  const isRejected = myApp?.status?.toLowerCase() === "rejected";
   const shouldShowTrackerOnly = Boolean(
-    activeInternship || (targetAppOrInternship && (!isInternshipEnded || !(isGradePublished && isTermArchived)))
+    activeInternship || (targetAppOrInternship && !isRejected && (!isInternshipEnded || !(isGradePublished && isTermArchived)))
   );
 
   // Auto-switch to tracker view when active internship exists or if tracking should continue
@@ -193,6 +195,19 @@ export function StudentApplicationsPage() {
       setView("tracker");
     }
   }, [shouldShowTrackerOnly, view]);
+
+  // Failure toast if application gets rejected, prompting restart of application cycle
+  useEffect(() => {
+    if (myApp?.status?.toLowerCase() === "rejected" && myApp?.id) {
+      const shownKey = `rejection_toast_shown_${myApp.id}`;
+      if (!sessionStorage.getItem(shownKey)) {
+        toast.error(`Your application has been rejected. Reason: ${myApp.rejection_reason || "Not specified"}. Please apply again to restart the application cycle.`, {
+          duration: 10000,
+        });
+        sessionStorage.setItem(shownKey, "true");
+      }
+    }
+  }, [myApp]);
 
   // Per-user draft keys so drafts don't bleed between accounts
   const draftKey  = `application_form_${user?.id ?? "anon"}`;

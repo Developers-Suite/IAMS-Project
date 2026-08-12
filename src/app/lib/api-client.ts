@@ -595,7 +595,6 @@ export const apiClient = {
     });
   },
 
-  // The real API has no branch concept — this creates a company and returns a synthetic branch
   async createCompanyWithBranch(
     companyData: { name: string; contactPerson?: string; contactEmail?: string; contactPhone?: string; [key: string]: unknown },
     branchData: { name: string; region?: string; location?: string; [key: string]: unknown }
@@ -623,9 +622,22 @@ export const apiClient = {
     if (!res.success) return { success: false, data: null, message: res.message };
 
     const company: CompanyResponse = res.data?.company ?? res.data;
+    const companyId = String(company?.id);
+    let branch = { id: String(company?.id ?? Date.now()), name: branchData.name || company?.name };
+    if (companyId) {
+      const branchRes = await this.createCompanyBranch(companyId, {
+        name: branchData.name,
+        region: branchData.region,
+        location: branchData.location,
+      });
+      if (branchRes.success && branchRes.data) {
+        branch = branchRes.data;
+      }
+    }
+
     return {
       success: true,
-      data: { company, branch: { id: String(company?.id ?? Date.now()), name: branchData.name || company?.name } },
+      data: { company, branch },
       message: res.message,
     };
   },

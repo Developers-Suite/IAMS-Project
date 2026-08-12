@@ -24,10 +24,10 @@ export function StudentProfileSetup() {
 
   // Academic Information
   const [studentId, setStudentId] = useState(user?.studentId || "");
-  const [department, setDepartment] = useState(user?.department || "");
+  const [department, setDepartment] = useState("");
   const [departmentId, setDepartmentId] = useState<string | null>(null);
   const [program, setProgram] = useState("");
-  const [level, setLevel] = useState("200");
+  const [level, setLevel] = useState("");
   const [languages, setLanguages] = useState("");
 
   // API-driven departments + programmes
@@ -69,7 +69,7 @@ export function StudentProfileSetup() {
           setStudentId(d.studentId || (user?.email ? user.email.split("@")[0] : ""));
           setDepartment(d.department || "");
           setProgram(d.program || "");
-          setLevel(d.level || "200");
+          setLevel(d.level || "");
           setLanguages(d.languages || "");
           setPreferredIndustries(d.preferredIndustries || "");
           setDesiredRoles(d.desiredRoles || "");
@@ -95,7 +95,7 @@ export function StudentProfileSetup() {
             setStudentId(p.student_id || (user?.email ? user.email.split("@")[0] : ""));
             setDepartment(p.department_name || (typeof p.department === "string" ? p.department : p.department?.name) || "");
             setProgram(p.program || "");
-            setLevel(String(p.level || "200"));
+            setLevel(p.level ? String(p.level) : "");
             setLanguages(p.languages || p.profile_data?.languages || "");
             setPreferredIndustries(p.preferred_industries || p.profile_data?.preferred_industries || "");
             setDesiredRoles(p.desired_roles || p.profile_data?.desired_roles || "");
@@ -126,7 +126,10 @@ export function StudentProfileSetup() {
   useEffect(() => {
     apiClient.getDepartments({ status: "active" }).then((res) => {
       if (res.success && res.data.length > 0) {
-        setApiDepts(res.data.map((d: any) => ({ id: String(d.id), name: d.name })));
+        const filtered = res.data
+          .map((d: any) => ({ id: String(d.id), name: d.name }))
+          .filter((d: any) => d.name.toLowerCase() !== "information technology");
+        setApiDepts(filtered);
       }
     }).catch(() => {});
   }, []);
@@ -287,7 +290,7 @@ export function StudentProfileSetup() {
             <div><span className="text-muted-foreground">Student ID:</span> <span className="font-medium">{studentId}</span></div>
             <div><span className="text-muted-foreground">Department:</span> <span className="font-medium">{department || "—"}</span></div>
             <div><span className="text-muted-foreground">Program:</span> <span className="font-medium">{program || "—"}</span></div>
-            <div><span className="text-muted-foreground">Level:</span> <span className="font-medium">{level} Level</span></div>
+            <div><span className="text-muted-foreground">Level:</span> <span className="font-medium">{level ? `${level} Level` : "—"}</span></div>
             {languages && <div><span className="text-muted-foreground">Languages:</span> <span className="font-medium">{languages}</span></div>}
           </div>
 
@@ -422,6 +425,7 @@ export function StudentProfileSetup() {
               <label className="text-xs font-medium">Level *</label>
               <select value={level} onChange={(e) => setLevel(e.target.value)}
                 className="w-full mt-1 px-3 py-2 border border-border rounded-lg bg-background text-sm">
+                <option value="">Select Level</option>
                 <option value="100">100 Level (1st Year)</option>
                 <option value="200">200 Level (2nd Year)</option>
                 <option value="300">300 Level (3rd Year)</option>
@@ -447,7 +451,6 @@ export function StudentProfileSetup() {
                 : (
                   <>
                     <option value="Computer Science">Computer Science</option>
-                    <option value="Information Technology">Information Technology</option>
                     <option value="Software Engineering">Software Engineering</option>
                     <option value="Electrical Engineering">Electrical Engineering</option>
                     <option value="Mechanical Engineering">Mechanical Engineering</option>

@@ -34,29 +34,21 @@ export function DocumentsPage() {
   const [isDownloadingForm, setIsDownloadingForm] = useState(false);
 
   // Simulated local state for uploaded final report (survives reload)
-  const [finalReportName, setFinalReportName] = useState<string | null>(() => {
-    try {
-      return localStorage.getItem("iams_final_report_name");
-    } catch {
-      return null;
-    }
-  });
-  const [finalReportUrl, setFinalReportUrl] = useState<string | null>(() => {
-    try {
-      return localStorage.getItem("iams_final_report_url");
-    } catch {
-      return null;
-    }
-  });
+  const [finalReportName, setFinalReportName] = useState<string | null>(null);
+  const [finalReportUrl, setFinalReportUrl] = useState<string | null>(null);
 
-  const fetchApplicationData = () => {
-    apiClient.getTerms().then((res) => {
-      if (res.success) setTerms(res.data);
-    });
+  const fetchApplicationData = async () => {
+    try {
+      const [termsRes, templatesRes, appsRes] = await Promise.all([
+        apiClient.getTerms(),
+        apiClient.getTemplates(),
+        apiClient.getApplications(),
+      ]);
 
-    apiClient.getTemplates().then((res) => {
-      if (res.success) {
-        const filtered = res.data.filter((t: any) => {
+      if (termsRes.success) setTerms(termsRes.data);
+
+      if (templatesRes.success) {
+        const filtered = templatesRes.data.filter((t: any) => {
           const isBuiltInCore = ["placement-letter", "acceptance-form", "insurance-letter", "logbook-template"].includes(t.slug ?? t.id);
           let isForStudent = false;
           try {
@@ -70,35 +62,58 @@ export function DocumentsPage() {
         });
         setCustomTemplates(filtered);
       }
-    });
 
-    apiClient.getApplications().then((res) => {
-      if (res.success && res.data.length > 0) {
-        const sorted = [...res.data].sort((a, b) => (b.created_at ?? "") > (a.created_at ?? "") ? 1 : -1);
-        setMyApp(sorted[0]);
+      let latestApp: any = null;
+      if (appsRes.success && appsRes.data.length > 0) {
+        const sorted = [...appsRes.data].sort((a, b) => (b.created_at ?? "") > (a.created_at ?? "") ? 1 : -1);
+        latestApp = sorted[0];
+        setMyApp(latestApp);
       }
-    });
 
-    apiClient.getInternships().then((res) => {
-      if (res.success && res.data.length > 0) {
-        const sorted = [...res.data].sort((a, b) => (b.created_at ?? "") > (a.created_at ?? "") ? 1 : -1);
-        const internship = sorted[0];
-        setInternshipId(String(internship.id));
-        setInternshipStatus(internship.status || null);
-        setCurrentCompanyName(internship.company?.name || internship.companyName || "Company");
+      if (latestApp) {
+        // Resolve the internship specifically for the latest application cycle
+        const internship = latestApp.internship;
+        if (internship) {
+          setInternshipId(String(internship.id));
+          setInternshipStatus(internship.status || null);
+          setCurrentCompanyName(internship.company?.name || internship.companyName || "Company");
 
-        const ended = Boolean(
-          internship.status === "completed" ||
-          (internship.end_date && new Date(internship.end_date).toISOString().split("T")[0] < new Date().toISOString().split("T")[0])
-        );
-        setIsInternshipEnded(ended);
+          const ended = Boolean(
+            internship.status === "completed" ||
+            (internship.end_date && new Date(internship.end_date).toISOString().split("T")[0] < new Date().toISOString().split("T")[0])
+          );
+          setIsInternshipEnded(ended);
 
-        if (internship.final_report_url) {
-          setFinalReportUrl(internship.final_report_url);
-          setFinalReportName(internship.final_report_name || "Final Internship Report");
+          if (internship.final_report_url) {
+            setFinalReportUrl(internship.final_report_url);
+            setFinalReportName(internship.final_report_name || "Final Internship Report");
+          } else {
+            // Check local storage scoped to this specific internship ID
+            const localUrl = localStorage.getItem(`iams_final_report_url_${internship.id}`);
+            const localName = localStorage.getItem(`iams_final_report_name_${internship.id}`);
+            setFinalReportUrl(localUrl);
+            setFinalReportName(localName);
+          }
+        } else {
+          // No active/completed internship for the latest application cycle (student is in a new cycle)
+          setInternshipId(null);
+          setInternshipStatus(null);
+          setCurrentCompanyName("Company");
+          setIsInternshipEnded(false);
+          setFinalReportUrl(null);
+          setFinalReportName(null);
         }
+      } else {
+        setInternshipId(null);
+        setInternshipStatus(null);
+        setCurrentCompanyName("Company");
+        setIsInternshipEnded(false);
+        setFinalReportUrl(null);
+        setFinalReportName(null);
       }
-    });
+    } catch (err) {
+      console.error("Error fetching documents details:", err);
+    }
   };
 
   useEffect(() => {
@@ -352,8 +367,8 @@ export function DocumentsPage() {
       if (res.success) {
         setFinalReportName("Final Internship Report");
         setFinalReportUrl(fileUrl);
-        localStorage.setItem("iams_final_report_name", "Final Internship Report");
-        localStorage.setItem("iams_final_report_url", fileUrl);
+        localStorage.setItem(`iams_final_report_name_${internshipId}`, "Final Internship Report");
+        localStorage.setItem(`iams_final_report_url_${internshipId}`, fileUrl);
         toast.success("Final report submitted successfully!", { id: toastId });
         fetchApplicationData();
       } else {
