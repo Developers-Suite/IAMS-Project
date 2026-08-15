@@ -15,6 +15,7 @@ interface Props {
 }
 
 export function AnnouncementsPanel({ viewRole, canCompose }: Props) {
+  const { user } = useAppContext();
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { execute: sendAction, loading: isSending } = useToastAction();
@@ -55,7 +56,7 @@ export function AnnouncementsPanel({ viewRole, canCompose }: Props) {
         message: data.message,
         priority: data.priority,
         target_roles: roles,
-        target_department_id: deptScoped ? ((useAppContext().user as any)?.department_id ?? undefined) : undefined,
+        target_department_id: deptScoped ? ((user as any)?.department_id ?? undefined) : undefined,
         student_level: data.student_level,
         term_type: data.term_type,
         placement_status: data.placement_status,
