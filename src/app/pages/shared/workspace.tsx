@@ -64,6 +64,8 @@ export function WorkspacePage() {
       navigate("/academic");
     } else if (user?.role === "hod") {
       navigate("/hod");
+    } else if (user?.role === "student") {
+      navigate("/student");
     }
   };
 

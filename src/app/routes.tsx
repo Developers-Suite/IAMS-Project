@@ -113,6 +113,14 @@ function HODCommunications() { return <SuspensePage><CommunicationsPage viewRole
 function HODSettings() { return <SuspensePage><SettingsPage /></SuspensePage>; }
 
 // Auth guard wrappers
+function WorkspaceRequired({ children }: { children: React.ReactNode }) {
+  const { selectedTermId } = useAppContext();
+  const { activeTerm, termLoading } = useTerm();
+  if (termLoading) return <PageLoader />;
+  if (!selectedTermId || !activeTerm) return <Navigate to="/workspace" replace />;
+  return <>{children}</>;
+}
+
 function CLOGuard({ children }: { children: React.ReactNode }) {
   return <AuthGuard allowedRoles={["clo"]}>{children}</AuthGuard>;
 }
@@ -149,7 +157,7 @@ export const router = createBrowserRouter([
       {
         path: "/workspace",
         element: (
-          <AuthGuard allowedRoles={["dlo", "supervisor", "academic", "hod"]}>
+          <AuthGuard allowedRoles={["dlo", "supervisor", "academic", "hod", "student"]}>
             <DashboardLayout />
           </AuthGuard>
         ),
@@ -223,13 +231,13 @@ export const router = createBrowserRouter([
           </StudentGuard>
         ),
         children: [
-          { index: true, element: <SuspensePage><StudentDashboard /></SuspensePage> },
+          { index: true, element: <WorkspaceRequired><SuspensePage><StudentDashboard /></SuspensePage></WorkspaceRequired> },
           { path: "profile-setup", element: <SuspensePage><StudentProfileSetup /></SuspensePage> },
-          { path: "applications", element: <SuspensePage><StudentApplicationsPage /></SuspensePage> },
-          { path: "logbook", element: <SuspensePage><LogbookPage /></SuspensePage> },
-          { path: "attendance", element: <SuspensePage><StudentAttendancePage /></SuspensePage> },
-          { path: "documents", element: <SuspensePage><DocumentsPage /></SuspensePage> },
-          { path: "evaluation", element: <SuspensePage><StudentGradesPage /></SuspensePage> },
+          { path: "applications", element: <WorkspaceRequired><SuspensePage><StudentApplicationsPage /></SuspensePage></WorkspaceRequired> },
+          { path: "logbook", element: <WorkspaceRequired><SuspensePage><LogbookPage /></SuspensePage></WorkspaceRequired> },
+          { path: "attendance", element: <WorkspaceRequired><SuspensePage><StudentAttendancePage /></SuspensePage></WorkspaceRequired> },
+          { path: "documents", element: <WorkspaceRequired><SuspensePage><DocumentsPage /></SuspensePage></WorkspaceRequired> },
+          { path: "evaluation", element: <WorkspaceRequired><SuspensePage><StudentGradesPage /></SuspensePage></WorkspaceRequired> },
           { path: "grades", element: <Navigate to="/student/evaluation" replace /> },
           { path: "history", element: <SuspensePage><StudentHistoryPage /></SuspensePage> },
           { path: "issues", Component: StudentIssues },

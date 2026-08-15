@@ -547,20 +547,20 @@ export function CompaniesPage({ viewRole }: Props) {
             </div>
 
             <Tabs.Root defaultValue={defaultBranchTab ? "branches" : "basic"} className="flex-1 flex flex-col overflow-hidden">
-              <Tabs.List className="flex border-b border-border px-5 bg-secondary/30">
-                <Tabs.Trigger value="basic" className="px-4 py-2 text-sm border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary hover:text-foreground text-muted-foreground transition-colors">
+              <Tabs.List className="flex border-b border-border px-5 bg-secondary/30 overflow-x-auto whitespace-nowrap scrollbar-none">
+                <Tabs.Trigger value="basic" className="px-4 py-2 text-sm border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary hover:text-foreground text-muted-foreground transition-colors shrink-0">
                   Basic Info
                 </Tabs.Trigger>
-                <Tabs.Trigger value="contact" className="px-4 py-2 text-sm border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary hover:text-foreground text-muted-foreground transition-colors">
+                <Tabs.Trigger value="contact" className="px-4 py-2 text-sm border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary hover:text-foreground text-muted-foreground transition-colors shrink-0">
                   <Mail className="w-4 h-4 inline mr-2" />Contact
                 </Tabs.Trigger>
-                <Tabs.Trigger value="supervisors" className="px-4 py-2 text-sm border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary hover:text-foreground text-muted-foreground transition-colors">
+                <Tabs.Trigger value="supervisors" className="px-4 py-2 text-sm border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary hover:text-foreground text-muted-foreground transition-colors shrink-0">
                   <User className="w-4 h-4 inline mr-2" />Supervisors
                 </Tabs.Trigger>
-                <Tabs.Trigger value="approval" className="px-4 py-2 text-sm border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary hover:text-foreground text-muted-foreground transition-colors">
+                <Tabs.Trigger value="approval" className="px-4 py-2 text-sm border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary hover:text-foreground text-muted-foreground transition-colors shrink-0">
                   Approval
                 </Tabs.Trigger>
-                <Tabs.Trigger value="branches" className="px-4 py-2 text-sm border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary hover:text-foreground text-muted-foreground transition-colors">
+                <Tabs.Trigger value="branches" className="px-4 py-2 text-sm border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary hover:text-foreground text-muted-foreground transition-colors shrink-0">
                   Branches {branches.length > 0 && <span className="ml-1 text-xs bg-primary/10 text-primary rounded px-1">{branches.length}</span>}
                 </Tabs.Trigger>
               </Tabs.List>

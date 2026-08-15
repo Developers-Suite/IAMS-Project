@@ -61,11 +61,11 @@ export function TermSwitcher() {
       {/* Dropdown */}
       {open && (
         <div
-          className="absolute right-0 top-full mt-1.5 w-72 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden"
+          className="absolute right-0 top-full mt-1.5 w-72 max-w-[calc(100vw-2rem)] bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden flex flex-col max-h-[80vh]"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="px-3 py-2.5 border-b border-border flex items-center justify-between">
+          <div className="px-3 py-2.5 border-b border-border flex items-center justify-between shrink-0">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
               <Calendar className="w-3 h-3" /> Term Workspace
             </p>
@@ -74,43 +74,45 @@ export function TermSwitcher() {
             </button>
           </div>
 
-          {/* Live / Active */}
-          {liveTerms.length > 0 && (
-            <div className="px-3 pt-2.5">
-              <p className="text-[0.62rem] font-semibold text-muted-foreground uppercase tracking-widest mb-1.5">
-                Live
-              </p>
-              {liveTerms.map((t) => (
-                <TermRow
-                  key={t.id}
-                  term={t}
-                  selected={selectedTerm?.id === t.id}
-                  onSelect={() => { setSelectedTerm(null); setOpen(false); }}
-                />
-              ))}
-            </div>
-          )}
+          <div className="overflow-y-auto flex-1">
+            {/* Live / Active */}
+            {liveTerms.length > 0 && (
+              <div className="px-3 pt-2.5">
+                <p className="text-[0.62rem] font-semibold text-muted-foreground uppercase tracking-widest mb-1.5">
+                  Live
+                </p>
+                {liveTerms.map((t) => (
+                  <TermRow
+                    key={t.id}
+                    term={t}
+                    selected={selectedTerm?.id === t.id}
+                    onSelect={() => { setSelectedTerm(null); setOpen(false); }}
+                  />
+                ))}
+              </div>
+            )}
 
-          {/* Archive */}
-          {archiveTerms.length > 0 && (
-            <div className="px-3 pt-2.5 pb-2">
-              <p className="text-[0.62rem] font-semibold text-muted-foreground uppercase tracking-widest mb-1.5">
-                Archive
-              </p>
-              {archiveTerms.map((t) => (
-                <TermRow
-                  key={t.id}
-                  term={t}
-                  selected={selectedTerm?.id === t.id}
-                  onSelect={() => { setSelectedTerm(t); setOpen(false); }}
-                />
-              ))}
-            </div>
-          )}
+            {/* Archive */}
+            {archiveTerms.length > 0 && (
+              <div className="px-3 pt-2.5 pb-2">
+                <p className="text-[0.62rem] font-semibold text-muted-foreground uppercase tracking-widest mb-1.5">
+                  Archive
+                </p>
+                {archiveTerms.map((t) => (
+                  <TermRow
+                    key={t.id}
+                    term={t}
+                    selected={selectedTerm?.id === t.id}
+                    onSelect={() => { setSelectedTerm(t); setOpen(false); }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Return to live CTA when in archive mode */}
           {isArchiveMode && (
-            <div className="px-3 pb-3 pt-1 border-t border-border">
+            <div className="px-3 pb-3 pt-2 border-t border-border shrink-0">
               <button
                 onClick={() => { setSelectedTerm(null); setOpen(false); }}
                 className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 text-xs bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity"

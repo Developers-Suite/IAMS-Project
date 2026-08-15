@@ -63,6 +63,7 @@ const dloNav: NavItem[] = [
 ];
 
 const studentNav: NavItem[] = [
+  { to: "/workspace", icon: Layers, label: "Term Workspace" },
   { to: "/student", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/student/profile-setup", icon: User, label: "My Profile" },
   { to: "/student/applications", icon: FileText, label: "Applications" },
@@ -252,7 +253,9 @@ export function DashboardLayout() {
   const handleLogout = () => {
     setUser(null);
     try {
-      localStorage.clear();
+      localStorage.removeItem("iams_user");
+      localStorage.removeItem("iams_token");
+      localStorage.removeItem("iams_selected_term_id");
     } catch {}
     navigate("/login", { replace: true });
   };
