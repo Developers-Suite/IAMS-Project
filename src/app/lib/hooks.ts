@@ -10,7 +10,7 @@ import type { ApiResponse } from "../types/api";
 import { apiClient } from "./api-client";
 import { setNotifications, setAnnouncementUnread } from "./store";
 import { toast } from "sonner";
-import { areBrowserNotificationsEnabled } from "./push-notifications";
+import { areBrowserNotificationsEnabled, updateAppBadge } from "./push-notifications";
 
 // ── useAsync: Generic async operation hook ──
 
@@ -268,6 +268,8 @@ export function useNotifications(enabled = true) {
       const newUnread = normalised.filter(
         (n) => !n.read && !seenIdsRef.current.has(n.id)
       );
+      
+      const unreadCount = normalised.filter((n) => !n.read).length;
 
       // Update the store (this triggers badge + panel reactivity)
       setNotifications(normalised);
@@ -284,13 +286,17 @@ export function useNotifications(enabled = true) {
         }
       }
 
+      let annUnread = 0;
       // Also poll announcement unread count and sync to store
       try {
         const annRes = await apiClient.getAnnouncementUnreadCount();
         if (annRes.success && annRes.data) {
-          setAnnouncementUnread((annRes.data as any).unread_count ?? 0);
+          annUnread = (annRes.data as any).unread_count ?? 0;
+          setAnnouncementUnread(annUnread);
         }
       } catch { /* silent */ }
+
+      updateAppBadge(unreadCount + annUnread);
 
       // Mark all current IDs as seen
       seenIdsRef.current = new Set(normalised.map((n) => n.id));
