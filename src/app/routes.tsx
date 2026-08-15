@@ -5,6 +5,8 @@ import { GlobalError } from "./components/global-error";
 import { AuthGuard } from "./components/auth-guard";
 import { StudentProfileGuard } from "./components/student-profile-guard";
 import { Loader2 } from "lucide-react";
+import { useAppContext } from "./lib/context";
+import { useTerm } from "./lib/term-context";
 
 // Loading Fallback
 function PageLoader() {
