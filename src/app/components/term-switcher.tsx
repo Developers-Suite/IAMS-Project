@@ -61,7 +61,7 @@ export function TermSwitcher() {
       {/* Dropdown */}
       {open && (
         <div
-          className="absolute right-0 top-full mt-1.5 w-72 max-w-[calc(100vw-2rem)] bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden flex flex-col max-h-[80vh]"
+          className="fixed left-3 right-3 top-16 sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-1.5 sm:w-72 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden flex flex-col max-h-[calc(100dvh-5rem)] sm:max-h-[80vh]"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
