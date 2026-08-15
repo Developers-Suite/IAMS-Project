@@ -458,13 +458,15 @@ export function DashboardLayout() {
                 {(user.name || "U")
                   .split(" ")
                   .map((w) => w[0])
-                  .join("")}
+                  .slice(0, 2)
+                  .join("")
+                  .toUpperCase()}
               </div>
-              <div className="hidden md:block text-left">
-                <p style={{ fontSize: "0.85rem", fontWeight: 500 }} className="text-foreground">
+              <div className="hidden md:block text-left min-w-0 max-w-[120px] lg:max-w-[200px]">
+                <p style={{ fontSize: "0.85rem", fontWeight: 500 }} className="text-foreground truncate">
                   {user.name || "User"}
                 </p>
-                <p style={{ fontSize: "0.7rem" }} className="text-muted-foreground">
+                <p style={{ fontSize: "0.7rem" }} className="text-muted-foreground truncate">
                   {user.email || "—"}
                 </p>
               </div>
@@ -485,7 +487,7 @@ export function DashboardLayout() {
                         className="w-11 h-11 rounded-full bg-primary flex items-center justify-center text-primary-foreground shrink-0"
                         style={{ fontSize: "0.8rem", fontWeight: 600 }}
                       >
-                        {(user.name || "U").split(" ").map((w) => w[0]).join("")}
+                        {(user.name || "U").split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p style={{ fontSize: "0.9rem", fontWeight: 500 }} className="text-foreground truncate">
