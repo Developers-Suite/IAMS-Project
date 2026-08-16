@@ -244,7 +244,7 @@ export function ApplicationsPage({ viewRole }: Props) {
                               <p className="text-muted-foreground px-2 py-1" style={{ fontSize: "0.75rem" }}>Select Supervisor</p>
                               {academicSupervisors.length === 0 && <p className="px-2 py-1.5 text-muted-foreground" style={{ fontSize: "0.8rem" }}>No supervisors available</p>}
                               {academicSupervisors.map((sup) => (
-                                <button key={sup.id} onClick={() => handleAssignSupervisor(appId, sup.id)} className="w-full text-left px-2 py-2 rounded hover:bg-accent" style={{ fontSize: "0.82rem" }}>
+                                <button key={sup.id} onClick={() => handleAssignSupervisor(appId, (sup as any).academic_supervisor?.id || sup.id)} className="w-full text-left px-2 py-2 rounded hover:bg-accent" style={{ fontSize: "0.82rem" }}>
                                   {sup.name}
                                 </button>
                               ))}
@@ -326,7 +326,7 @@ export function ApplicationsPage({ viewRole }: Props) {
                                       {academicSupervisors.map((sup) => (
                                         <button
                                           key={sup.id}
-                                          onClick={() => handleAssignSupervisor(appId, sup.id)}
+                                          onClick={() => handleAssignSupervisor(appId, (sup as any).academic_supervisor?.id || sup.id)}
                                           className="w-full text-left px-2 py-1.5 rounded hover:bg-accent"
                                           style={{ fontSize: "0.8rem" }}
                                         >
@@ -412,7 +412,7 @@ export function ApplicationsPage({ viewRole }: Props) {
                             <p className="text-muted-foreground px-2 py-1" style={{ fontSize: "0.75rem" }}>Select Supervisor</p>
                             {academicSupervisors.length === 0 && <p className="px-2 py-1.5 text-muted-foreground" style={{ fontSize: "0.8rem" }}>No supervisors available</p>}
                             {academicSupervisors.map((sup) => (
-                              <button key={sup.id} onClick={() => { handleAssignSupervisor(String(detail.id), sup.id); setSelectedApp(null); }}
+                              <button key={sup.id} onClick={() => { handleAssignSupervisor(String(detail.id), (sup as any).academic_supervisor?.id || sup.id); setSelectedApp(null); }}
                                 className="w-full text-left px-2 py-2 rounded hover:bg-accent" style={{ fontSize: "0.82rem" }}>
                                 {sup.name}
                               </button>
