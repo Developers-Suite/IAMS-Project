@@ -374,7 +374,7 @@ export function CompanyBranchSelector({
                 )}
               </div>
               <div>
-                <label style={{ fontSize: "0.8rem" }}>Contact Person *</label>
+                <label style={{ fontSize: "0.8rem" }}>Contact Person</label>
                 <div className="relative mt-1">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input

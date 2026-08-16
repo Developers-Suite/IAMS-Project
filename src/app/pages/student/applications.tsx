@@ -386,7 +386,6 @@ export function StudentApplicationsPage() {
             : false;
           return !!(
             form.newCompanyName &&
-            form.newCompanyContactPerson &&
             form.newCompanyContactEmail &&
             !hasDuplicateCompany &&
             form.newBranchName &&
