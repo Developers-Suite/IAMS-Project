@@ -223,7 +223,7 @@ export function CompanyBranchSelector({
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2">
               <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
               <p className="text-amber-800" style={{ fontSize: "0.8rem" }}>
-                <strong>{selectedCompany.name}</strong> is pending DLO approval. You cannot submit an application until the company is approved. Please check back later or choose a different company.
+                <strong>{typeof selectedCompany.name === "string" ? selectedCompany.name : "Company"}</strong> is pending approval. You can still submit your application, but it will be held in a "Pending Company Approval" state until the organization is verified.
               </p>
             </div>
           )}
@@ -374,7 +374,7 @@ export function CompanyBranchSelector({
                 )}
               </div>
               <div>
-                <label style={{ fontSize: "0.8rem" }}>Contact Person *</label>
+                <label style={{ fontSize: "0.8rem" }}>Contact Person</label>
                 <div className="relative mt-1">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input

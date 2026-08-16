@@ -117,7 +117,7 @@ export function StudentApplicationsPage() {
       const [appsRes, termsRes, companiesRes] = await Promise.all([
         apiClient.getApplications(),
         apiClient.getTerms(),
-        apiClient.getCompanies({ approval_status: "approved", per_page: 200 }),
+        apiClient.getCompanies({ per_page: 200 }),
       ]);
 
       let resolvedApp: any = null;
@@ -370,9 +370,6 @@ export function StudentApplicationsPage() {
       case 2: {
         if (form.companyChoice === "existing") {
           if (!form.selectedCompanyId) return false;
-          // Company must be approved by DLO/CLO before an application can be submitted
-          const selectedCo = companies.find((c: any) => String(c.id) === form.selectedCompanyId);
-          if (selectedCo && selectedCo.approval_status !== "approved") return false;
           if (form.branchChoice === "existing") return !!form.selectedBranchId;
           if (form.branchChoice === "new") {
             return !!(
@@ -389,7 +386,6 @@ export function StudentApplicationsPage() {
             : false;
           return !!(
             form.newCompanyName &&
-            form.newCompanyContactPerson &&
             form.newCompanyContactEmail &&
             !hasDuplicateCompany &&
             form.newBranchName &&
@@ -425,6 +421,7 @@ export function StudentApplicationsPage() {
     await submitAction(
       async () => {
         let companyId = "";
+        let isCompanyApproved = false;
         const actor = user?.name || "Student";
 
         const isNewCompany = form.companyChoice === "new";
@@ -435,6 +432,7 @@ export function StudentApplicationsPage() {
             return { success: false, data: null, message: "Selected company not found." };
           }
           companyId = String(company.id);
+          isCompanyApproved = company.approval_status === "approved";
 
           if (form.branchChoice === "existing") {
             // branch already selected, fine
@@ -470,6 +468,7 @@ export function StudentApplicationsPage() {
             return { success: false, data: null, message: companyRes.message || "Failed to register company." };
           }
           companyId = companyRes.data.company.id;
+          isCompanyApproved = false;
         }
 
         const createRes = await apiClient.createApplication({
@@ -477,7 +476,7 @@ export function StudentApplicationsPage() {
           academic_term_id: Number(form.termId),
           application_type: "individual",
           cover_letter: form.additionalNotes || undefined,
-          status: isNewCompany ? "pending_company_approval" : "submitted",
+          status: "submitted",
         });
         if (!createRes.success || !createRes.data?.id) {
           // If student profile not found, provide helpful message
@@ -504,7 +503,6 @@ export function StudentApplicationsPage() {
       },
       {
         successMessage: "Application submitted successfully!",
-        errorMessage: "Submission failed. Please check details.",
       }
     );
   };
