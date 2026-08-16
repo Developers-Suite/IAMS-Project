@@ -323,10 +323,19 @@ async function requestApi<T>(
         }
       }
 
+      let errorMessage = (body && typeof body === "object" && "message" in body ? String((body as any).message) : undefined) ?? `Error ${response.status}`;
+      
+      if (body && typeof body === "object" && "errors" in body && typeof body.errors === "object" && body.errors !== null) {
+        const errorDetails = Object.values(body.errors).flat().join(" ");
+        if (errorDetails) {
+           errorMessage = `${errorMessage} ${errorDetails}`;
+        }
+      }
+
       return {
         success: false,
         data: (body && typeof body === "object" && "data" in body ? (body as any).data : null),
-        message: (body && typeof body === "object" && "message" in body ? String((body as any).message) : undefined) ?? `Error ${response.status}`,
+        message: errorMessage,
         error_code: body && typeof body === "object" && "error_code" in body ? String((body as any).error_code) : undefined,
         code: body && typeof body === "object" && "code" in body ? String((body as any).code) : undefined,
       } as any;
