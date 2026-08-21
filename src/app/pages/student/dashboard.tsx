@@ -20,7 +20,8 @@ export function StudentDashboard() {
   const [activeTermName, setActiveTermName] = useState<string>("N/A");
   const [refreshing, setRefreshing] = useState(false);
   const prevStatusRef = useRef<string | null>(null);
- 
+  const [resendingInvite, setResendingInvite] = useState(false);
+
   const refreshDashboard = async () => {
     setRefreshing(true);
     try {
@@ -132,7 +133,7 @@ export function StudentDashboard() {
 
   // Auto-refresh every 8 seconds to catch DLO approvals
   useEffect(() => {
-    const interval = setInterval(refreshDashboard, 8000);
+    const interval = setInterval(refreshDashboard, 60_000);
     return () => clearInterval(interval);
   }, []);
 
@@ -202,7 +203,45 @@ export function StudentDashboard() {
   // Check user.id first (most reliable indicator), then backend status, then default to pending
   const supervisorInviteStatus = (activeInternship?.industry_supervisor?.user?.id ? "approved" : null) || pendingApplication?.supervisor_approval_status || activeInternship?.supervisor_approval_status || "pending";
 
+  // Resolve supervisor email for resend (from internship or pending app)
+  const supervisorEmail =
+    activeInternship?.industry_supervisor?.user?.email ??
+    activeInternship?.supervisor_email ??
+    pendingApplication?.supervisor_email ??
+    null;
+
   if (loading) return <SkeletonDashboard statCount={3} />;
+
+
+  const handleResendInvite = async () => {
+    if (resendingInvite) return;
+    const emailToUse = supervisorEmail;
+    const nameToUse = supervisorData || "Supervisor";
+    if (!emailToUse) {
+      navigate("/student/documents");
+      return;
+    }
+    setResendingInvite(true);
+    try {
+      const companyName = activeInternship?.company?.name ?? pendingApplication?.company?.name ?? undefined;
+      const res = await apiClient.requestMagicLink(emailToUse, {
+        role: "industry_supervisor",
+        name: nameToUse,
+        application_id: pendingApplication?.id,
+        company_name: companyName,
+        student_name: user?.name,
+      });
+      if (res.success) {
+        toast.success(`Invitation resent to ${emailToUse}!`);
+      } else {
+        toast.error(res.message ?? "Failed to resend invitation.");
+      }
+    } catch {
+      toast.error("Failed to resend invitation.");
+    } finally {
+      setResendingInvite(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -287,14 +326,13 @@ export function StudentDashboard() {
                 >
                   Go to Documents <ArrowRight className="w-4 h-4 inline ml-2" />
                 </button>
-                {supervisorData && (supervisorInviteStatus !== "approved" && supervisorInviteStatus !== "accepted") && (
+                  {supervisorData && (supervisorInviteStatus !== "approved" && supervisorInviteStatus !== "accepted") && (
                   <button
-                    onClick={() => {
-                      toast.info(`Invitation resent to ${supervisorData}`);
-                    }}
-                    className="w-full px-6 py-2 border border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 rounded-lg font-semibold text-sm transition-colors"
+                    onClick={handleResendInvite}
+                    disabled={resendingInvite}
+                    className="w-full px-6 py-2 border border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 rounded-lg font-semibold text-sm transition-colors disabled:opacity-50"
                   >
-                    Resend Supervisor Invite
+                    {resendingInvite ? "Sending..." : "Resend Supervisor Invite"}
                   </button>
                 )}
               </div>
@@ -502,12 +540,11 @@ export function StudentDashboard() {
                   </div>
                   {supervisorData && (supervisorInviteStatus !== "approved" && supervisorInviteStatus !== "accepted") && (
                     <button
-                      onClick={() => {
-                        toast.info(`Invitation resent to ${supervisorData}`);
-                      }}
-                      className="w-full px-4 py-2 border border-amber-300 text-amber-700 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/20 text-sm font-semibold transition-colors"
+                      onClick={handleResendInvite}
+                      disabled={resendingInvite}
+                      className="w-full px-4 py-2 border border-amber-300 text-amber-700 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/20 text-sm font-semibold transition-colors disabled:opacity-50"
                     >
-                      Resend Supervisor Invite
+                      {resendingInvite ? "Sending..." : "Resend Supervisor Invite"}
                     </button>
                   )}
                 </div>
@@ -523,7 +560,10 @@ export function StudentDashboard() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="font-bold">Course Advisors</h3>
-              <button className="text-primary hover:opacity-75 text-xs font-semibold">See all</button>
+              <button
+                onClick={() => navigate("/student/communications")}
+                className="text-primary hover:opacity-75 text-xs font-semibold"
+              >See all</button>
             </div>
             {supervisorName ? (
               <div className="bg-card border border-border rounded-xl p-4 text-center space-y-3">
@@ -574,16 +614,18 @@ export function StudentDashboard() {
               </div>
             )}
 
-            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4 space-y-2">
-              <p className="font-semibold text-blue-900 dark:text-blue-400 text-sm">Internship Active</p>
-              <p className="text-muted-foreground text-xs">Keep your logbook updated regularly to ensure smooth progress tracking</p>
-              <button
-                onClick={() => navigate("/student/logbook")}
-                className="text-blue-700 dark:text-blue-400 hover:underline text-xs font-semibold"
-              >
-                Add Entry →
-              </button>
-            </div>
+            {activeInternship && (
+              <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4 space-y-2">
+                <p className="font-semibold text-blue-900 dark:text-blue-400 text-sm">Internship Active</p>
+                <p className="text-muted-foreground text-xs">Keep your logbook updated regularly to ensure smooth progress tracking</p>
+                <button
+                  onClick={() => navigate("/student/logbook")}
+                  className="text-blue-700 dark:text-blue-400 hover:underline text-xs font-semibold"
+                >
+                  Add Entry →
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Quick Actions */}

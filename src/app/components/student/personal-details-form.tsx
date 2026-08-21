@@ -74,7 +74,7 @@ export function PersonalDetailsForm({ form, updateForm, user, fetchedProfile }: 
             <input
               type="tel"
               value={form.phoneNumber}
-              onChange={(e) => updateForm({ phoneNumber: e.target.value })}
+              onChange={(e) => updateForm({ phoneNumber: e.target.value.replace(/[^\d\s+()-]/g, '') })}
               placeholder="+233..."
               className="w-full pl-9 pr-3 py-2 border border-border rounded-lg bg-background"
               style={{ fontSize: "0.85rem" }}
@@ -99,7 +99,7 @@ export function PersonalDetailsForm({ form, updateForm, user, fetchedProfile }: 
             <input
               type="tel"
               value={form.emergencyPhone}
-              onChange={(e) => updateForm({ emergencyPhone: e.target.value })}
+              onChange={(e) => updateForm({ emergencyPhone: e.target.value.replace(/[^\d\s+()-]/g, '') })}
               placeholder="+233..."
               className={`w-full pl-9 pr-3 py-2 border rounded-lg bg-background ${samePhoneNumbers ? "border-red-400" : "border-border"}`}
               style={{ fontSize: "0.85rem" }}

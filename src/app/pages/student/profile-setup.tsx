@@ -371,7 +371,7 @@ export function StudentProfileSetup() {
           </div>
           <div>
             <label className="text-xs font-medium">Phone Number *</label>
-            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
+            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value.replace(/[^\d\s+()-]/g, ''))}
               placeholder="+233 50 123 4567"
               className="w-full mt-1 px-3 py-2 border border-border rounded-lg bg-background text-sm" />
           </div>
@@ -391,7 +391,7 @@ export function StudentProfileSetup() {
             </div>
             <div>
               <label className="text-xs font-medium">Emergency Contact Phone *</label>
-              <input type="tel" value={emergencyPhone} onChange={(e) => setEmergencyPhone(e.target.value)}
+              <input type="tel" value={emergencyPhone} onChange={(e) => setEmergencyPhone(e.target.value.replace(/[^\d\s+()-]/g, ''))}
                 placeholder="+233 50 000 0000"
                 className={`w-full mt-1 px-3 py-2 border rounded-lg bg-background text-sm ${phone.trim() && emergencyPhone.trim() && phone.trim() === emergencyPhone.trim() ? "border-red-400" : "border-border"}`} />
               {phone.trim() && emergencyPhone.trim() && phone.trim() === emergencyPhone.trim() && (

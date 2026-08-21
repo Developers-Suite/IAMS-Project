@@ -7,9 +7,9 @@ import { toast } from "sonner";
 import { useStudentCheckIn } from "../../hooks/use-student-check-in";
 import { ghanaRegions } from "../../lib/mock-data";
 import { getInternshipEndDate } from "../../lib/application-helpers";
-import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { applicationSchema, type ApplicationInput } from "../../lib/schemas";
+import { SkeletonDashboard } from "../../components/skeleton";
 import {
   Calendar,
   FileText,
@@ -109,6 +109,7 @@ export function StudentApplicationsPage() {
   const [companies, setCompanies] = useState<any[]>([]);
   const [branches, setBranches] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [grade, setGrade] = useState<any>(null);
 
   const refreshApplications = async () => {
@@ -146,6 +147,7 @@ export function StudentApplicationsPage() {
       console.error("Error refreshing application or grade details:", e);
     } finally {
       setRefreshing(false);
+      setLoading(false);
     }
   };
 
@@ -513,6 +515,8 @@ export function StudentApplicationsPage() {
     { num: 3, label: "Details & Documents" },
     { num: 4, label: "Review & Submit" },
   ];
+
+  if (loading) return <SkeletonDashboard statCount={3} />;
 
   return (
     <div className="space-y-4">

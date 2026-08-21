@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAppContext } from "../../lib/context";
 import { apiClient } from "../../lib/api-client";
 import { Card } from "../../components/ui/card";
+import { SkeletonList } from "../../components/skeleton";
 import {
   Award, BadgeCheck, ChevronDown, ChevronUp, Download, BookMarked,
   Calendar, FileText, BarChart3, FolderOpen, AlertCircle, Star
@@ -63,6 +64,7 @@ export function StudentHistoryPage() {
   const [gradeMap, setGradeMap] = useState<Record<string, any>>({});
   const [assessmentMap, setAssessmentMap] = useState<Record<string, any>>({});
   const [loadingMap, setLoadingMap] = useState<Record<string, Record<string, boolean>>>({});
+  const [loading, setLoading] = useState(true);
 
   // Load internship data
   useEffect(() => {
@@ -85,8 +87,11 @@ export function StudentHistoryPage() {
         });
         setLoadingMap(initialLoading);
       }
+      setLoading(false);
     });
   }, []);
+
+  if (loading) return <SkeletonList count={3} />;
 
   if (!user) return null;
 

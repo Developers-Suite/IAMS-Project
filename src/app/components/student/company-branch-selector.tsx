@@ -408,7 +408,7 @@ export function CompanyBranchSelector({
                   <input
                     type="tel"
                     value={form.newCompanyPhone}
-                    onChange={(e) => updateForm({ newCompanyPhone: e.target.value })}
+                    onChange={(e) => updateForm({ newCompanyPhone: e.target.value.replace(/[^\d\s+()-]/g, '') })}
                     placeholder="+233..."
                     className="w-full pl-9 pr-3 py-2 border border-border rounded-lg bg-background"
                     style={{ fontSize: "0.85rem" }}

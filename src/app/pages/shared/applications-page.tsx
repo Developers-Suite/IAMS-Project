@@ -3,7 +3,7 @@ import { SkeletonTableRows } from "../../components/skeleton";
 import { StatusBadge } from "../../components/status-badge";
 import { useAppContext } from "../../lib/context";
 import { apiClient } from "../../lib/api-client";
-import { Search, CheckCircle2, XCircle, UserPlus, Download, Lock } from "lucide-react";
+import { Search, CheckCircle2, XCircle, UserPlus, Download, Lock, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import type { ExtendedRole } from "../../services/auth-service";
 import { exportToCSV } from "../../lib/csv-export";
@@ -23,6 +23,9 @@ export function ApplicationsPage({ viewRole }: Props) {
   const [selectedApp, setSelectedApp] = useState<string | null>(null);
   const [showAssign, setShowAssign] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [rejectModal, setRejectModal] = useState<{ id: string } | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejecting, setRejecting] = useState(false);
 
   const fetchApplications = useCallback(async () => {
     setLoading(true);
@@ -69,10 +72,17 @@ export function ApplicationsPage({ viewRole }: Props) {
     }
   };
 
-  const handleReject = async (id: string) => {
-    const reason = prompt("Enter rejection reason:");
-    if (!reason) return;
-    const res = await apiClient.rejectApplication(id, reason);
+  const handleReject = (id: string) => {
+    setRejectReason("");
+    setRejectModal({ id });
+  };
+
+  const confirmReject = async () => {
+    if (!rejectModal || !rejectReason.trim()) return;
+    setRejecting(true);
+    const res = await apiClient.rejectApplication(rejectModal.id, rejectReason.trim());
+    setRejecting(false);
+    setRejectModal(null);
     if (res.success) {
       toast.success(res.message ?? "Application rejected.");
       fetchApplications();
@@ -116,6 +126,7 @@ export function ApplicationsPage({ viewRole }: Props) {
   if (loading) return <SkeletonTableRows count={5} />;
 
   return (
+    <>
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
@@ -178,7 +189,15 @@ export function ApplicationsPage({ viewRole }: Props) {
               }`}
               style={{ fontSize: "0.8rem" }}
             >
-              {s === "All" ? "All" : s.replace("_", " ")}
+              {s === "All" ? "All" : ({
+                  draft: "Draft",
+                  submitted: "Submitted",
+                  under_review: "Under Review",
+                  approved: "Approved",
+                  rejected: "Rejected",
+                  company_accepted: "Company Accepted",
+                  pending_company_approval: "Pending Company Approval",
+                } as Record<string, string>)[s] ?? s.replace(/_/g, " ")}
             </button>
           ))}
         </div>
@@ -429,5 +448,47 @@ export function ApplicationsPage({ viewRole }: Props) {
         )}
       </div>
     </div>
+
+      {/* Rejection Reason Modal */}
+      {rejectModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setRejectModal(null)}>
+          <div className="bg-card border border-border rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-bold text-base">Reject Application</h3>
+                <p className="text-muted-foreground mt-1" style={{ fontSize: "0.82rem" }}>
+                  Provide a reason for rejection. The student will see this message.
+                </p>
+              </div>
+            </div>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="e.g., Company does not meet department requirements..."
+              rows={3}
+              className="w-full px-3 py-2 border border-border rounded-lg bg-background resize-none"
+              style={{ fontSize: "0.85rem" }}
+              autoFocus
+            />
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setRejectModal(null)}
+                className="px-4 py-2 rounded-lg border border-border bg-card hover:bg-accent text-sm font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmReject}
+                disabled={!rejectReason.trim() || rejecting}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 text-sm font-medium"
+              >
+                {rejecting ? "Rejecting..." : "Confirm Reject"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
