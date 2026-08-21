@@ -414,14 +414,21 @@ export function AttendancePage({ viewRole }: Props) {
                 )}
               </div>
             </div>
-            {canVerify && !selectedRecord.verified_by && selectedRecord.check_in_type === "manual" && (
-              <div className="px-6 py-4 border-t border-border bg-secondary/20 flex justify-end gap-2">
+            {canVerify && (
+              <div className="px-6 py-4 border-t border-border bg-secondary/20 flex flex-wrap justify-end gap-2">
                 <button
                   onClick={() => handleVerify(String(selectedRecord.id), "present")}
                   className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
                   style={{ fontSize: "0.85rem" }}
                 >
-                  <CheckCircle2 className="w-4 h-4" /> Verify Present
+                  <CheckCircle2 className="w-4 h-4" /> Mark Present
+                </button>
+                <button
+                  onClick={() => handleVerify(String(selectedRecord.id), "excused")}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700"
+                  style={{ fontSize: "0.85rem" }}
+                >
+                  <Shield className="w-4 h-4" /> Excuse Absence
                 </button>
                 <button
                   onClick={() => handleVerify(String(selectedRecord.id), "absent")}
@@ -487,9 +494,11 @@ export function AttendancePage({ viewRole }: Props) {
                     <td className="px-4 py-4">
                       {r.verified_by
                         ? <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                        : r.check_in_type !== "manual"
-                          ? <span className="flex items-center gap-1 text-emerald-600" style={{ fontSize: "0.7rem" }}><Shield className="w-3 h-3" /> GPS</span>
-                          : <span className="flex items-center gap-1 text-amber-600" style={{ fontSize: "0.7rem" }}><Clock className="w-3 h-3" /> Pending</span>}
+                        : r.status === "absent"
+                          ? <span className="flex items-center gap-1 text-red-600" style={{ fontSize: "0.7rem" }}><XCircle className="w-3 h-3" /> Unexcused</span>
+                          : r.check_in_type !== "manual"
+                            ? <span className="flex items-center gap-1 text-emerald-600" style={{ fontSize: "0.7rem" }}><Shield className="w-3 h-3" /> GPS</span>
+                            : <span className="flex items-center gap-1 text-amber-600" style={{ fontSize: "0.7rem" }}><Clock className="w-3 h-3" /> Pending</span>}
                     </td>
                   </tr>
                 ))

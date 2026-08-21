@@ -55,7 +55,7 @@ export function StudentAttendanceView({ attendanceRecords }: StudentAttendanceVi
                       {typeof r.date === "string" && r.date.includes("T") ? r.date.split("T")[0] : (r.date ?? "—")}
                     </td>
                     <td className="px-4 py-3 font-medium text-muted-foreground" style={{ fontSize: "0.85rem" }}>
-                      {r.checkInTime}
+                      {r.checkInTime || "—"}
                     </td>
                     <td className="px-4 py-3">
                       <span
@@ -80,15 +80,17 @@ export function StudentAttendanceView({ attendanceRecords }: StudentAttendanceVi
                     <td className="px-4 py-3">
                       <span
                         className={`px-2 py-0.5 rounded text-xs font-semibold ${
-                          r.verificationStatus === "Verified"
+                          r.verificationStatus === "Verified" || r.status === "present"
                             ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
-                            : r.verificationStatus === "Rejected"
+                            : r.verificationStatus === "Rejected" || r.status === "absent"
                             ? "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400"
+                            : r.status === "excused"
+                            ? "bg-violet-100 text-violet-700 dark:bg-violet-950/40 dark:text-violet-400"
                             : "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
                         }`}
                         style={{ fontSize: "0.65rem" }}
                       >
-                        {r.verificationStatus}
+                        {r.status === "absent" ? "Absent" : r.status === "excused" ? "Excused" : r.verificationStatus || r.status || "Pending"}
                       </span>
                     </td>
                   </tr>
