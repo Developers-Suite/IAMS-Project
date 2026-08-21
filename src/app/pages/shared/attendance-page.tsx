@@ -10,6 +10,8 @@ import { Card, CardContent } from "../../components/ui/card";
 import { StatCard } from "../../components/stat-card";
 import { GpsLocationDisplay } from "../../components/gps-location-display";
 import { useTerm } from "../../lib/term-context";
+import { StudentAttendanceCalendar } from "../../components/student-attendance-calendar";
+import { LayoutList, Calendar as CalendarViewIcon } from "lucide-react";
 
 interface Props {
   viewRole: ExtendedRole;
@@ -39,6 +41,8 @@ export function AttendancePage({ viewRole }: Props) {
   const [dateTo, setDateTo] = useState("");
   const [studentFilter, setStudentFilter] = useState("");
   const [selectedRecord, setSelectedRecord] = useState<any | null>(null);
+  const [viewMode, setViewMode] = useState<"table" | "calendar">("table");
+  const [selectedStudentKey, setSelectedStudentKey] = useState<string>("");
 
   const canVerify = viewRole === "supervisor" || viewRole === "dlo";
 
@@ -118,8 +122,28 @@ export function AttendancePage({ viewRole }: Props) {
             </h1>
             <p className="text-muted-foreground mt-1" style={{ fontSize: "0.9rem" }}>
               {viewRole === "clo" ? "Institution-wide attendance tracking" : viewRole === "supervisor" ? "Verify student check-ins" : "Department attendance overview"}
-              {" · "}Click any row to inspect details
+              {" · "}Switch between Table and Calendar view
             </p>
+          </div>
+
+          {/* View Mode Switcher */}
+          <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-xl border border-border">
+            <button
+              onClick={() => setViewMode("table")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                viewMode === "table" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <LayoutList className="w-3.5 h-3.5" /> Table View
+            </button>
+            <button
+              onClick={() => setViewMode("calendar")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                viewMode === "calendar" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <CalendarViewIcon className="w-3.5 h-3.5" /> Calendar View
+            </button>
           </div>
         </div>
 
@@ -284,6 +308,94 @@ export function AttendancePage({ viewRole }: Props) {
         </Card>
       )}
 
+      {/* If Calendar Mode is Active */}
+      {viewMode === "calendar" ? (
+        <div className="space-y-4">
+          {/* Student Selector when in Calendar Mode */}
+          <div className="bg-card border border-border rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground block mb-1">Select Student to View Calendar</label>
+              <select
+                value={selectedStudentKey}
+                onChange={(e) => setSelectedStudentKey(e.target.value)}
+                className="px-3 py-2 bg-background border border-border rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary min-w-[260px]"
+              >
+                <option value="">All Students (Combined Calendar)</option>
+                {Array.from(
+                  new Map(
+                    records.map((r) => [
+                      String(r.internship?.student?.id ?? r.student?.id ?? r.internship_id),
+                      {
+                        key: String(r.internship?.student?.id ?? r.student?.id ?? r.internship_id),
+                        name: studentName(r),
+                        num: studentNum(r),
+                        company: r.internship?.company?.name,
+                        start: r.internship?.start_date,
+                        end: r.internship?.end_date,
+                      },
+                    ])
+                  ).values()
+                )
+                  .filter((s) => s.name !== "—")
+                  .map((s) => (
+                    <option key={s.key} value={s.key}>
+                      {s.name} ({s.num}) {s.company ? `· ${s.company}` : ""}
+                    </option>
+                  ))}
+              </select>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Showing monthly check-in history, missed absences, and GPS logs.
+            </p>
+          </div>
+
+          <StudentAttendanceCalendar
+            records={
+              selectedStudentKey
+                ? records.filter(
+                    (r) =>
+                      String(r.internship?.student?.id ?? r.student?.id ?? r.internship_id) === selectedStudentKey
+                  )
+                : records
+            }
+            studentName={
+              selectedStudentKey
+                ? records.find(
+                    (r) =>
+                      String(r.internship?.student?.id ?? r.student?.id ?? r.internship_id) === selectedStudentKey
+                  )?.internship?.student?.user?.name
+                : undefined
+            }
+            studentId={
+              selectedStudentKey
+                ? records.find(
+                    (r) =>
+                      String(r.internship?.student?.id ?? r.student?.id ?? r.internship_id) === selectedStudentKey
+                  )?.internship?.student?.student_id
+                : undefined
+            }
+            internshipStartDate={
+              selectedStudentKey
+                ? records.find(
+                    (r) =>
+                      String(r.internship?.student?.id ?? r.student?.id ?? r.internship_id) === selectedStudentKey
+                  )?.internship?.start_date
+                : undefined
+            }
+            internshipEndDate={
+              selectedStudentKey
+                ? records.find(
+                    (r) =>
+                      String(r.internship?.student?.id ?? r.student?.id ?? r.internship_id) === selectedStudentKey
+                  )?.internship?.end_date
+                : undefined
+            }
+            canVerify={canVerify}
+            onVerify={handleVerify}
+          />
+        </div>
+      ) : (
+        <>
       <Card>
         <CardContent className="p-4 space-y-4">
           <div className="flex items-center justify-between gap-3">
@@ -507,6 +619,8 @@ export function AttendancePage({ viewRole }: Props) {
           </table>
         </div>
       </Card>
+      </>
+      )}
     </div>
   );
 }

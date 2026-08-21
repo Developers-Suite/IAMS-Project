@@ -1,5 +1,7 @@
-import { MapPin } from "lucide-react";
+import { useState } from "react";
+import { MapPin, LayoutList, Calendar as CalendarIcon } from "lucide-react";
 import { GpsLocationDisplay } from "../gps-location-display";
+import { StudentAttendanceCalendar } from "../student-attendance-calendar";
 
 interface AttendanceRecord {
   id: string;
@@ -8,19 +10,82 @@ interface AttendanceRecord {
   checkInType: string;
   location: string;
   verificationStatus: string;
+  status?: string;
   lat?: number | string | null;
   lng?: number | string | null;
   notes?: string | null;
+  attendance_date?: string;
+  check_in_time?: string;
+  check_out_time?: string;
 }
 
 interface StudentAttendanceViewProps {
   attendanceRecords: AttendanceRecord[];
+  studentName?: string;
+  studentId?: string;
+  internshipStartDate?: string;
+  internshipEndDate?: string;
 }
 
-export function StudentAttendanceView({ attendanceRecords }: StudentAttendanceViewProps) {
+export function StudentAttendanceView({
+  attendanceRecords,
+  studentName,
+  studentId,
+  internshipStartDate,
+  internshipEndDate,
+}: StudentAttendanceViewProps) {
+  const [viewMode, setViewMode] = useState<"table" | "calendar">("table");
+
+  // Normalize records for the calendar
+  const calendarRecords = attendanceRecords.map((r) => ({
+    id: r.id,
+    attendance_date: r.attendance_date || r.date,
+    date: r.date || r.attendance_date,
+    check_in_time: r.check_in_time || (r.checkInTime !== "—" ? r.checkInTime : null),
+    status: r.status || (r.verificationStatus === "Verified" ? "present" : r.verificationStatus?.toLowerCase() || "present"),
+    notes: r.notes || (r.checkInType === "manual" ? r.location : null),
+    check_in_type: r.checkInType,
+    gps_check_in_lat: r.lat,
+    gps_check_in_lng: r.lng,
+    verificationStatus: r.verificationStatus,
+  }));
+
   return (
-    <div className="space-y-3">
-      {attendanceRecords.length === 0 ? (
+    <div className="space-y-4">
+      {/* View Switcher */}
+      <div className="flex items-center justify-between">
+        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          Student Attendance History
+        </div>
+        <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-xl border border-border">
+          <button
+            onClick={() => setViewMode("table")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+              viewMode === "table" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <LayoutList className="w-3.5 h-3.5" /> Table
+          </button>
+          <button
+            onClick={() => setViewMode("calendar")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+              viewMode === "calendar" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <CalendarIcon className="w-3.5 h-3.5" /> Calendar
+          </button>
+        </div>
+      </div>
+
+      {viewMode === "calendar" ? (
+        <StudentAttendanceCalendar
+          records={calendarRecords}
+          studentName={studentName}
+          studentId={studentId}
+          internshipStartDate={internshipStartDate}
+          internshipEndDate={internshipEndDate}
+        />
+      ) : attendanceRecords.length === 0 ? (
         <div className="bg-card border border-border rounded-xl p-8 text-center text-muted-foreground">
           <MapPin className="w-10 h-10 mx-auto mb-3" />
           <p style={{ fontSize: "0.85rem" }}>No attendance records found.</p>

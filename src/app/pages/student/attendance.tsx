@@ -3,9 +3,10 @@ import { useAppContext } from "../../lib/context";
 import { apiClient } from "../../lib/api-client";
 import { 
   Calendar, MapPin, Clock, AlertCircle, CheckCircle2, 
-  RefreshCw, Award, Target, Building2, XCircle 
+  RefreshCw, Award, Target, Building2, XCircle, LayoutList, Calendar as CalendarViewIcon 
 } from "lucide-react";
 import { Card } from "../../components/ui/card";
+import { StudentAttendanceCalendar } from "../../components/student-attendance-calendar";
 
 export function StudentAttendancePage() {
   const { user } = useAppContext();
@@ -18,6 +19,7 @@ export function StudentAttendancePage() {
   const [internshipInfo, setInternshipInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const hasLoadedOnce = useRef(false);
 
   useEffect(() => {
@@ -154,14 +156,36 @@ export function StudentAttendancePage() {
             {internshipInfo?.company?.name || "Your internship"}
           </p>
         </div>
-        <button
-          onClick={handleManualRefresh}
-          disabled={refreshing}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card hover:bg-accent transition-all disabled:opacity-50 text-sm font-medium shadow-sm"
-        >
-          <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-          {refreshing ? "Refreshing..." : "Refresh"}
-        </button>
+        <div className="flex items-center gap-2">
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-xl border border-border">
+            <button
+              onClick={() => setViewMode("list")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                viewMode === "list" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <LayoutList className="w-3.5 h-3.5" /> List
+            </button>
+            <button
+              onClick={() => setViewMode("calendar")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                viewMode === "calendar" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <CalendarViewIcon className="w-3.5 h-3.5" /> Calendar
+            </button>
+          </div>
+
+          <button
+            onClick={handleManualRefresh}
+            disabled={refreshing}
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card hover:bg-accent transition-all disabled:opacity-50 text-sm font-medium shadow-sm"
+          >
+            <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+            {refreshing ? "Refreshing..." : "Refresh"}
+          </button>
+        </div>
       </div>
 
       {/* Stats grid – 3 cards: Rate, Present, Absent */}
@@ -265,6 +289,16 @@ export function StudentAttendancePage() {
         </div>
       </Card>
 
+      {/* If Calendar Mode is Active */}
+      {viewMode === "calendar" ? (
+        <StudentAttendanceCalendar
+          records={attendanceRecords}
+          studentName={user?.name}
+          internshipStartDate={internshipInfo?.start_date}
+          internshipEndDate={internshipInfo?.end_date}
+        />
+      ) : (
+        <>
       {/* Attendance Records Timeline */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -379,6 +413,8 @@ export function StudentAttendancePage() {
           <div className="flex items-center gap-2"><Clock className="w-3.5 h-3.5 text-blue-500" /><span>Half Day – Partial attendance recorded</span></div>
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }
