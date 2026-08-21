@@ -77,7 +77,7 @@ export function AttendancePage({ viewRole }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [dateFrom, dateTo]);
+  }, [dateFrom, dateTo, selectedTermId, viewRole]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
