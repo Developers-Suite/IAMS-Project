@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { apiClient } from "./api-client";
+import { useAppContext } from "./context";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -67,6 +68,7 @@ const ACTIVE_STATUSES = new Set(["active"]);
 // ── Provider ───────────────────────────────────────────────────────────────────
 
 export function TermProvider({ children }: { children: ReactNode }) {
+  const appCtx = useAppContext();
   const [allTerms, setAllTerms] = useState<TermSummary[]>([]);
   const [activeTerm, setActiveTerm] = useState<TermSummary | null>(null);
   const [selectedTerm, setSelectedTermState] = useState<TermSummary | null>(null);
@@ -98,7 +100,14 @@ export function TermProvider({ children }: { children: ReactNode }) {
       // On first load, default selectedTerm to the active term.
       // Keep existing selection if the user had already switched to an archive.
       setSelectedTermState((prev) => {
-        if (!prev) return active;
+        if (!prev) {
+           const storedId = appCtx.selectedTermId || localStorage.getItem("iams_selected_term_id");
+           if (storedId) {
+             const storedTerm = terms.find((t) => String(t.id) === storedId);
+             if (storedTerm) return storedTerm;
+           }
+           return active;
+        }
         // If the previously selected term is no longer in the list, fall back to active.
         const stillExists = terms.some((t) => t.id === prev.id);
         return stillExists ? prev : active;
@@ -108,14 +117,20 @@ export function TermProvider({ children }: { children: ReactNode }) {
     } finally {
       setTermLoading(false);
     }
-  }, []);
+  }, [appCtx.selectedTermId]);
 
   useEffect(() => {
     void fetchTerms();
   }, [fetchTerms]);
 
   const setSelectedTerm = (term: TermSummary | null) => {
-    setSelectedTermState(term ?? activeTerm);
+    const newTerm = term ?? activeTerm;
+    setSelectedTermState(newTerm);
+    if (newTerm) {
+       appCtx.setSelectedTermId(String(newTerm.id));
+    } else {
+       appCtx.setSelectedTermId(null);
+    }
   };
 
   const isArchiveMode = !!(

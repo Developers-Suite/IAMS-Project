@@ -58,6 +58,7 @@ export function MessagesPanel({ preselectedRecipientId, preselectedThreadId, onC
   const [contacts, setContacts] = useState<any[]>([]);
   const [showNewConversation, setShowNewConversation] = useState(false);
   const [newForm, setNewForm] = useState<NewConversationForm>({ recipientId: "", subject: "", message: "" });
+  const [contactSearch, setContactSearch] = useState("");
   const [apiAvailable, setApiAvailable] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -552,22 +553,71 @@ export function MessagesPanel({ preselectedRecipientId, preselectedThreadId, onC
             </div>
 
             <div className="p-6 space-y-5">
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 relative">
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-1">
                   Recipient
                 </label>
-                <select
-                  value={newForm.recipientId}
-                  onChange={(e) => setNewForm({ ...newForm, recipientId: e.target.value })}
-                  className="w-full px-4 py-3 bg-muted/50 border-none rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
-                >
-                  <option value="">Select a contact...</option>
-                  {contacts.map((c) => (
-                    <option key={c.id} value={String(c.id)}>
-                      {c.name} ({humanizeRole(c.role)}) {c.is_online ? "🟢 Online" : "⚪ Offline"}
-                    </option>
-                  ))}
-                </select>
+                {newForm.recipientId ? (
+                  <div className="flex items-center justify-between w-full px-4 py-3 bg-muted/50 rounded-xl">
+                    <span className="text-sm font-medium">
+                      {(() => {
+                        const c = contacts.find((c: any) => String(c.id) === newForm.recipientId);
+                        return c ? `${c.name} (${humanizeRole(c.role)})` : "Selected Contact";
+                      })()}
+                    </span>
+                    <button 
+                      onClick={() => setNewForm({ ...newForm, recipientId: "" })}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <input
+                        type="text"
+                        value={contactSearch}
+                        onChange={(e) => setContactSearch(e.target.value)}
+                        placeholder="Search for a contact..."
+                        className="w-full pl-9 pr-4 py-3 bg-muted/50 border-none rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
+                      />
+                    </div>
+                    {contactSearch.trim() && (
+                      <div className="absolute top-[100%] left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-border rounded-xl shadow-lg z-50 max-h-[200px] overflow-y-auto">
+                        {(() => {
+                          const matches = contacts.filter((c: any) => 
+                            c.name.toLowerCase().includes(contactSearch.toLowerCase()) || 
+                            humanizeRole(c.role).toLowerCase().includes(contactSearch.toLowerCase())
+                          );
+                          if (matches.length === 0) {
+                            return <div className="p-3 text-sm text-muted-foreground italic">No contacts found.</div>;
+                          }
+                          return matches.map((c: any) => (
+                            <button
+                              key={c.id}
+                              onClick={() => {
+                                setNewForm({ ...newForm, recipientId: String(c.id) });
+                                setContactSearch("");
+                              }}
+                              className="w-full text-left px-4 py-2 hover:bg-muted/50 flex items-center justify-between gap-2 border-b border-border last:border-0"
+                            >
+                              <div>
+                                <p className="text-sm font-medium">{c.name}</p>
+                                <p className="text-xs text-muted-foreground">{humanizeRole(c.role)}</p>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <span className={`w-2 h-2 rounded-full ${c.is_online ? "bg-emerald-500" : "bg-gray-400"}`} />
+                                <span className="text-[10px] text-muted-foreground">{c.is_online ? "Online" : "Offline"}</span>
+                              </div>
+                            </button>
+                          ));
+                        })()}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
 
               <div className="space-y-1.5">

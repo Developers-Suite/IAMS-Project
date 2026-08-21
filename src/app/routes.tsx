@@ -127,19 +127,35 @@ function CLOGuard({ children }: { children: React.ReactNode }) {
   return <AuthGuard allowedRoles={["clo"]}>{children}</AuthGuard>;
 }
 function DLOGuard({ children }: { children: React.ReactNode }) {
-  return <AuthGuard allowedRoles={["dlo"]}>{children}</AuthGuard>;
+  return (
+    <AuthGuard allowedRoles={["dlo"]}>
+      <WorkspaceRequired>{children}</WorkspaceRequired>
+    </AuthGuard>
+  );
 }
 function StudentGuard({ children }: { children: React.ReactNode }) {
   return <AuthGuard allowedRoles={["student"]}>{children}</AuthGuard>;
 }
 function SupervisorGuard({ children }: { children: React.ReactNode }) {
-  return <AuthGuard allowedRoles={["supervisor"]}>{children}</AuthGuard>;
+  return (
+    <AuthGuard allowedRoles={["supervisor"]}>
+      <WorkspaceRequired>{children}</WorkspaceRequired>
+    </AuthGuard>
+  );
 }
 function AcademicGuard({ children }: { children: React.ReactNode }) {
-  return <AuthGuard allowedRoles={["academic"]}>{children}</AuthGuard>;
+  return (
+    <AuthGuard allowedRoles={["academic"]}>
+      <WorkspaceRequired>{children}</WorkspaceRequired>
+    </AuthGuard>
+  );
 }
 function HODGuard({ children }: { children: React.ReactNode }) {
-  return <AuthGuard allowedRoles={["hod"]}>{children}</AuthGuard>;
+  return (
+    <AuthGuard allowedRoles={["hod"]}>
+      <WorkspaceRequired>{children}</WorkspaceRequired>
+    </AuthGuard>
+  );
 }
 
 export const router = createBrowserRouter([

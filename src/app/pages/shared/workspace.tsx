@@ -5,9 +5,11 @@ import { useNavigate } from "react-router";
 import { Calendar, Users, GraduationCap, ChevronRight, RefreshCw, Layers } from "lucide-react";
 import { SkeletonDashboard } from "../../components/skeleton";
 import { toast } from "sonner";
+import { useTerm } from "../../lib/term-context";
 
 export function WorkspacePage() {
-  const { user, setSelectedTermId } = useAppContext();
+  const { user } = useAppContext();
+  const { allTerms, setSelectedTerm } = useTerm();
   const navigate = useNavigate();
 
   const [terms, setTerms] = useState<any[]>([]);
@@ -54,7 +56,10 @@ export function WorkspacePage() {
   );
 
   const handleSelectWorkspace = (termId: string, termName: string) => {
-    setSelectedTermId(String(termId));
+    const matchedTerm = allTerms.find(t => String(t.id) === String(termId)) || terms.find(t => String(t.id) === String(termId));
+    if (matchedTerm) {
+      setSelectedTerm(matchedTerm);
+    }
     toast.success(`Switched workspace to ${termName}`);
     if (user?.role === "dlo") {
       navigate("/dlo");
