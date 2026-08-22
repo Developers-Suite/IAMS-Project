@@ -9,6 +9,7 @@ import { SkeletonTableRows } from "../../components/skeleton";
 import {
   Search, AlertTriangle, MessageSquare, Download, X,
   Eye, BookMarked, MapPin, Clock, CheckCircle2, FileText, Award, Flag,
+  ChevronRight, User,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { ExtendedRole } from "../../services/auth-service";
@@ -54,6 +55,10 @@ export function StudentsPage({ viewRole }: Props) {
   const [itemsPerPage] = useState(10);
   const [missed3, setMissed3] = useState<string[]>([]);
   const [missed7, setMissed7] = useState<string[]>([]);
+  const [missed3List, setMissed3List] = useState<any[]>([]);
+  const [missed7List, setMissed7List] = useState<any[]>([]);
+  const [missedModalThreshold, setMissedModalThreshold] = useState<3 | 7 | null>(null);
+  const [missedSearch, setMissedSearch] = useState("");
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
   const [detailTab, setDetailTab] = useState<"overview" | "scoring">("overview");
 
@@ -129,12 +134,18 @@ export function StudentsPage({ viewRole }: Props) {
 
   const fetchMissed = useCallback(async () => {
     const [r3, r7] = await Promise.all([
-      apiClient.getMissedAttendance(3),
-      apiClient.getMissedAttendance(7),
+      apiClient.getMissedAttendance({ days: 3, ...(selectedTermId ? { term_id: selectedTermId } : {}) }),
+      apiClient.getMissedAttendance({ days: 7, ...(selectedTermId ? { term_id: selectedTermId } : {}) }),
     ]);
-    if (r3.success) setMissed3(r3.data.map((i: any) => String(i.id)));
-    if (r7.success) setMissed7(r7.data.map((i: any) => String(i.id)));
-  }, []);
+    if (r3.success && Array.isArray(r3.data)) {
+      setMissed3List(r3.data);
+      setMissed3(r3.data.map((i: any) => String(i.id)));
+    }
+    if (r7.success && Array.isArray(r7.data)) {
+      setMissed7List(r7.data);
+      setMissed7(r7.data.map((i: any) => String(i.id)));
+    }
+  }, [selectedTermId]);
 
   useEffect(() => { fetchStudents(); fetchMissed(); }, [fetchStudents, fetchMissed]);
 
@@ -397,27 +408,125 @@ export function StudentsPage({ viewRole }: Props) {
   const showReport = structure !== "B"; // A, C, D show report; B doesn't
   const showPresentation = structure !== "A"; // B, C, D show presentation; A doesn't
 
+  const activeMissedList = missedModalThreshold === 7 ? missed7List : missed3List;
+  const filteredMissedList = activeMissedList.filter((item: any) => {
+    if (!missedSearch.trim()) return true;
+    const q = missedSearch.toLowerCase();
+    const sName = (item.student?.user?.name ?? item.student?.name ?? "").toLowerCase();
+    const sId = (item.student?.student_id ?? item.student_id ?? "").toLowerCase();
+    const cName = (item.company?.name ?? "").toLowerCase();
+    const dept = (item.student?.department?.name ?? item.department?.name ?? "").toLowerCase();
+    return sName.includes(q) || sId.includes(q) || cName.includes(q) || dept.includes(q);
+  });
+
+  const openStudentFromMissed = (item: any) => {
+    const userId = String(item.student?.user?.id ?? item.student_id ?? item.id);
+    const existing = enrolledStudents.find(
+      (s) => s.id === userId || s.studentUserId === userId || s.internshipId === String(item.id)
+    );
+    if (existing) {
+      setSelectedStudent(existing.id);
+    } else {
+      const fallbackRow = {
+        id: userId,
+        internshipId: String(item.id),
+        studentName: item.student?.user?.name ?? item.student?.name ?? "—",
+        studentId: item.student?.student_id ?? "—",
+        studentUserId: userId,
+        companyName: item.company?.name ?? "—",
+        department: item.student?.department?.name ?? "—",
+        level: item.student?.level ?? "—",
+        supervisorAssigned: item.academic_supervisor?.user?.name ?? item.academicSupervisor?.user?.name ?? "",
+        status: item.status ?? "active",
+        startDate: fmtDate(item.start_date ?? item.created_at),
+      };
+      setEnrolledStudents((prev) => [fallbackRow, ...prev]);
+      setSelectedStudent(userId);
+    }
+    setMissedModalThreshold(null);
+  };
+
+  const messageStudentFromMissed = (item: any) => {
+    const userId = String(item.student?.user?.id ?? item.student?.user_id ?? "");
+    if (userId) {
+      navigate(`${commPath}?tab=messages&recipient=${userId}`);
+    } else {
+      toast.error("Unable to find user ID for this student.");
+    }
+  };
+
   if (loading) return <SkeletonTableRows count={5} />;
 
   return (
     <div className="space-y-6">
       {/* Missed check-in summary cards */}
       {(missed3.length > 0 || missed7.length > 0) && (
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
-            <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
-            <div>
-              <p className="font-semibold text-amber-800">{missed3.length} student{missed3.length !== 1 ? "s" : ""}</p>
-              <p className="text-amber-700" style={{ fontSize: "0.75rem" }}>Missed check-in 3+ days</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => { setMissedModalThreshold(3); setMissedSearch(""); }}
+            className={`w-full text-left rounded-xl p-4 flex items-center justify-between gap-3 border transition-all duration-200 group cursor-pointer hover:shadow-md hover:-translate-y-0.5 ${
+              missedModalThreshold === 3
+                ? "bg-amber-100/90 border-amber-400 ring-2 ring-amber-400/40 dark:bg-amber-950/50 dark:border-amber-600"
+                : "bg-amber-50/80 border-amber-200 hover:bg-amber-100/80 dark:bg-amber-950/25 dark:border-amber-800/60 dark:hover:bg-amber-950/40"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-amber-100 border border-amber-300/60 text-amber-700 dark:bg-amber-900/40 dark:border-amber-700/60 dark:text-amber-300 shrink-0 group-hover:scale-105 transition-transform">
+                <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold text-amber-900 dark:text-amber-200 text-base">
+                    {missed3.length} student{missed3.length !== 1 ? "s" : ""}
+                  </p>
+                  <span className="text-[0.65rem] font-bold px-1.5 py-0.5 rounded-full bg-amber-200/80 text-amber-800 dark:bg-amber-900/80 dark:text-amber-300">
+                    3+ Days
+                  </span>
+                </div>
+                <p className="text-amber-700 dark:text-amber-400 mt-0.5" style={{ fontSize: "0.75rem" }}>
+                  Missed check-in 3+ days · <span className="underline group-hover:text-amber-900 dark:group-hover:text-amber-200 font-medium">Click to view & message</span>
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
-            <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
-            <div>
-              <p className="font-semibold text-red-800">{missed7.length} student{missed7.length !== 1 ? "s" : ""}</p>
-              <p className="text-red-700" style={{ fontSize: "0.75rem" }}>Missed check-in 7+ days</p>
+            <div className="flex items-center gap-1 text-amber-700 dark:text-amber-400 text-xs font-semibold shrink-0 group-hover:translate-x-0.5 transition-transform">
+              <span className="hidden md:inline">View List</span>
+              <ChevronRight className="w-4 h-4" />
             </div>
-          </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { setMissedModalThreshold(7); setMissedSearch(""); }}
+            className={`w-full text-left rounded-xl p-4 flex items-center justify-between gap-3 border transition-all duration-200 group cursor-pointer hover:shadow-md hover:-translate-y-0.5 ${
+              missedModalThreshold === 7
+                ? "bg-red-100/90 border-red-400 ring-2 ring-red-400/40 dark:bg-red-950/50 dark:border-red-600"
+                : "bg-red-50/80 border-red-200 hover:bg-red-100/80 dark:bg-red-950/25 dark:border-red-800/60 dark:hover:bg-red-950/40"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-red-100 border border-red-300/60 text-red-700 dark:bg-red-900/40 dark:border-red-700/60 dark:text-red-300 shrink-0 group-hover:scale-105 transition-transform">
+                <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold text-red-900 dark:text-red-200 text-base">
+                    {missed7.length} student{missed7.length !== 1 ? "s" : ""}
+                  </p>
+                  <span className="text-[0.65rem] font-bold px-1.5 py-0.5 rounded-full bg-red-200/80 text-red-800 dark:bg-red-900/80 dark:text-red-300 uppercase tracking-wider">
+                    Critical 7+ Days
+                  </span>
+                </div>
+                <p className="text-red-700 dark:text-red-400 mt-0.5" style={{ fontSize: "0.75rem" }}>
+                  Missed check-in 7+ days · <span className="underline group-hover:text-red-900 dark:group-hover:text-red-200 font-medium">Click to view & message</span>
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 text-red-700 dark:text-red-400 text-xs font-semibold shrink-0 group-hover:translate-x-0.5 transition-transform">
+              <span className="hidden md:inline">View List</span>
+              <ChevronRight className="w-4 h-4" />
+            </div>
+          </button>
         </div>
       )}
 
@@ -799,6 +908,178 @@ export function StudentsPage({ viewRole }: Props) {
                   )}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Missed Check-In Students Modal */}
+      {missedModalThreshold !== null && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setMissedModalThreshold(null)}
+        >
+          <div
+            className="bg-card border border-border rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div
+              className={`p-5 border-b flex items-start justify-between gap-4 ${
+                missedModalThreshold === 7
+                  ? "bg-red-50/70 border-red-200 dark:bg-red-950/40 dark:border-red-900/60"
+                  : "bg-amber-50/70 border-amber-200 dark:bg-amber-950/40 dark:border-amber-900/60"
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div
+                  className={`p-2.5 rounded-xl border shrink-0 mt-0.5 ${
+                    missedModalThreshold === 7
+                      ? "bg-red-100 border-red-300 text-red-700 dark:bg-red-900/50 dark:text-red-300 dark:border-red-800"
+                      : "bg-amber-100 border-amber-300 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 dark:border-amber-800"
+                  }`}
+                >
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold">
+                      {missedModalThreshold === 7
+                        ? "Critical: Students Missing Check-In (7+ Days)"
+                        : "Students Missing Check-In (3+ Days)"}
+                    </h3>
+                    <span
+                      className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
+                        missedModalThreshold === 7
+                          ? "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/60 dark:text-red-200 dark:border-red-800"
+                          : "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/60 dark:text-amber-200 dark:border-amber-800"
+                      }`}
+                    >
+                      {activeMissedList.length} flagged
+                    </span>
+                  </div>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {missedModalThreshold === 7
+                      ? "These students have missed daily check-in for 7 or more consecutive working days. Immediate intervention is required."
+                      : "These students have missed daily check-in for 3 or more working days. Reach out via chat or review their profiles."}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setMissedModalThreshold(null)}
+                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground shrink-0"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Search & Filter Toolbar */}
+            <div className="p-4 border-b border-border bg-muted/20 flex items-center gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Filter flagged students by name, student ID, company..."
+                  value={missedSearch}
+                  onChange={(e) => setMissedSearch(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 bg-background border border-border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                />
+              </div>
+              {missedSearch && (
+                <button
+                  onClick={() => setMissedSearch("")}
+                  className="text-xs text-muted-foreground hover:text-foreground underline px-1"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+
+            {/* Students List */}
+            <div className="p-4 overflow-y-auto flex-1 space-y-3 divide-y divide-border/60">
+              {filteredMissedList.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground space-y-2">
+                  <CheckCircle2 className="w-8 h-8 mx-auto text-emerald-500 opacity-80" />
+                  <p className="font-medium text-sm">No students match this filter.</p>
+                  <p className="text-xs text-muted-foreground">
+                    {missedSearch ? "Try refining your search terms." : "All students are checked in!"}
+                  </p>
+                </div>
+              ) : (
+                filteredMissedList.map((item: any) => {
+                  const sName = item.student?.user?.name ?? item.student?.name ?? "—";
+                  const sId = item.student?.student_id ?? item.student_id ?? "—";
+                  const sDept = item.student?.department?.name ?? item.department?.name ?? "—";
+                  const cName = item.company?.name ?? "—";
+                  const sUserId = String(item.student?.user?.id ?? item.student?.user_id ?? "");
+                  const initials = sName.split(" ").map((w: string) => w[0]).join("").slice(0, 2);
+
+                  return (
+                    <div
+                      key={item.id}
+                      className="pt-3 first:pt-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl hover:bg-muted/40 transition-colors"
+                    >
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div
+                          className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
+                            missedModalThreshold === 7
+                              ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
+                              : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                          }`}
+                        >
+                          {initials}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-semibold text-sm truncate">{sName}</p>
+                            <span className="text-xs text-muted-foreground font-mono">({sId})</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            <span className="font-medium text-foreground">{cName}</span> · {sDept}
+                          </p>
+                          {item.academic_supervisor?.user?.name && (
+                            <p className="text-[0.7rem] text-muted-foreground mt-0.5">
+                              Supervisor: {item.academic_supervisor.user.name}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => messageStudentFromMissed(item)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition text-xs font-semibold shadow-sm cursor-pointer"
+                          title="Open Chat to message student"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5" />
+                          <span>Message</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openStudentFromMissed(item)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-accent text-foreground transition text-xs font-medium cursor-pointer"
+                          title="View complete student profile"
+                        >
+                          <Eye className="w-3.5 h-3.5 text-muted-foreground" />
+                          <span>Profile</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-3 bg-muted/30 border-t border-border flex items-center justify-between text-xs text-muted-foreground px-5">
+              <span>Showing {filteredMissedList.length} of {activeMissedList.length} students</span>
+              <button
+                onClick={() => setMissedModalThreshold(null)}
+                className="px-3 py-1.5 rounded-lg border border-border bg-background hover:bg-muted font-medium text-foreground cursor-pointer"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
