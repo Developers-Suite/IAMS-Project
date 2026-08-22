@@ -1155,12 +1155,14 @@ export const apiClient = {
     return { success: response.success, data: attendance, message: response.message };
   },
 
-  async getMissedAttendance(days?: number): Promise<ApiResponse<any[]>> {
-    const baseQuery = days && days > 1 ? { days } : undefined;
+  async getMissedAttendance(params?: { days?: number; term_id?: number | string } | number): Promise<ApiResponse<any[]>> {
+    const baseQuery = typeof params === "number"
+      ? (params > 1 ? { days: params } : undefined)
+      : params;
     const response = await requestApi<unknown>(
       API_ENDPOINTS.ATTENDANCE_MISSED,
       // SECURITY: Add supervisor context for server-side filtering
-      { method: "GET", query: applyDomainScoping(baseQuery) }
+      { method: "GET", query: applyDomainScoping(baseQuery as Record<string, unknown>) }
     );
     return {
       success: response.success,
