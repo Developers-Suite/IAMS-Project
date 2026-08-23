@@ -1485,8 +1485,7 @@ export const apiClient = {
       "industry-supervisor": API_ENDPOINTS.DASHBOARD_SUPERVISOR,
       "academic-supervisor": API_ENDPOINTS.DASHBOARD_ACADEMIC,
     };
-    const url = params ? `${endpointMap[role]}?${buildQueryString(params)}` : endpointMap[role];
-    return requestApi<any>(url, { method: "GET" });
+    return requestApi<any>(endpointMap[role], { method: "GET", query: params });
   },
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━

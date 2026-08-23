@@ -87,9 +87,18 @@ export function StudentsPage({ viewRole }: Props) {
     // Academic supervisors can't access /users (CLO/DLO only).
     // Load their assigned students directly from the dashboard instead.
     if (viewRole === "academic") {
-      const dashRes = await apiClient.getDashboard("academic-supervisor");
+      const dashRes = await apiClient.getDashboard(
+        "academic-supervisor",
+        selectedTermId ? { term_id: selectedTermId } : undefined
+      );
       if (dashRes.success) {
-        const internships: any[] = dashRes.data?.assigned_internships ?? [];
+        const rawInternships: any[] = dashRes.data?.assigned_internships ?? [];
+        const internships: any[] = selectedTermId
+          ? rawInternships.filter(
+              (i: any) =>
+                String(i.academic_term_id ?? i.term_id ?? i.term?.id) === String(selectedTermId)
+            )
+          : rawInternships;
         const rows = internships.map((i: any) => ({
           id: String(i.student?.user?.id ?? i.id),
           internshipId: String(i.id),
@@ -115,19 +124,38 @@ export function StudentsPage({ viewRole }: Props) {
       apiClient.getInternships({ per_page: 200, ...(selectedTermId ? { academic_term_id: selectedTermId } : {}) }),
     ]);
     if (usersRes.success) {
-      // Build a map from userId → internship
-      const internshipMap = new Map<string, any>();
-      if (internshipsRes.success) {
-        for (const i of internshipsRes.data) {
-          const uid = String(i.student?.user?.id ?? "");
-          if (uid) internshipMap.set(uid, i);
+      if (selectedTermId && internshipsRes.success) {
+        // In workspace / archive mode, list students enrolled in this term's internships
+        const rows = internshipsRes.data.map((i: any) => ({
+          id: String(i.student?.user?.id ?? i.id),
+          internshipId: String(i.id),
+          studentName: i.student?.user?.name ?? "—",
+          studentId: i.student?.student_id ?? "—",
+          studentUserId: String(i.student?.user?.id ?? ""),
+          companyName: i.company?.name ?? "—",
+          department: i.student?.department?.name ?? "—",
+          level: i.student?.level ?? "—",
+          supervisorAssigned: i.academic_supervisor?.user?.name ?? "",
+          status: i.status ?? "registered",
+          startDate: fmtDate(i.start_date ?? i.created_at),
+        }));
+        setEnrolledStudents(rows);
+        setTotalPages(Math.ceil(rows.length / itemsPerPage) || 1);
+      } else {
+        // Build a map from userId → internship
+        const internshipMap = new Map<string, any>();
+        if (internshipsRes.success) {
+          for (const i of internshipsRes.data) {
+            const uid = String(i.student?.user?.id ?? "");
+            if (uid) internshipMap.set(uid, i);
+          }
         }
+        const rows = usersRes.data.map((u: any) =>
+          normalizeUserWithInternship(u, internshipMap.get(String(u.id)))
+        );
+        setEnrolledStudents(rows);
+        setTotalPages(Math.ceil(rows.length / itemsPerPage) || 1);
       }
-      const rows = usersRes.data.map((u: any) =>
-        normalizeUserWithInternship(u, internshipMap.get(String(u.id)))
-      );
-      setEnrolledStudents(rows);
-      setTotalPages(Math.ceil(rows.length / itemsPerPage) || 1);
     }
     setLoading(false);
   }, [viewRole, itemsPerPage, selectedTermId]);

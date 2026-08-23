@@ -7,8 +7,11 @@ import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { SkeletonDashboard } from "../../components/skeleton";
 
+import { useTerm } from "../../lib/term-context";
+
 export function StudentDashboard() {
   const { user } = useAppContext();
+  const { selectedTermId } = useTerm();
   const navigate = useNavigate();
   const [dashboard, setDashboard] = useState<any>(null);
   const [visitations, setVisitations] = useState<any[]>([]);
@@ -25,10 +28,11 @@ export function StudentDashboard() {
   const refreshDashboard = async () => {
     setRefreshing(true);
     try {
+      const termParams = selectedTermId ? { term_id: selectedTermId } : undefined;
       const [dashRes, appsRes, internshipRes, termsRes] = await Promise.all([
-        apiClient.getDashboard("student"),
-        apiClient.getApplications(),
-        apiClient.getInternships(),
+        apiClient.getDashboard("student", termParams),
+        apiClient.getApplications(termParams),
+        apiClient.getInternships(termParams ? { academic_term_id: selectedTermId } : undefined),
         apiClient.getTerms(),
       ]);
       if (dashRes.success) {
@@ -126,16 +130,16 @@ export function StudentDashboard() {
     }
   };
 
-  // Load data on mount
+  // Load data on mount and term switch
   useEffect(() => {
     refreshDashboard();
-  }, []);
+  }, [selectedTermId]);
 
-  // Auto-refresh every 8 seconds to catch DLO approvals
+  // Auto-refresh every 60 seconds to catch DLO approvals
   useEffect(() => {
     const interval = setInterval(refreshDashboard, 60_000);
     return () => clearInterval(interval);
-  }, []);
+  }, [selectedTermId]);
 
   const activeInternship = dashboard?.active_internship;
   const recentLogbooks: any[] = dashboard?.recent_logbooks ?? [];

@@ -35,7 +35,7 @@ export function SupervisorDashboard() {
       const [dashRes, logsRes, approvalsRes] = await Promise.all([
         apiClient.getDashboard("industry-supervisor", termParams),
         apiClient.getLogbookEntries({ status: "submitted", per_page: 10, ...termParams }),
-        apiClient.getPendingSupervisorInvitations(),
+        apiClient.getPendingSupervisorInvitations(selectedTermId ? { term_id: selectedTermId } : undefined),
       ]);
       if (cancelled) return;
       if (dashRes.success) {

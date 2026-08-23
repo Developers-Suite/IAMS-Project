@@ -51,10 +51,13 @@ export function AcademicDashboard() {
           String(i.academic_term_id ?? i.term_id ?? i.term?.id) === String(selectedTermId)
       )
     : allInternships;
-  const pendingLogbooks: any[] = dashboard?.pending_logbooks     ?? [];
-  const upcomingVisits: any[]  = dashboard?.upcoming_visitations ?? [];
+  const assignedIds = new Set(internships.map((i: any) => i.id));
+  const pendingLogbooks: any[] = (dashboard?.pending_logbooks ?? []).filter(
+    (l: any) => assignedIds.has(l.internship_id)
+  );
+  const upcomingVisits: any[] = dashboard?.upcoming_visitations ?? [];
 
-  const totalStudents    = dashboard?.assigned_students ?? internships.length;
+  const totalStudents    = internships.length;
   const activeCount      = internships.filter((i) => i.status === "active").length;
   const completedCount   = internships.filter((i) => i.status === "completed").length;
   const pendingLogsCount = pendingLogbooks.length;

@@ -103,12 +103,24 @@ export function EvaluatePage() {
   const [params, setParams] = useSearchParams();
 
   useEffect(() => {
+    setAppId("");
+    setRubricsByWeek({});
+    setAssessmentsByInternship({});
+  }, [selectedTermId]);
+
+  useEffect(() => {
     let cancelled = false;
     const termParams = selectedTermId ? { term_id: selectedTermId } : {};
     apiClient.getDashboard("industry-supervisor", termParams).then((res) => {
       if (!cancelled && res.success) {
-        // Backend already scopes assigned_internships to this supervisor
-        setAssignedInternships(res.data?.assigned_internships ?? []);
+        const rawInternships: any[] = res.data?.assigned_internships ?? [];
+        const filtered = selectedTermId
+          ? rawInternships.filter(
+              (i: any) =>
+                String(i.academic_term_id ?? i.term_id ?? i.term?.id) === String(selectedTermId)
+            )
+          : rawInternships;
+        setAssignedInternships(filtered);
       }
     });
     return () => { cancelled = true; };
@@ -123,7 +135,9 @@ export function EvaluatePage() {
   // SECURITY: Backend filters by supervisor_id parameter
 
   useEffect(() => {
-    if (!appId && activeApps.length > 0) setAppId(getInternshipId(activeApps[0]));
+    if ((!appId || !activeApps.some((a) => getInternshipId(a) === appId)) && activeApps.length > 0) {
+      setAppId(getInternshipId(activeApps[0]));
+    }
   }, [activeApps, appId]);
 
   useEffect(() => {

@@ -74,8 +74,23 @@ export function AcademicEvaluatePage() {
     }
   }, [user?.id, selectedTermId]);
 
-  // Derive assigned students from dashboard internships
-  const assignedStudents: NormalizedStudent[] = (dashboard?.assigned_internships ?? []).map(
+  // Reset selected student on term/workspace change
+  useEffect(() => {
+    setSelectedStudent(null);
+    setAttendanceRecords([]);
+    setSiteVisitNotes([]);
+    setGradeData(null);
+  }, [selectedTermId]);
+
+  // Derive assigned students from dashboard internships scoped to selected term
+  const rawAssigned: any[] = dashboard?.assigned_internships ?? [];
+  const assignedStudents: NormalizedStudent[] = (selectedTermId
+    ? rawAssigned.filter(
+        (i: any) =>
+          String(i.academic_term_id ?? i.term_id ?? i.term?.id) === String(selectedTermId)
+      )
+    : rawAssigned
+  ).map(
     (i: any): NormalizedStudent => ({
       id: String(i.id),
       studentName: i.student?.user?.name ?? "—",
