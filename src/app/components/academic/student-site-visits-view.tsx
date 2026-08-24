@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { Calendar, Building2, MapPin, Star, Save, X } from "lucide-react";
+import { Calendar, Building2, MapPin, Save, X } from "lucide-react";
 import { DatePicker } from "../ui/date-picker";
 
 interface SiteVisitNote {
   id: string;
   date: string;
   observations: string;
-  studentEngagement: number;
   companyFeedback: string;
   recommendations: string;
 }
@@ -16,7 +15,6 @@ interface StudentSiteVisitsViewProps {
   onAddVisitNote: (note: {
     date: string;
     observations: string;
-    studentEngagement: number;
     companyFeedback: string;
     recommendations: string;
   }) => void;
@@ -30,7 +28,6 @@ export function StudentSiteVisitsView({
   const [newVisit, setNewVisit] = useState({
     date: new Date().toISOString().split("T")[0],
     observations: "",
-    studentEngagement: 3,
     companyFeedback: "",
     recommendations: "",
   });
@@ -42,7 +39,6 @@ export function StudentSiteVisitsView({
     setNewVisit({
       date: new Date().toISOString().split("T")[0],
       observations: "",
-      studentEngagement: 3,
       companyFeedback: "",
       recommendations: "",
     });
@@ -92,29 +88,6 @@ export function StudentSiteVisitsView({
                     value={newVisit.date}
                     onChange={(val) => setNewVisit({ ...newVisit, date: val })}
                   />
-                </div>
-                <div>
-                  <label style={{ fontSize: "0.8rem" }}>Student Engagement (1-5)</label>
-                  <div className="flex gap-1.5 mt-1.5">
-                    {[1, 2, 3, 4, 5].map((n) => (
-                      <button
-                        key={n}
-                        type="button"
-                        onClick={() => setNewVisit({ ...newVisit, studentEngagement: n })}
-                        className={`w-10 h-10 rounded-lg border flex items-center justify-center transition-all ${
-                          newVisit.studentEngagement >= n
-                            ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                            : "border-border hover:bg-accent text-muted-foreground"
-                        }`}
-                      >
-                        <Star
-                          className={`w-4 h-4 ${
-                            newVisit.studentEngagement >= n ? "fill-current text-yellow-400" : ""
-                          }`}
-                        />
-                      </button>
-                    ))}
-                  </div>
                 </div>
                 <div>
                   <label style={{ fontSize: "0.8rem" }}>Observations *</label>
@@ -191,16 +164,6 @@ export function StudentSiteVisitsView({
                 <span style={{ fontSize: "0.9rem" }} className="font-semibold">
                   {typeof visit.date === "string" && visit.date.includes("T") ? visit.date.split("T")[0] : (visit.date ?? "—")}
                 </span>
-              </div>
-              <div className="flex items-center gap-1">
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <Star
-                    key={n}
-                    className={`w-3.5 h-3.5 ${
-                      n <= visit.studentEngagement ? "text-amber-500 fill-amber-500" : "text-gray-200"
-                    }`}
-                  />
-                ))}
               </div>
             </div>
             <div>

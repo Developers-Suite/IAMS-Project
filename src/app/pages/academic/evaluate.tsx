@@ -33,7 +33,6 @@ function normalizeVisitToNote(v: any) {
     id: String(v.id),
     date: dateStr,
     observations: v.observations ?? v.visit_purpose ?? "",
-    studentEngagement: v.student_engagement_rating ?? 3,
     companyFeedback: v.company_feedback ?? "",
     recommendations: v.recommendations ?? "",
   };
@@ -217,7 +216,6 @@ export function AcademicEvaluatePage() {
   const handleAddVisitNote = async (noteData: {
     date: string;
     observations: string;
-    studentEngagement: number;
     companyFeedback: string;
     recommendations: string;
   }) => {
