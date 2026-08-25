@@ -297,14 +297,14 @@ export function DashboardLayout() {
           style={{ boxShadow: "0 4px 20px rgba(11,94,215,0.25)" }}
         >
           {/* Logo Area */}
-          <div className={`flex items-center ${sidebarOpen || isMobile ? "gap-3 px-5" : "justify-center px-0"} py-5 transition-all duration-300`}>
+          <div className={`flex items-center ${sidebarOpen || isMobile ? "justify-between px-5" : "justify-center px-0"} py-5 transition-all duration-300`}>
             {(sidebarOpen || isMobile) ? (
-              <div className="rounded-xl overflow-hidden shrink-0 bg-white shadow-lg shadow-black/10 p-3">
-                <img src="/logo%202.png" alt="HTU IAMS" className="h-8 w-auto object-contain" />
+              <div className="flex items-center h-10 overflow-hidden shrink-0">
+                <img src="/HTU%20IAMSNEWLOGOWHITE.png" alt="HTU IAMS" className="h-10 w-auto object-contain" />
               </div>
             ) : (
-              <div className="w-8 h-8 rounded-xl overflow-hidden shrink-0 shadow-lg shadow-black/10 bg-white">
-                <img src="/logo%202.png" alt="HTU IAMS" className="w-full h-full object-cover object-left" />
+              <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 flex items-center justify-center p-1 bg-white/10">
+                <img src="/HTULOGO.png" alt="HTU Logo" className="w-full h-full object-contain" />
               </div>
             )}
             {isMobile && sidebarOpen && (
