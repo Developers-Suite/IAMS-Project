@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText } from "lucide-react";
+import { FileText, Calendar, PlusCircle, CheckCircle2 } from "lucide-react";
 import { CompanyAcceptanceModal } from "./company-acceptance-modal";
 import { ApplicationStatus } from "./application-status";
 import { ApplicationActions } from "./application-actions";
@@ -14,6 +14,7 @@ interface ApplicationTrackerProps {
   myApp: any;
   terms?: any[];
   onViewWindows: () => void;
+  onApplyAnother?: () => void;
   onCancelApplication?: () => void;
   onAcceptanceSubmitted?: () => void;
   isInternshipEnded?: boolean;
@@ -111,6 +112,7 @@ export function ApplicationTracker({
   myApp,
   terms,
   onViewWindows,
+  onApplyAnother,
   onCancelApplication,
   onAcceptanceSubmitted,
   isInternshipEnded = false,
@@ -228,6 +230,36 @@ export function ApplicationTracker({
         internshipStartDate={internshipStartDate}
         isEnded={isInternshipEnded}
       />
+
+      {isInternshipEnded && (
+        <div className="rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/80 dark:bg-blue-950/30 p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h4 className="font-semibold text-blue-950 dark:text-blue-100 text-sm flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              Internship Completed
+            </h4>
+            <p className="text-blue-800 dark:text-blue-200 text-xs mt-1 max-w-xl">
+              You have completed this industrial attachment. You can apply for another internship window right away, even while your final grades and evaluations are being reviewed.
+            </p>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={onViewWindows}
+              className="px-4 py-2 border border-blue-300 dark:border-blue-700 text-blue-800 dark:text-blue-200 rounded-lg hover:bg-blue-100/60 dark:hover:bg-blue-900/30 text-xs font-semibold flex items-center gap-1.5 transition-all"
+            >
+              <Calendar className="w-3.5 h-3.5" /> View Open Windows
+            </button>
+            <button
+              type="button"
+              onClick={onApplyAnother || onViewWindows}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all"
+            >
+              <PlusCircle className="w-3.5 h-3.5" /> Apply for Another Internship
+            </button>
+          </div>
+        </div>
+      )}
 
       <ApplicationActions
         status={myApp.status}

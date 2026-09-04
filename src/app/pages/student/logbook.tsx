@@ -11,8 +11,10 @@ import {
 import { toast } from "sonner";
 import { DatePicker } from "../../components/ui/date-picker";
 import { isActiveInternshipStatus, isCheckedInAttendanceRecord } from "../../hooks/use-student-check-in";
+import { useTerm } from "../../lib/term-context";
 
 export function LogbookPage() {
+  const { selectedTermId, isArchiveMode } = useTerm();
   const [internshipId, setInternshipId] = useState<number | null>(null);
   const [internshipStatus, setInternshipStatus] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
@@ -44,7 +46,7 @@ export function LogbookPage() {
 
   const { execute: submitLogEntry, loading: isSubmitting } = useToastAction();
 
-  const isLogbookActive = isActiveInternshipStatus(internshipStatus, endDate);
+  const isLogbookActive = !isArchiveMode && isActiveInternshipStatus(internshipStatus, endDate);
 
   const loadData = useCallback(async () => {
     try {
@@ -53,12 +55,20 @@ export function LogbookPage() {
         apiClient.getInternships(),
       ]);
 
-      let targetInternship = dashRes.data?.active_internship;
+      let targetInternship: any = null;
 
-      // Fall back to most recent internship if active_internship is null (e.g. ended/completed)
-      if (!targetInternship && internshipsRes.success && Array.isArray(internshipsRes.data) && internshipsRes.data.length > 0) {
+      if (internshipsRes.success && Array.isArray(internshipsRes.data) && internshipsRes.data.length > 0) {
         const sorted = [...internshipsRes.data].sort((a, b) => (b.created_at ?? "") > (a.created_at ?? "") ? 1 : -1);
-        targetInternship = sorted[0];
+        if (selectedTermId) {
+          targetInternship = sorted.find(
+            (i) => String(i.academic_term_id ?? i.term_id ?? i.academicTerm?.id ?? i.term?.id) === String(selectedTermId)
+          );
+        }
+        if (!targetInternship) {
+          targetInternship = dashRes.data?.active_internship || sorted[0];
+        }
+      } else {
+        targetInternship = dashRes.data?.active_internship;
       }
 
       if (!targetInternship?.id) return;
@@ -151,7 +161,7 @@ export function LogbookPage() {
 
   useEffect(() => {
     loadData();
-  }, [loadData]);
+  }, [loadData, selectedTermId]);
 
   // Check for previous day drafts on mount and periodically
   useEffect(() => {
@@ -394,10 +404,12 @@ export function LogbookPage() {
           <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
           <div className="flex-1">
             <p className="text-amber-900 font-semibold text-sm dark:text-amber-200">
-              {internshipStatus === "completed" ? "Internship Completed" : "Internship Ended"}
+              {isArchiveMode ? "Archived Workspace (Read-Only)" : internshipStatus === "completed" ? "Internship Completed" : "Internship Ended"}
             </p>
             <p className="text-amber-700 text-xs mt-0.5 dark:text-amber-400">
-              Your internship period has ended. Creating, editing, or submitting logbook entries is no longer permitted.
+              {isArchiveMode
+                ? "You are viewing an archived academic term's logbook. All entries are preserved in read-only mode."
+                : "Your internship period has ended. Creating, editing, or submitting logbook entries is no longer permitted."}
             </p>
           </div>
         </div>

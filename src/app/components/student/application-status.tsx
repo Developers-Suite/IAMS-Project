@@ -40,7 +40,7 @@ export function ApplicationStatus({ status, createdAt, internshipStartDate, isEn
         </div>
         {isEnded && (
           <p className="text-blue-700 dark:text-blue-400" style={{ fontSize: "0.8rem" }}>
-            The internship period has officially ended. Final grades are currently under review.
+            The internship period has officially ended. Final grades are currently under review. You are eligible to apply for another internship.
           </p>
         )}
         {!isEnded && displayStatus === "pending_company_approval" && (

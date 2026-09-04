@@ -280,8 +280,14 @@ export function StudentDashboard() {
                 <p className="text-sm opacity-90 mb-2">{new Date().toLocaleDateString("en-GB", { month: "long", day: "numeric", year: "numeric" })}</p>
                 <h1 className="text-3xl font-bold mb-2">Internship Has Ended</h1>
                 <p className="opacity-95 text-sm max-w-xl mb-4">
-                  Your industrial attachment for <span className="font-semibold text-red-100">{activeTermName !== "N/A" ? activeTermName : "this academic term"}</span> at <span className="font-semibold text-red-100">{myInternship?.company?.name || companyName}</span> has officially ended.
+                  Your industrial attachment for <span className="font-semibold text-emerald-100">{activeTermName !== "N/A" ? activeTermName : "this academic term"}</span> at <span className="font-semibold text-emerald-100">{myInternship?.company?.name || companyName}</span> has officially ended. Final evaluations are in review, and you are eligible to apply for another internship.
                 </p>
+                <button
+                  onClick={() => navigate("/student/applications")}
+                  className="px-4 py-2.5 bg-white text-emerald-800 rounded-lg hover:bg-emerald-50 text-sm font-semibold inline-flex items-center gap-2 shadow-sm transition-all"
+                >
+                  <FileText className="w-4 h-4" /> Apply for Another Internship <ArrowRight className="w-4 h-4" />
+                </button>
               </div>
               <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-10 flex items-center justify-center">
                 <Award className="w-40 h-40" />

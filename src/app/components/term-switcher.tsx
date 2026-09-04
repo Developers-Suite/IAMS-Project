@@ -86,7 +86,7 @@ export function TermSwitcher() {
                     key={t.id}
                     term={t}
                     selected={selectedTerm?.id === t.id}
-                    onSelect={() => { setSelectedTerm(null); setOpen(false); }}
+                    onSelect={() => { setSelectedTerm(t); setOpen(false); }}
                   />
                 ))}
               </div>

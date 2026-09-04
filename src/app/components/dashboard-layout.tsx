@@ -14,8 +14,9 @@ import { getSettings, updateSettings, subscribeSettings } from "../lib/settings-
 import { setNotifications } from "../lib/store";
 import { CheckInModal } from "./check-in-modal";
 import { NotificationBell } from "./notification-bell";
-import { useStudentCheckIn } from "../hooks/use-student-check-in";
 import { TermSwitcher, ArchiveModeBanner } from "./term-switcher";
+import { useTerm } from "../lib/term-context";
+import { toast } from "sonner";
 
 interface NavItem {
   to: string;
@@ -166,6 +167,7 @@ function getRoleLabel(role: ExtendedRole): string {
 
 export function DashboardLayout() {
   const { user, setUser, sidebarOpen, setSidebarOpen, store, selectedTermId } = useAppContext();
+  const { isArchiveMode } = useTerm();
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -416,15 +418,19 @@ export function DashboardLayout() {
           {user.role === "student" && (
             <button
               onClick={() => {
+                if (isArchiveMode) {
+                  toast.error("Check-in is disabled while viewing an archived term workspace.");
+                  return;
+                }
                 if (!activeInternship) {
                   toast.error("Check-in is closed — your internship period for this term has ended.");
                   return;
                 }
                 setCheckInModalOpen(true);
               }}
-              disabled={!activeInternship}
+              disabled={!activeInternship || isArchiveMode}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
-                !activeInternship
+                !activeInternship || isArchiveMode
                   ? "bg-muted/60 text-muted-foreground cursor-not-allowed opacity-60"
                   : checkedInToday
                   ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20"
@@ -433,14 +439,12 @@ export function DashboardLayout() {
               style={{ fontSize: "0.85rem", fontWeight: 500 }}
             >
               <CheckCircle2 className="w-4 h-4" />
-              {!activeInternship ? "Check-in Closed" : checkedInToday ? "Checked In" : "Check In"}
+              {isArchiveMode ? "Archived Mode" : !activeInternship ? "Check-in Closed" : checkedInToday ? "Checked In" : "Check In"}
             </button>
           )}
 
-          {/* Term Switcher — visible for CLO, DLO, supervisors (not students) */}
-          {user.role !== "student" && (
-            <TermSwitcher />
-          )}
+          {/* Term Switcher */}
+          <TermSwitcher />
 
           {/* Notifications */}
           <NotificationBell />

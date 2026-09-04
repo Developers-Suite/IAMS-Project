@@ -99,11 +99,11 @@ export function TermProvider({ children }: { children: ReactNode }) {
 
       // On first load, default selectedTerm to the active term.
       // Keep existing selection if the user had already switched to an archive.
-      setSelectedTermState((prev) => {
+        const userKey = appCtx.user?.id ? `iams_selected_term_id_${appCtx.user.id}` : "iams_selected_term_id";
         if (!prev) {
-           const storedId = appCtx.selectedTermId || localStorage.getItem("iams_selected_term_id");
+           const storedId = appCtx.selectedTermId || localStorage.getItem(userKey) || localStorage.getItem("iams_selected_term_id");
            if (storedId) {
-             const storedTerm = terms.find((t) => String(t.id) === storedId);
+             const storedTerm = terms.find((t) => String(t.id) === String(storedId));
              if (storedTerm) return storedTerm;
            }
            return active;
@@ -117,7 +117,7 @@ export function TermProvider({ children }: { children: ReactNode }) {
     } finally {
       setTermLoading(false);
     }
-  }, [appCtx.selectedTermId]);
+  }, [appCtx.selectedTermId, appCtx.user?.id]);
 
   useEffect(() => {
     void fetchTerms();
@@ -126,17 +126,19 @@ export function TermProvider({ children }: { children: ReactNode }) {
   const setSelectedTerm = (term: TermSummary | null) => {
     const newTerm = term ?? activeTerm;
     setSelectedTermState(newTerm);
+    const userKey = appCtx.user?.id ? `iams_selected_term_id_${appCtx.user.id}` : "iams_selected_term_id";
     if (newTerm) {
        appCtx.setSelectedTermId(String(newTerm.id));
+       try { localStorage.setItem(userKey, String(newTerm.id)); } catch {}
     } else {
        appCtx.setSelectedTermId(null);
+       try { localStorage.removeItem(userKey); } catch {}
     }
   };
 
-  const isArchiveMode = !!(
-    selectedTerm &&
-    activeTerm &&
-    selectedTerm.id !== activeTerm.id
+  // Archive mode applies strictly when the viewed workspace term is archived or completed
+  const isArchiveMode = Boolean(
+    selectedTerm && ["archived", "completed"].includes((selectedTerm.status ?? "").toLowerCase())
   );
 
   const selectedTermId = selectedTerm?.id ?? null;

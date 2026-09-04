@@ -1,26 +1,72 @@
 import { useState, useEffect } from "react";
 import { apiClient } from "../../lib/api-client";
-import { Award, AlertCircle, Clock, Users, BookMarked, ClipboardCheck, CheckCircle2 } from "lucide-react";
+import { Award, AlertCircle, Clock, Users, BookMarked, ClipboardCheck, CheckCircle2, Lock } from "lucide-react";
 import { Card } from "../../components/ui/card";
 import { SkeletonFormCard, SkeletonStatCards } from "../../components/skeleton";
+import { useTerm } from "../../lib/term-context";
 
 export function StudentGradesPage() {
+  const { selectedTermId, isArchiveMode, selectedTerm } = useTerm();
   const [internship, setInternship] = useState<any>(null);
+  const [allInternships, setAllInternships] = useState<any[]>([]);
   const [grade, setGrade] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    apiClient.getDashboard("student").then(async (dashRes) => {
-      const active = dashRes.data?.active_internship;
-      setInternship(active ?? null);
+  const fetchGradeForInternship = async (targetInternship: any) => {
+    if (!targetInternship?.id) {
+      setGrade(null);
+      return;
+    }
+    const gradeRes = await apiClient.getGrade(String(targetInternship.id));
+    if (gradeRes.success) {
+      setGrade(gradeRes.data?.grade ?? gradeRes.data ?? null);
+    } else {
+      setGrade(null);
+    }
+  };
 
-      if (active?.id) {
-        const gradeRes = await apiClient.getGrade(String(active.id));
-        if (gradeRes.success) setGrade(gradeRes.data?.grade ?? gradeRes.data ?? null);
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+
+    Promise.all([
+      apiClient.getInternships({ per_page: 50 }),
+      apiClient.getDashboard("student"),
+    ]).then(async ([internshipsRes, dashRes]) => {
+      if (cancelled) return;
+      const list: any[] = Array.isArray(internshipsRes.data)
+        ? internshipsRes.data
+        : Array.isArray((internshipsRes.data as any)?.data)
+        ? (internshipsRes.data as any).data
+        : [];
+      setAllInternships(list);
+
+      // Find internship matching selected term
+      let matched = null;
+      if (selectedTermId) {
+        matched = list.find(
+          (i: any) => String(i.academic_term_id ?? i.academicTerm?.id ?? i.term_id) === String(selectedTermId)
+        );
       }
-      setLoading(false);
+      if (!matched) {
+        matched = dashRes.data?.active_internship ?? list[0] ?? null;
+      }
+      setInternship(matched);
+
+      if (matched?.id) {
+        await fetchGradeForInternship(matched);
+      } else {
+        setGrade(null);
+      }
+      if (!cancelled) setLoading(false);
+    }).catch(() => {
+      if (!cancelled) setLoading(false);
     });
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedTermId]);
 
   if (loading) {
     return (
@@ -35,10 +81,29 @@ export function StudentGradesPage() {
   if (!internship) {
     return (
       <div className="space-y-4">
-        <h1 className="text-2xl font-bold">Score & Evaluation</h1>
+        <div>
+          <h1 className="text-2xl font-bold">Score & Evaluation</h1>
+          {selectedTerm && (
+            <p className="text-muted-foreground text-xs mt-1">
+              Workspace: <span className="font-semibold text-foreground">{selectedTerm.name}</span>
+            </p>
+          )}
+        </div>
+        {isArchiveMode && (
+          <Card className="p-4 border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 flex items-center gap-3">
+            <Lock className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
+            <p className="text-xs text-amber-800 dark:text-amber-200">
+              Viewing archived term workspace: <strong>{selectedTerm?.name}</strong>. No internship record exists for this term.
+            </p>
+          </Card>
+        )}
         <Card className="p-6 text-center">
           <Award className="w-10 h-10 text-gray-400 mx-auto mb-2" />
-          <p className="text-muted-foreground text-sm">No active internship</p>
+          <p className="text-muted-foreground text-sm">
+            {selectedTerm
+              ? `No internship record found for ${selectedTerm.name}`
+              : "No internship found"}
+          </p>
         </Card>
       </div>
     );
@@ -96,10 +161,58 @@ export function StudentGradesPage() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold">Score & Evaluation</h1>
-        <p className="text-muted-foreground text-sm mt-1">Your internship performance</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">Score & Evaluation</h1>
+          <p className="text-muted-foreground text-sm mt-0.5">
+            {selectedTerm ? (
+              <>
+                Workspace: <span className="font-semibold text-foreground">{selectedTerm.name}</span>
+                {internship?.company?.name && ` • ${internship.company.name}`}
+              </>
+            ) : (
+              "Your internship performance"
+            )}
+          </p>
+        </div>
+
+        {allInternships.length > 1 && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Attachment:</span>
+            <select
+              value={internship?.id ?? ""}
+              onChange={(e) => {
+                const found = allInternships.find((i: any) => String(i.id) === e.target.value);
+                if (found) {
+                  setInternship(found);
+                  fetchGradeForInternship(found);
+                }
+              }}
+              className="text-xs bg-card border border-border rounded-lg px-2.5 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+            >
+              {allInternships.map((item: any) => (
+                <option key={item.id} value={item.id}>
+                  {item.company?.name || `Internship #${item.id}`} ({item.status})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
+
+      {isArchiveMode && (
+        <Card className="p-4 border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 flex items-center gap-3">
+          <Lock className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
+          <div className="space-y-0.5">
+            <p className="font-semibold text-amber-900 dark:text-amber-200 text-xs">
+              Archived Workspace: {selectedTerm?.name}
+            </p>
+            <p className="text-amber-800/80 dark:text-amber-300/80 text-xs">
+              Viewing historical score & evaluation snapshot for this completed term.
+            </p>
+          </div>
+        </Card>
+      )}
 
       {!showFields ? (
         <Card className="p-6 text-center space-y-2">

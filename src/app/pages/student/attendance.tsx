@@ -7,9 +7,11 @@ import {
 } from "lucide-react";
 import { Card } from "../../components/ui/card";
 import { StudentAttendanceCalendar } from "../../components/student-attendance-calendar";
+import { useTerm } from "../../lib/term-context";
 
 export function StudentAttendancePage() {
   const { user } = useAppContext();
+  const { selectedTermId, isArchiveMode } = useTerm();
   const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
   const [stats, setStats] = useState({
     present: 0,
@@ -26,7 +28,7 @@ export function StudentAttendancePage() {
     loadAttendanceData();
     const interval = setInterval(loadAttendanceData, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [selectedTermId]);
 
   const handleManualRefresh = async () => {
     setRefreshing(true);
@@ -37,18 +39,41 @@ export function StudentAttendancePage() {
   const loadAttendanceData = async () => {
     if (!hasLoadedOnce.current) setLoading(true);
     try {
-      const dashRes = await apiClient.getDashboard("student");
-      const activeInternship = dashRes.data?.active_internship;
+      const [dashRes, internshipsRes] = await Promise.all([
+        apiClient.getDashboard("student"),
+        apiClient.getInternships(),
+      ]);
 
-      if (!activeInternship?.id) return;
+      let targetInternship: any = null;
 
-      setInternshipInfo(activeInternship);
+      if (internshipsRes.success && Array.isArray(internshipsRes.data) && internshipsRes.data.length > 0) {
+        const sorted = [...internshipsRes.data].sort((a, b) => (b.created_at ?? "") > (a.created_at ?? "") ? 1 : -1);
+        if (selectedTermId) {
+          targetInternship = sorted.find(
+            (i) => String(i.academic_term_id ?? i.term_id ?? i.academicTerm?.id ?? i.term?.id) === String(selectedTermId)
+          );
+        }
+        if (!targetInternship) {
+          targetInternship = dashRes.data?.active_internship || sorted[0];
+        }
+      } else {
+        targetInternship = dashRes.data?.active_internship;
+      }
+
+      if (!targetInternship?.id) {
+        setInternshipInfo(null);
+        setAttendanceRecords([]);
+        setStats({ present: 0, absent: 0, total: 0 });
+        return;
+      }
+
+      setInternshipInfo(targetInternship);
 
       const filters: any = { per_page: 100 };
-      if (activeInternship.start_date) filters.from_date = activeInternship.start_date;
-      if (activeInternship.end_date) filters.to_date = activeInternship.end_date;
+      if (targetInternship.start_date) filters.from_date = targetInternship.start_date;
+      if (targetInternship.end_date) filters.to_date = targetInternship.end_date;
 
-      const attRes = await apiClient.getInternshipAttendance(String(activeInternship.id), filters);
+      const attRes = await apiClient.getInternshipAttendance(String(targetInternship.id), filters);
 
       if (attRes.success) {
         const data = attRes.data as any;
@@ -187,6 +212,21 @@ export function StudentAttendancePage() {
           </button>
         </div>
       </div>
+
+      {/* Archived Workspace Notice */}
+      {isArchiveMode && (
+        <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-amber-900 dark:text-amber-100 text-sm">
+              Archived Workspace (Read-Only)
+            </p>
+            <p className="text-amber-800 dark:text-amber-200 text-xs mt-0.5">
+              You are viewing historical attendance records for an archived academic term. Daily check-in and modifications are disabled.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Stats grid – 3 cards: Rate, Present, Absent */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

@@ -21,6 +21,7 @@ import {
   RotateCcw,
   Save,
   AlertCircle,
+  Lock,
 } from "lucide-react";
 
 import { TermSelector } from "../../components/student/term-selector";
@@ -29,6 +30,7 @@ import { PersonalDetailsForm } from "../../components/student/personal-details-f
 import { ApplicationReview } from "../../components/student/application-review";
 import { ApplicationTracker } from "../../components/student/application-tracker";
 import { TermWindowsList } from "../../components/student/term-windows-list";
+import { useTerm } from "../../lib/term-context";
 
 type View = "windows" | "apply" | "tracker";
 type Step = 1 | 2 | 3 | 4;
@@ -103,8 +105,10 @@ const defaultForm: FormData = {
 
 export function StudentApplicationsPage() {
   const { user } = useAppContext();
+  const { selectedTermId, isArchiveMode } = useTerm();
   const { activeInternship } = useStudentCheckIn(!!user);
   const [myApp, setMyApp] = useState<any | null>(null);
+  const [applicationsList, setApplicationsList] = useState<any[]>([]);
   const [terms, setTerms] = useState<any[]>([]);
   const [companies, setCompanies] = useState<any[]>([]);
   const [branches, setBranches] = useState<any[]>([]);
@@ -126,7 +130,17 @@ export function StudentApplicationsPage() {
         const sorted = [...appsRes.data].sort((a, b) =>
           (b.created_at ?? "") > (a.created_at ?? "") ? 1 : -1
         );
-        resolvedApp = sorted[0];
+        setApplicationsList(sorted);
+
+        // If workspace term is selected, prioritize application belonging to that term
+        if (selectedTermId) {
+          const scoped = sorted.find(
+            (a) => String(a.academic_term_id ?? a.term_id ?? a.academicTerm?.id ?? a.term?.id) === String(selectedTermId)
+          );
+          resolvedApp = scoped || sorted[0];
+        } else {
+          resolvedApp = sorted[0];
+        }
         setMyApp(resolvedApp);
       }
       if (termsRes.success) setTerms(termsRes.data.map(normalizeTerm));
@@ -151,16 +165,16 @@ export function StudentApplicationsPage() {
     }
   };
 
-  // Load data on mount
+  // Load data on mount and whenever the selected workspace term changes
   useEffect(() => {
     refreshApplications();
-  }, []);
+  }, [selectedTermId]);
 
-  // Auto-refresh every 10 seconds to catch DLO approvals
+  // Auto-refresh every 15 seconds to catch DLO approvals
   useEffect(() => {
-    const interval = setInterval(refreshApplications, 10000);
+    const interval = setInterval(refreshApplications, 15000);
     return () => clearInterval(interval);
-  }, []);
+  }, [selectedTermId]);
 
   const [view, setView] = useState<View>("windows");
   const [step, setStep] = useState<Step>(1);
@@ -168,7 +182,7 @@ export function StudentApplicationsPage() {
   const [eligibilityError, setEligibilityError] = useState<string | null>(null);
   const [hasSavedDraft, setHasSavedDraft] = useState(false);
 
-  // Determine if the current internship has ended
+  // Determine if the target internship has completed or ended
   const targetAppOrInternship = activeInternship || myApp?.internship || myApp;
   const isInternshipEnded = Boolean(
     targetAppOrInternship && (
@@ -187,9 +201,20 @@ export function StudentApplicationsPage() {
   const isTermArchived = matchingTerm?.status === "archived";
 
   const isRejected = myApp?.status?.toLowerCase() === "rejected";
-  const shouldShowTrackerOnly = Boolean(
-    activeInternship || (targetAppOrInternship && !isRejected && (!isInternshipEnded || !(isGradePublished && isTermArchived)))
+
+  // If the previous internship is completed/ended, do NOT lock student to tracker only.
+  // The student is free to apply for another internship even without being graded first.
+  const hasActiveOngoingInternship = Boolean(activeInternship && !isInternshipEnded);
+  const hasIncompletePendingApp = Boolean(
+    myApp &&
+    !isRejected &&
+    !isInternshipEnded &&
+    ["submitted", "under_review", "approved", "pending_company_approval", "company_accepted", "active"].includes(
+      (myApp.status ?? "").toLowerCase()
+    )
   );
+
+  const shouldShowTrackerOnly = Boolean(hasActiveOngoingInternship || hasIncompletePendingApp);
 
   // Auto-switch to tracker view when active internship exists or if tracking should continue
   useEffect(() => {
@@ -216,14 +241,16 @@ export function StudentApplicationsPage() {
   const stepKey   = `application_step_${user?.id ?? "anon"}`;
 
   // Block new applications when:
-  // 1. Student has an active running internship in an active term
-  // 2. Student has an active pending application in a currently active term
+  // 1. Student has an active running internship in an active term (not completed)
+  // 2. Student has an active pending application in a currently active term (not completed)
   const activeTermIds = new Set(terms.filter((t) => t.status === "active").map((t) => String(t.id)));
 
-  const pendingAppInActiveTerm = myApp && activeTermIds.has(String(myApp.academic_term_id ?? myApp.termId ?? myApp.term_id ?? myApp.academicTerm?.id ?? "")) &&
+  const pendingAppInActiveTerm = myApp &&
+    !isInternshipEnded &&
+    activeTermIds.has(String(myApp.academic_term_id ?? myApp.termId ?? myApp.term_id ?? myApp.academicTerm?.id ?? "")) &&
     ["submitted", "under_review", "approved", "pending_company_approval"].includes((myApp.status ?? "").toLowerCase());
 
-  const hasPendingApplication = Boolean(activeInternship || pendingAppInActiveTerm);
+  const hasPendingApplication = Boolean(hasActiveOngoingInternship || pendingAppInActiveTerm);
 
 
   const hasMeaningfulDraft = useCallback((f: FormData, s: number) =>
@@ -346,9 +373,9 @@ export function StudentApplicationsPage() {
       return false;
     }
 
-    // Check if already has an active ongoing internship or pending application
-    const isPendingApp = myApp && ["submitted", "under_review", "approved"].includes((myApp.status ?? "").toLowerCase());
-    if (activeInternship || isPendingApp) {
+    // Check if already has an active ongoing internship or pending application (excluding completed internships)
+    const isPendingApp = myApp && !isInternshipEnded && ["submitted", "under_review", "approved", "pending_company_approval"].includes((myApp.status ?? "").toLowerCase());
+    if (hasActiveOngoingInternship || isPendingApp) {
       setEligibilityError(
         "You already have an active application or ongoing internship. You cannot submit another one until it is completed or resolved."
       );
@@ -498,6 +525,7 @@ export function StudentApplicationsPage() {
           const sorted = [...appsRes.data].sort((a, b) =>
             (b.created_at ?? "") > (a.created_at ?? "") ? 1 : -1
           );
+          setApplicationsList(sorted);
           setMyApp(sorted[0]);
         }
         setView("tracker");
@@ -555,15 +583,15 @@ export function StudentApplicationsPage() {
           <button
             key={tab.key}
             type="button"
-            disabled={tab.key === "apply" && hasPendingApplication}
+            disabled={tab.key === "apply" && (hasPendingApplication || isArchiveMode)}
             onClick={() => {
-              if (tab.key === "apply" && hasPendingApplication) return;
+              if (tab.key === "apply" && (hasPendingApplication || isArchiveMode)) return;
               setView(tab.key);
               // Only reset to step 1 when starting fresh (no draft in progress)
               if (tab.key === "apply" && !hasSavedDraft) setStep(1);
             }}
             className={`flex items-center justify-center px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-              tab.key === "apply" && hasPendingApplication
+              tab.key === "apply" && (hasPendingApplication || isArchiveMode)
                 ? "bg-muted/30 text-muted-foreground cursor-not-allowed opacity-50"
                 : view === tab.key
                 ? "bg-primary text-primary-foreground shadow-md"
@@ -578,8 +606,23 @@ export function StudentApplicationsPage() {
 
       {view === "windows" && (
         <div className="space-y-4">
+          {/* Archived Term Notice */}
+          {isArchiveMode && (
+            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex items-start gap-3">
+              <Lock className="w-5 h-5 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-amber-900 dark:text-amber-100 text-sm">
+                  Archived Workspace Active (Read-Only)
+                </p>
+                <p className="text-amber-800 dark:text-amber-200 mt-1 text-xs">
+                  You are viewing an archived academic term workspace. New applications are closed for this cohort. Switch to an active workspace to apply.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Pending Application Block */}
-          {hasPendingApplication && (
+          {hasPendingApplication && !isArchiveMode && (
             <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
@@ -750,23 +793,49 @@ export function StudentApplicationsPage() {
       )}
 
       {view === "tracker" && (
-        <ApplicationTracker
-          myApp={myApp}
-          terms={terms}
-          onViewWindows={() => setView("windows")}
-          onCancelApplication={handleCancelApplication}
-          onAcceptanceSubmitted={() => {
-            apiClient.getApplications().then((res) => {
-              if (res.success && res.data.length > 0) {
-                const sorted = [...res.data].sort((a, b) =>
-                  (b.created_at ?? "") > (a.created_at ?? "") ? 1 : -1
-                );
-                setMyApp(sorted[0]);
-              }
-            });
-          }}
-          isInternshipEnded={isInternshipEnded}
-        />
+        <div className="space-y-4">
+          {applicationsList.length > 1 && (
+            <div className="flex items-center gap-2 overflow-x-auto pb-1">
+              <span className="text-xs text-muted-foreground whitespace-nowrap font-medium">Viewing application:</span>
+              {applicationsList.map((app, idx) => (
+                <button
+                  key={app.id}
+                  type="button"
+                  onClick={() => setMyApp(app)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${
+                    myApp?.id === app.id
+                      ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                      : "bg-muted text-muted-foreground border-border hover:bg-muted/80"
+                  }`}
+                >
+                  #{applicationsList.length - idx} · {app.company?.name || app.companyName || "Company"} ({app.status})
+                </button>
+              ))}
+            </div>
+          )}
+          <ApplicationTracker
+            myApp={myApp}
+            terms={terms}
+            onViewWindows={() => setView("windows")}
+            onApplyAnother={() => {
+              clearDraft();
+              setView("windows");
+            }}
+            onCancelApplication={handleCancelApplication}
+            onAcceptanceSubmitted={() => {
+              apiClient.getApplications().then((res) => {
+                if (res.success && res.data.length > 0) {
+                  const sorted = [...res.data].sort((a, b) =>
+                    (b.created_at ?? "") > (a.created_at ?? "") ? 1 : -1
+                  );
+                  setApplicationsList(sorted);
+                  setMyApp(sorted[0]);
+                }
+              });
+            }}
+            isInternshipEnded={isInternshipEnded}
+          />
+        </div>
       )}
     </div>
   );

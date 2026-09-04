@@ -9,14 +9,16 @@ import { getInternshipStartDate, getInternshipEndDate, formatDisplayDate, resolv
 import { CompanyAcceptanceModal } from "../../components/student/company-acceptance-modal";
 import { DocumentUploadModal } from "../../components/student/document-upload-modal";
 import { InviteSupervisorModal } from "../../components/student/invite-supervisor-modal";
+import { useTerm } from "../../lib/term-context";
 import {
   Upload, FileText, Download, CheckCircle2, Clock, X, Eye,
-  File, AlertTriangle, Send, Shield
+  File, AlertTriangle, Send, Shield, Lock
 } from "lucide-react";
 import { toast } from "sonner";
 
 export function DocumentsPage() {
   const { user } = useAppContext();
+  const { selectedTermId, isArchiveMode } = useTerm();
   const [myApp, setMyApp] = useState<any | null>(null);
   const [internshipId, setInternshipId] = useState<string | null>(null);
   const [internshipStatus, setInternshipStatus] = useState<string | null>(null);
@@ -66,7 +68,14 @@ export function DocumentsPage() {
       let latestApp: any = null;
       if (appsRes.success && appsRes.data.length > 0) {
         const sorted = [...appsRes.data].sort((a, b) => (b.created_at ?? "") > (a.created_at ?? "") ? 1 : -1);
-        latestApp = sorted[0];
+        if (selectedTermId) {
+          latestApp = sorted.find(
+            (a) => String(a.academic_term_id ?? a.term_id ?? a.academicTerm?.id ?? a.term?.id) === String(selectedTermId)
+          );
+        }
+        if (!latestApp) {
+          latestApp = sorted[0];
+        }
         setMyApp(latestApp);
       }
 
@@ -118,7 +127,7 @@ export function DocumentsPage() {
 
   useEffect(() => {
     fetchApplicationData();
-  }, []);
+  }, [selectedTermId]);
 
   // Supervisor details from uploaded form
   const [uploadedSupervisorName, setUploadedSupervisorName] = useState<string>("");
